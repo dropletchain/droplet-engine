@@ -1,18 +1,13 @@
 package ch.lubu;
 
-import kademlia.dht.KadContent;
-
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -20,18 +15,18 @@ import java.util.zip.Inflater;
 /**
  * Represents a data block containing data
  */
-public class Block implements Iterator<Entry>, Iterable<Entry>{
+public class Chunk implements Iterator<Entry>, Iterable<Entry>{
 
     private int maxEntries;
 
     private List<Entry> entries = new ArrayList<>();
 
-    private Block(int maxEntries) {
+    private Chunk(int maxEntries) {
         this.maxEntries = maxEntries;
     }
 
-    public static Block getNewBlock(int maxEntries) {
-        return new Block(maxEntries);
+    public static Chunk getNewBlock(int maxEntries) {
+        return new Chunk(maxEntries);
     }
 
     /**
@@ -39,9 +34,9 @@ public class Block implements Iterator<Entry>, Iterable<Entry>{
      * @param data
      * @return
      */
-    public static Block getBlockFromData(byte[] data) {
+    public static Chunk getBlockFromData(byte[] data) {
         ByteBuffer buffer = ByteBuffer.wrap(data);
-        Block block = new Block(1000);
+        Chunk chunk = new Chunk(1000);
         while (buffer.hasRemaining()) {
             long timestamp = buffer.getLong();
             int meta_len = buffer.getInt();
@@ -51,10 +46,10 @@ public class Block implements Iterator<Entry>, Iterable<Entry>{
             }
             String meta = new String(metaByte);
             double value = buffer.getDouble();
-            block.entries.add(new Entry(timestamp, meta, value));
+            chunk.entries.add(new Entry(timestamp, meta, value));
         }
-        block.maxEntries = block.entries.size();
-        return block;
+        chunk.maxEntries = chunk.entries.size();
+        return chunk;
     }
 
     private static byte[] getDecompressedData(byte[] compressedBlock) throws DataFormatException {
@@ -75,7 +70,7 @@ public class Block implements Iterator<Entry>, Iterable<Entry>{
      * @return
      * @throws DataFormatException
      */
-    public static Block getBlockFromCompressed(byte[] compressedBlock) throws DataFormatException {
+    public static Chunk getBlockFromCompressed(byte[] compressedBlock) throws DataFormatException {
         return getBlockFromData(getDecompressedData(compressedBlock));
     }
 
@@ -86,7 +81,7 @@ public class Block implements Iterator<Entry>, Iterable<Entry>{
      * @return
      * @throws InvalidKeyException
      */
-    public static Block getBlockFromCompressedEncrypted(byte[] compressedEncryptedBlock, byte[] key) throws InvalidKeyException {
+    public static Chunk getBlockFromCompressedEncrypted(byte[] compressedEncryptedBlock, byte[] key) throws InvalidKeyException {
         SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
         Cipher cipher = null;
         try {
@@ -121,9 +116,9 @@ public class Block implements Iterator<Entry>, Iterable<Entry>{
      * @param pubKey
      * @return
      * @throws InvalidKeyException
-     * @throws BlockVerficationFailure
+     * @throws ChunkVerficationFailure
      */
-    public static Block getBlockFromCompressedEncryptedSignedBlock(byte[] compressedEncryptedBlock, byte[] key, PublicKey pubKey) throws InvalidKeyException, BlockVerficationFailure {
+    public static Chunk getBlockFromCompressedEncryptedSignedBlock(byte[] compressedEncryptedBlock, byte[] key, PublicKey pubKey) throws InvalidKeyException, ChunkVerficationFailure {
         try {
             Signature ver = Signature.getInstance("SHA256withECDSA");
             ByteBuffer buff = ByteBuffer.wrap(compressedEncryptedBlock);
@@ -135,7 +130,7 @@ public class Block implements Iterator<Entry>, Iterable<Entry>{
             ver.initVerify(pubKey);
             ver.update(data);
             if(!ver.verify(sig)) {
-                throw new BlockVerficationFailure("Invalid signature!", compressedEncryptedBlock);
+                throw new ChunkVerficationFailure("Invalid signature!", compressedEncryptedBlock);
             } else {
                 return getBlockFromCompressedEncrypted(data, key);
             }

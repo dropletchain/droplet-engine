@@ -1,6 +1,6 @@
 package ch.lubu.test;
 
-import ch.lubu.Block;
+import ch.lubu.Chunk;
 import ch.lubu.Entry;
 import ch.lubu.avadata.AvaDataEntry;
 import ch.lubu.avadata.AvaDataImporter;
@@ -24,29 +24,29 @@ public class AvaData {
 
     int counter = 0;
 
-    public List<Block> transferData(int maxBlocksize) throws IOException {
-        ArrayList<Block> blocks = new ArrayList<>();
-        Block curBlock = Block.getNewBlock(maxBlocksize);
+    public List<Chunk> transferData(int maxBlocksize) throws IOException {
+        ArrayList<Chunk> chunks = new ArrayList<>();
+        Chunk curChunk = Chunk.getNewBlock(maxBlocksize);
         AvaDataImporter importer = null;
         for(int item=1; item<=10; item ++) {
             try {
                 importer = new AvaDataImporter("./DATA", item);
                 while (importer.hasNext()) {
                     AvaDataEntry entry = importer.next();
-                    if (curBlock.getRemainingSpace() < 10) {
-                        blocks.add(curBlock);
-                        curBlock = Block.getNewBlock(maxBlocksize);
+                    if (curChunk.getRemainingSpace() < 10) {
+                        chunks.add(curChunk);
+                        curChunk = Chunk.getNewBlock(maxBlocksize);
                     }
-                    curBlock.putIotData(new Entry(entry.time_stamp, "temp_amp", entry.temp_amb));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "temp_skin", entry.temp_skin));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "sleep_state", entry.sleep_state));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "avg_bpm", entry.avg_bpm));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "activity_index", entry.activity_index));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "accel_z", entry.accel_z));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "perfusion_index_green", entry.perfusion_index_green));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "perfusion_index_infrared", entry.perfusion_index_infrared));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "phase_60kHz", entry.phase_60kHz));
-                    curBlock.putIotData(new Entry(entry.time_stamp, "impedance_60kHz", entry.impedance_60kHz));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "temp_amp", entry.temp_amb));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "temp_skin", entry.temp_skin));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "sleep_state", entry.sleep_state));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "avg_bpm", entry.avg_bpm));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "activity_index", entry.activity_index));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "accel_z", entry.accel_z));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "perfusion_index_green", entry.perfusion_index_green));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "perfusion_index_infrared", entry.perfusion_index_infrared));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "phase_60kHz", entry.phase_60kHz));
+                    curChunk.putIotData(new Entry(entry.time_stamp, "impedance_60kHz", entry.impedance_60kHz));
 
                     counter += 10;
                 }
@@ -56,10 +56,10 @@ public class AvaData {
                     importer.close();
             }
         }
-        if(curBlock.getNumEntries() > 0) {
-            blocks.add(curBlock);
+        if(curChunk.getNumEntries() > 0) {
+            chunks.add(curChunk);
         }
-        return blocks;
+        return chunks;
     }
 
 
@@ -80,51 +80,51 @@ public class AvaData {
             keyGenEC.initialize(256, random);
             KeyPair pair = keyGenEC.generateKeyPair();
 
-            List<Block> blocks = avaData.transferData(maxBlocksize);
-            System.out.format("--- Max Blocksize: %d,  Num Blocks: %d, Num Entries: %d ---\n", maxBlocksize, blocks.size(), avaData.counter);
+            List<Chunk> chunks = avaData.transferData(maxBlocksize);
+            System.out.format("--- Max Chunksize: %d,  Num Chunks: %d, Num Entries: %d ---\n", maxBlocksize, chunks.size(), avaData.counter);
 
             System.out.println(".::Normal Data::.");
             int totalSizeBase = 0;
-            for(Block block : blocks) {
-                byte[] data = block.getData();
+            for(Chunk chunk : chunks) {
+                byte[] data = chunk.getData();
                 totalSizeBase += data.length;
                 //Block.getBlockFromData(data);
             }
-            BigDecimal avg = BigDecimal.valueOf(totalSizeBase).divide(BigDecimal.valueOf(blocks.size()), RoundingMode.HALF_UP);
-            System.out.format("Total Size: %d, Average Block Size: %s\n", totalSizeBase, avg.toString());
+            BigDecimal avg = BigDecimal.valueOf(totalSizeBase).divide(BigDecimal.valueOf(chunks.size()), RoundingMode.HALF_UP);
+            System.out.format("Total Size: %d, Average Chunk Size: %s\n", totalSizeBase, avg.toString());
 
             System.out.println(".::Compressed Data::.");
             int totalSize = 0;
-            for(Block block : blocks) {
+            for(Chunk block : chunks) {
                 byte[] data = block.getCompressedData();
                 totalSize += data.length;
                 //Block.getBlockFromCompressed(data);
             }
-            avg = BigDecimal.valueOf(totalSize).divide(BigDecimal.valueOf(blocks.size()), RoundingMode.HALF_UP);
+            avg = BigDecimal.valueOf(totalSize).divide(BigDecimal.valueOf(chunks.size()), RoundingMode.HALF_UP);
             BigDecimal improvent = BigDecimal.valueOf(totalSizeBase).divide(BigDecimal.valueOf(totalSize),2, RoundingMode.HALF_UP);
-            System.out.format("Total Size: %d, Average Block Size: %s, Improvement to Basecase: %s\n", totalSize, avg.toString(), improvent.toString());
+            System.out.format("Total Size: %d, Average Chunk Size: %s, Improvement to Basecase: %s\n", totalSize, avg.toString(), improvent.toString());
 
             System.out.println(".::Compressed and Encrypted Data::.");
             totalSize = 0;
-            for(Block block : blocks) {
-                byte[] data = block.getCompressedAndEncryptedData(secretKey.getEncoded());
+            for(Chunk chunk : chunks) {
+                byte[] data = chunk.getCompressedAndEncryptedData(secretKey.getEncoded());
                 totalSize += data.length;
                 //Block.getBlockFromCompressedEncrypted(data, secretKey.getEncoded());
             }
-            avg = BigDecimal.valueOf(totalSize).divide(BigDecimal.valueOf(blocks.size()), RoundingMode.HALF_UP);
+            avg = BigDecimal.valueOf(totalSize).divide(BigDecimal.valueOf(chunks.size()), RoundingMode.HALF_UP);
             improvent = BigDecimal.valueOf(totalSizeBase).divide(BigDecimal.valueOf(totalSize),2 , RoundingMode.HALF_UP);
-            System.out.format("Total Size: %d, Average Block Size: %s, Improvement to Basecase: %s\n", totalSize, avg.toString(), improvent.toString());
+            System.out.format("Total Size: %d, Average Chunk Size: %s, Improvement to Basecase: %s\n", totalSize, avg.toString(), improvent.toString());
 
             System.out.println(".::Compressed, Encrypted and Signed Data::.");
             totalSize = 0;
-            for(Block block : blocks) {
-                byte[] data = block.getCompressedEncryptedSignedData(secretKey.getEncoded(), pair.getPrivate());
+            for(Chunk chunk : chunks) {
+                byte[] data = chunk.getCompressedEncryptedSignedData(secretKey.getEncoded(), pair.getPrivate());
                 totalSize += data.length;
                 //Block.getBlockFromCompressedEncryptedSignedBlock(data, secretKey.getEncoded(), pair.getPublic());
             }
-            avg = BigDecimal.valueOf(totalSize).divide(BigDecimal.valueOf(blocks.size()), RoundingMode.HALF_UP);
+            avg = BigDecimal.valueOf(totalSize).divide(BigDecimal.valueOf(chunks.size()), RoundingMode.HALF_UP);
             improvent = BigDecimal.valueOf(totalSizeBase).divide(BigDecimal.valueOf(totalSize),2, RoundingMode.HALF_UP);
-            System.out.format("Total Size: %d, Average Block Size: %s, Improvement to Basecase: %s\n", totalSize, avg.toString(), improvent.toString());
+            System.out.format("Total Size: %d, Average Chunk Size: %s, Improvement to Basecase: %s\n", totalSize, avg.toString(), improvent.toString());
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {

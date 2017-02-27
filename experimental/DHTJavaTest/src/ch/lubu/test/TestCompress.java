@@ -1,23 +1,18 @@
 package ch.lubu.test;
 
-import ch.lubu.Block;
-import ch.lubu.BlockKey;
+import ch.lubu.Chunk;
+import ch.lubu.ChunkKey;
 import ch.lubu.Entry;
 import ch.lubu.KademliaByteContent;
-import junit.framework.TestCase;
 import kademlia.JKademliaNode;
 import kademlia.dht.GetParameter;
 import kademlia.dht.KademliaStorageEntry;
 import kademlia.exceptions.ContentNotFoundException;
-import kademlia.exceptions.RoutingException;
 import kademlia.node.KademliaId;
-import kademlia.simulations.DHTContentImpl;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Base64;
 import java.util.Random;
-import java.util.regex.Matcher;
 import java.util.zip.DataFormatException;
 
 /**
@@ -27,31 +22,31 @@ public class TestCompress {
 
     @Test
     public void testBlock() {
-        Block block = Block.getNewBlock(10);
-        block.putIotData(new Entry(1,"STEP", 10.0));
-        block.putIotData(new Entry(2,"STEP", 12.0));
-        block.putIotData(new Entry(3,"STEP", 14.0));
-        byte[] compressed = block.getCompressedData();
+        Chunk chunk = Chunk.getNewBlock(10);
+        chunk.putIotData(new Entry(1,"STEP", 10.0));
+        chunk.putIotData(new Entry(2,"STEP", 12.0));
+        chunk.putIotData(new Entry(3,"STEP", 14.0));
+        byte[] compressed = chunk.getCompressedData();
         try {
-            Block after = Block.getBlockFromCompressed(compressed);
+            Chunk after = Chunk.getBlockFromCompressed(compressed);
             for(Entry entry : after)
                 System.out.println(entry.getTimestamp() + " " + entry.getMetadata() + " " + entry.getValue());
         } catch (DataFormatException e) {
             e.printStackTrace();
         }
 
-        System.out.println( (double)block.getData().length / (double)block.getCompressedData().length + " factor");
+        System.out.println( (double) chunk.getData().length / (double) chunk.getCompressedData().length + " factor");
     }
 
 
     @Test
     public void testWithKademlia() {
-        Block block = Block.getNewBlock(10);
-        block.putIotData(new Entry(1,"STEP", 10.0));
-        block.putIotData(new Entry(2,"STEP", 12.0));
-        block.putIotData(new Entry(3,"STEP", 14.0));
+        Chunk chunk = Chunk.getNewBlock(10);
+        chunk.putIotData(new Entry(1,"STEP", 10.0));
+        chunk.putIotData(new Entry(2,"STEP", 12.0));
+        chunk.putIotData(new Entry(3,"STEP", 14.0));
 
-        BlockKey key = new BlockKey("Lukas", "StreamTest", 1);
+        ChunkKey key = new ChunkKey("Lukas", "StreamTest", 1);
         try {
             JKademliaNode node1;
             node1 = new JKademliaNode("node 1", new KademliaId(), 12067);
@@ -62,7 +57,7 @@ public class TestCompress {
             System.out.println("NodeID2 " + node2.getNode().getNodeId().hexRepresentation());
 
 
-            KademliaByteContent byteContent = new KademliaByteContent(key.getKademliaKey(), "Lukas", block.getCompressedData());
+            KademliaByteContent byteContent = new KademliaByteContent(key.getKademliaKey(), "Lukas", chunk.getCompressedData());
             node2.put(byteContent);
 
 
@@ -77,9 +72,9 @@ public class TestCompress {
 
             KademliaByteContent out = KademliaByteContent.createFromBytes(content.getContent());
 
-            Block outBlock = Block.getBlockFromCompressed(out.getData());
+            Chunk outChunk = Chunk.getBlockFromCompressed(out.getData());
 
-            for(Entry entry : outBlock)
+            for(Entry entry : outChunk)
                 System.out.println(entry.getTimestamp() + " " + entry.getMetadata() + " " + entry.getValue());
 
 
@@ -104,11 +99,11 @@ public class TestCompress {
         JKademliaNode[] nodes = new JKademliaNode[num_server];
         Random rand = new Random();
 
-        Block block = Block.getNewBlock(10);
-        block.putIotData(new Entry(1,"STEP", 10.0));
-        block.putIotData(new Entry(2,"STEP", 12.0));
-        block.putIotData(new Entry(3,"STEP", 14.0));
-        BlockKey key = new BlockKey("Lukas", "StreamTest", 1);
+        Chunk chunk = Chunk.getNewBlock(10);
+        chunk.putIotData(new Entry(1,"STEP", 10.0));
+        chunk.putIotData(new Entry(2,"STEP", 12.0));
+        chunk.putIotData(new Entry(3,"STEP", 14.0));
+        ChunkKey key = new ChunkKey("Lukas", "StreamTest", 1);
 
         try {
             for (int i = 0; i < num_server; i++) {
@@ -133,7 +128,7 @@ public class TestCompress {
                 }
             }*/
 
-            KademliaByteContent byteContent = new KademliaByteContent(key.getKademliaKey(), "Lukas", block.getCompressedData());
+            KademliaByteContent byteContent = new KademliaByteContent(key.getKademliaKey(), "Lukas", chunk.getCompressedData());
             nodes[0].put(byteContent);
 
             GetParameter gp = new GetParameter(key.getKademliaKey(), byteContent.getType());
@@ -142,9 +137,9 @@ public class TestCompress {
 
             KademliaByteContent out = KademliaByteContent.createFromBytes(content.getContent());
 
-            Block outBlock = Block.getBlockFromCompressed(out.getData());
+            Chunk outChunk = Chunk.getBlockFromCompressed(out.getData());
 
-            for(Entry entry : outBlock)
+            for(Entry entry : outChunk)
                 System.out.println(entry.getTimestamp() + " " + entry.getMetadata() + " " + entry.getValue());
 
             Thread.sleep(1000);

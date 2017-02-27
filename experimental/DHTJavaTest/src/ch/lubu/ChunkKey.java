@@ -8,7 +8,7 @@ import java.security.NoSuchAlgorithmException;
 /**
  * Created by lukas on 24.02.17.
  */
-public class BlockKey {
+public class ChunkKey {
 
     private String userid;
 
@@ -16,7 +16,7 @@ public class BlockKey {
 
     private long timestamp;
 
-    public BlockKey(String userid, String streamid, long timestamp) {
+    public ChunkKey(String userid, String streamid, long timestamp) {
         this.userid = userid;
         this.streamid = streamid;
         this.timestamp = timestamp;
