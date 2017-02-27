@@ -4,6 +4,7 @@ import ch.lubu.Chunk;
 import ch.lubu.ChunkKey;
 import ch.lubu.Entry;
 import ch.lubu.KademliaByteContent;
+import ch.lubu.fitbitdata.FitbitCSVDataImporter;
 import kademlia.JKademliaNode;
 import kademlia.dht.GetParameter;
 import kademlia.dht.KademliaStorageEntry;
@@ -12,8 +13,10 @@ import kademlia.node.KademliaId;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Random;
 import java.util.zip.DataFormatException;
+import java.io.File;
 
 /**
  * Created by lukas on 24.02.17.
@@ -153,8 +156,11 @@ public class TestCompress {
         }
     }
 
+    @Test
     public void testAvaBlocks() {
-
+        File data = new File("./../../raw-data/FitBit/fitbit_export_20161201.csv");
+        List<Entry> entries = FitbitCSVDataImporter.importCSVData(data);
+        System.out.format("%d\n", entries.size());
     }
 
 }
