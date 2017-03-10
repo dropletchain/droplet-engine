@@ -118,9 +118,9 @@ public class AvaData {
             System.out.println(".::Compressed, Encrypted and Signed Data::.");
             totalSize = 0;
             for(Chunk chunk : chunks) {
-                byte[] data = chunk.getCompressedEncryptedSignedData(secretKey.getEncoded(), pair.getPrivate());
+                byte[] data = chunk.getCompressedEncryptedSignedData(secretKey.getEncoded(), pair.getPrivate(), true);
                 totalSize += data.length;
-                //Block.getBlockFromCompressedEncryptedSignedBlock(data, secretKey.getEncoded(), pair.getPublic());
+                Chunk.getBlockFromCompressedEncryptedSignedBlock(data, secretKey.getEncoded(), pair.getPublic(), true);
             }
             avg = BigDecimal.valueOf(totalSize).divide(BigDecimal.valueOf(chunks.size()), RoundingMode.HALF_UP);
             improvent = BigDecimal.valueOf(totalSizeBase).divide(BigDecimal.valueOf(totalSize),2, RoundingMode.HALF_UP);

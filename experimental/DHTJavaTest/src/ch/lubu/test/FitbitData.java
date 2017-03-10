@@ -103,7 +103,7 @@ public class FitbitData {
             System.out.println(".::Compressed, Encrypted and Signed Data::.");
             totalSize = 0;
             for(Chunk chunk : chunks) {
-                byte[] data = chunk.getCompressedEncryptedSignedData(secretKey.getEncoded(), pair.getPrivate());
+                byte[] data = chunk.getCompressedEncryptedSignedData(secretKey.getEncoded(), pair.getPrivate(), false);
                 totalSize += data.length;
                 //Block.getBlockFromCompressedEncryptedSignedBlock(data, secretKey.getEncoded(), pair.getPublic());
             }

@@ -1,6 +1,7 @@
 package ch.lubu;
 
 import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
@@ -110,6 +111,42 @@ public class Chunk implements Iterator<Entry>, Iterable<Entry>{
     }
 
     /**
+     *
+     * @param compressedEncryptedBlock
+     * @param key
+     * @return
+     * @throws InvalidKeyException
+     */
+    public static Chunk getBlockFromCompressedGCMEncrypted(byte[] compressedEncryptedBlock, byte[] key) throws InvalidKeyException, AEADBadTagException {
+        SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+        Cipher cipher = null;
+        int nonceSize = 12;
+        try {
+            cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            byte[] ivByte = new byte[nonceSize];
+            System.arraycopy(compressedEncryptedBlock, 0, ivByte, 0, ivByte.length);
+
+            GCMParameterSpec gcmParams = new GCMParameterSpec(cipher.getBlockSize() * 8, ivByte);
+            cipher.init(Cipher.DECRYPT_MODE, skeySpec, gcmParams);
+            byte[] compressedData = cipher.doFinal(compressedEncryptedBlock, ivByte.length, compressedEncryptedBlock.length - ivByte.length);
+            return getBlockFromData(getDecompressedData(compressedData));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (DataFormatException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * Decdoes a compressed, encoded and signed block
      * @param compressedEncryptedBlock
      * @param key
@@ -118,7 +155,7 @@ public class Chunk implements Iterator<Entry>, Iterable<Entry>{
      * @throws InvalidKeyException
      * @throws ChunkVerficationFailure
      */
-    public static Chunk getBlockFromCompressedEncryptedSignedBlock(byte[] compressedEncryptedBlock, byte[] key, PublicKey pubKey) throws InvalidKeyException, ChunkVerficationFailure {
+    public static Chunk getBlockFromCompressedEncryptedSignedBlock(byte[] compressedEncryptedBlock, byte[] key, PublicKey pubKey, boolean isGCM) throws InvalidKeyException, ChunkVerficationFailure, AEADBadTagException {
         try {
             Signature ver = Signature.getInstance("SHA256withECDSA");
             ByteBuffer buff = ByteBuffer.wrap(compressedEncryptedBlock);
@@ -132,7 +169,10 @@ public class Chunk implements Iterator<Entry>, Iterable<Entry>{
             if(!ver.verify(sig)) {
                 throw new ChunkVerficationFailure("Invalid signature!", compressedEncryptedBlock);
             } else {
-                return getBlockFromCompressedEncrypted(data, key);
+                if(isGCM)
+                    return getBlockFromCompressedGCMEncrypted(data, key);
+                else
+                    return getBlockFromCompressedEncrypted(data, key);
             }
 
         } catch (NoSuchAlgorithmException e) {
@@ -218,10 +258,35 @@ public class Chunk implements Iterator<Entry>, Iterable<Entry>{
         return finalResult;
     }
 
-    public byte[] getCompressedEncryptedSignedData(byte[] key, PrivateKey privECDSA) throws Exception {
+    public byte[] getCompressedAndEncryptedGCMData(byte[] key) throws Exception {
+        SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+        int nonceSize = 12;
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        SecureRandom randomSecureRandom = new SecureRandom();
+        byte[] ivBytes = new byte[nonceSize];
+        randomSecureRandom.nextBytes(ivBytes);
+
+        GCMParameterSpec gcm = new GCMParameterSpec(cipher.getBlockSize() * 8, ivBytes);
+
+        cipher.init(Cipher.ENCRYPT_MODE, skeySpec, gcm);
+
+        byte[] compressedData = getCompressedData();
+        byte[] encrypted = cipher.doFinal(compressedData);
+        byte[] finalResult = new byte[ivBytes.length + encrypted.length];
+        System.arraycopy(ivBytes, 0, finalResult, 0, ivBytes.length);
+        System.arraycopy(encrypted,0, finalResult, ivBytes.length, encrypted.length);
+        return finalResult;
+    }
+
+    public byte[] getCompressedEncryptedSignedData(byte[] key, PrivateKey privECDSA, boolean useGCM) throws Exception {
         Signature sig = Signature.getInstance("SHA256withECDSA");
         sig.initSign(privECDSA);
-        byte[] data = getCompressedAndEncryptedData(key);
+        byte[] data = null;
+        if(useGCM)
+            data = getCompressedAndEncryptedGCMData(key);
+        else
+            data = getCompressedAndEncryptedData(key);
         sig.update(data);
         byte[] signature = sig.sign();
         ByteBuffer buff = ByteBuffer.allocate(data.length + signature.length + Integer.BYTES);
