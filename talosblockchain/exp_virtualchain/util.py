@@ -18,6 +18,12 @@ OPCODE_NAMES = {
     DELETE: "DELETE",
 }
 
+OPCODE_FIELDS = {
+    ADD: ['uid', 'data'],
+    CHANGE: ['uid', 'data'],
+    DELETE: ['uid'],
+}
+
 NAME_OPCODES = {
     "ADD": ADD,
     "CHANGE": CHANGE,

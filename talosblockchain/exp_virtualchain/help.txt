@@ -1,0 +1,10 @@
+bitcoin-qt -regtest -dnsseed=0 -addnode=13.93.3.195:13000 -datadir=./localnet_tmp -server -rpcuser="talos" -rpcpassword="talos" -debug -txindex
+
+change:
+blocks.py (virtualchain)
+client.py (protocoin)
+
+virtualchain vriables:
+BLOCKSTACK_TESTNET
+BLOCKSTACK_DEBUG
+VIRTUALCHAIN_WORKING_DIR

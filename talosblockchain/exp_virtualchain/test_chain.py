@@ -47,7 +47,7 @@ def get_first_block_id():
     Get the id of the first block to start indexing.
     """
     print "\nreference implementation of get_first_block_id\n"
-    return 1000
+    return 927
 
 
 def get_db_state():
@@ -80,7 +80,7 @@ def get_op_processing_order():
     return OPCODES
 
 
-def db_parse(block_id, opcode, op_payload, senders, inputs, outputs, fee, db_state=None):
+def db_parse(block_id, txid, txind, opcode, op_payload, senders, inputs, outputs, fee, db_state=None):
     """
     Given the block ID, and information from what looks like
     an OP_RETURN transaction that is part of the virtual chain, parse the
@@ -114,7 +114,7 @@ def db_scan_block(block_id, op_list, db_state=None):
     return
 
 
-def db_check(block_id, opcode, op, txid, vtxindex, checked, db_state=None):
+def db_check(block_id, new_ops, opcode, op, txid, vtxindex, checked, db_state=None):
     """
     Given the block ID and a parsed operation, check to see if this is a *valid* operation
     for the purposes of this virtual chain's database.
@@ -136,10 +136,9 @@ def db_commit(block_id, opcode, op, txid, vtxindex, db_state=None):
     is to be rejected.
     """
     print "\nreference implementation of db_commit\n"
-    return opcode
+    return op
 
-
-def db_save(block_id, filename, db_state=None):
+def db_save(block_id, consensus_hash, pending_ops, filename, db_state=None):
     """
     Save all persistent state to stable storage.
 

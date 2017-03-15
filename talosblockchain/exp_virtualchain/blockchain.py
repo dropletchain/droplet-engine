@@ -13,14 +13,14 @@ def write_data(client, data, private_key):
     broadcast_transaction(tx, client)
 
 
-private_key_hex = 'cSi82vbDR5NQUJ2eB55C4oz1LxEsA6NePmXM7zNGNSXYbSt6Aop1'
+private_key_hex = 'cRzqZ5sD7e8hL12x381SPNMiXFd9VaUSnKS5kTtNbWD8cyJjMFL7'
 private_key = BitcoinTestnetPrivateKey(private_key_hex)
 client = BitcoindClient("talos", "talos", port=18332, version_byte=111)
 
 
-data1 = util.MAGIC_BYTES + util.ADD + "01" + "Hello"
-data2 = util.MAGIC_BYTES + util.CHANGE + "01" + "Hello World"
-data3 = util.MAGIC_BYTES + util.DELETE + "01"
+data1 = util.MAGIC_BYTES + util.ADD + "05" + "Hello"
+data2 = util.MAGIC_BYTES + util.CHANGE + "05" + "Hello World"
+data3 = util.MAGIC_BYTES + util.DELETE + "05"
 
 write_data(client, data1, private_key)
 write_data(client, data2, private_key)
