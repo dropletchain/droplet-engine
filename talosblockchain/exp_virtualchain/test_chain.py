@@ -1,29 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from util import *
-
-"""
-    Virtualchain
-    ~~~~~
-    copyright: (c) 2014 by Halfmoon Labs, Inc.
-    copyright: (c) 2015 by Blockstack.org
-
-    This file is part of Virtualchain
-
-    Virtualchain is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Virtualchain is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    You should have received a copy of the GNU General Public License
-    along with Virtualchain.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
 
 # example plugin to a virtual chain that defines its behavior.
 
@@ -38,7 +13,7 @@ def get_virtual_chain_version():
     """
     Get the version string for this virtual chain.
     """
-    print "\nreference implementation of get_virtual_chain_version\n"
+    print "reference implementation of get_virtual_chain_version"
     return "v0.01-beta"
 
 
@@ -46,8 +21,8 @@ def get_first_block_id():
     """
     Get the id of the first block to start indexing.
     """
-    print "\nreference implementation of get_first_block_id\n"
-    return 927
+    print "reference implementation of get_first_block_id"
+    return 800
 
 
 def get_db_state():
@@ -110,7 +85,7 @@ def db_scan_block(block_id, op_list, db_state=None):
     engine implementation information on what is to come in the
     sequence of db_check() calls.
     """
-    print "\nreference implementation of db_check_block\n"
+    print "reference implementation of db_check_block"
     return
 
 
@@ -121,7 +96,7 @@ def db_check(block_id, new_ops, opcode, op, txid, vtxindex, checked, db_state=No
 
     Return True if so; False if not.
     """
-    print "\nreference implementation of db_check\n"
+    print "reference implementation of db_check"
     return True
 
 
@@ -135,7 +110,8 @@ def db_commit(block_id, opcode, op, txid, vtxindex, db_state=None):
     data to pass on to db_serialize, or False if the op
     is to be rejected.
     """
-    print "\nreference implementation of db_commit\n"
+    print "reference implementation of db_commit"
+    print op
     return op
 
 def db_save(block_id, consensus_hash, pending_ops, filename, db_state=None):
@@ -145,7 +121,8 @@ def db_save(block_id, consensus_hash, pending_ops, filename, db_state=None):
     Return True on success
     Return False on failure.
     """
-    print "\nreference implementation of db_save\n"
+    print "reference implementation of db_save"
+    print pending_ops
     return True
 
 
@@ -155,5 +132,5 @@ def db_continue(block_id, consensus_hash):
     has been saved, and that this is now the new consensus hash.
     Return value indicates whether or not we should continue indexing.
     """
-    print "\nreference implementation of db_continue\n"
+    print "reference implementation of db_continue"
     return True

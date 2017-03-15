@@ -35,4 +35,4 @@ conf={"bitcoind_port":8332,
 
 engine = StateEngine(util.MAGIC_BYTES, util.OPCODES, util.OPCODE_FIELDS, impl=chain)
 
-virtualchain.sync_virtualchain(conf, 930, engine)
+virtualchain.sync_virtualchain(conf, 847, engine)
