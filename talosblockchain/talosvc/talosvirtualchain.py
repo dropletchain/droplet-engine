@@ -1,20 +1,21 @@
-from util import *
+from config import *
+import virtualchain
+import sys
+from talosvc.policydb import TalosPolicyDB
 
-# example plugin to a virtual chain that defines its behavior.
 
 def get_virtual_chain_name():
     """
     Get the name of the virtual chain we're building.
     """
-    return "virtualchain-test"
+    return "talos-virtualchain"
 
 
 def get_virtual_chain_version():
     """
     Get the version string for this virtual chain.
     """
-    print "reference implementation of get_virtual_chain_version"
-    return "v0.01-beta"
+    return "v1.0"
 
 
 def get_first_block_id():
@@ -22,7 +23,7 @@ def get_first_block_id():
     Get the id of the first block to start indexing.
     """
     print "reference implementation of get_first_block_id"
-    return 800
+    return 0
 
 
 def get_db_state():
@@ -30,7 +31,17 @@ def get_db_state():
     Return an opaque 'state' object that will be preserved across calls
     to the blockchain indexing callbacks.
     """
-    return {}
+
+    impl = virtualchain.get_implementation()
+    if impl is None:
+       impl = sys.modules[__name__]
+
+    db_filename = virtualchain.get_db_filename(impl=impl)
+
+    db_inst = TalosPolicyDB( db_filename, )
+
+    return db_inst
+
 
 
 def get_opcodes():
@@ -66,13 +77,19 @@ def db_parse(block_id, txid, txind, opcode, op_payload, senders, inputs, outputs
 
     NOTE: the virtual chain indexer reserves all keys that start with 'virtualchain_'
     """
-    print op_payload
-    data = {}
-    if opcode == ADD or opcode == CHANGE:
-        data['uid'] = op_payload[0:2]
-        data['data'] = op_payload[2:]
-    else:
-        data['uid'] = op_payload[0:2]
+    def match(to_compare):
+        return to_compare == opcode
+
+    # check op and parse data
+    data = None
+    for opcode_lst in OPCODES:
+        if match(opcode_lst):
+            try:
+                data = PARSE_HANDLERS[opcode_lst](opcode_lst)
+            except RuntimeError:
+                return None
+    if data is None:
+        return data
     return data
 
 
@@ -85,7 +102,6 @@ def db_scan_block(block_id, op_list, db_state=None):
     engine implementation information on what is to come in the
     sequence of db_check() calls.
     """
-    print "reference implementation of db_check_block"
     return
 
 
@@ -114,7 +130,7 @@ def db_commit(block_id, opcode, op, txid, vtxindex, db_state=None):
     print op
     return op
 
-def db_save(block_id, consensus_hash, y, filename, db_state=None):
+def db_save(block_id, consensus_hash, pending_ops, filename, db_state=None):
     """
     Save all persistent state to stable storage.
 
