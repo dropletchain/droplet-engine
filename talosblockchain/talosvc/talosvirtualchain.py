@@ -85,11 +85,18 @@ def db_parse(block_id, txid, txind, opcode, op_payload, senders, inputs, outputs
     for opcode_lst in OPCODES:
         if match(opcode_lst):
             try:
-                data = PARSE_HANDLERS[opcode_lst](opcode_lst)
+                data = PARSE_HANDLERS[opcode_lst](op_payload)
             except RuntimeError:
                 return None
     if data is None:
         return data
+
+    #parse txtid
+    sender_pk = str(senders[0]['script_pubkey'])
+    sender_address = str(senders[0]['addresses'][0])
+    data[OPCODE__TXTID] = txid
+    data[OPCODE_FIELD_OWNER] = sender_address
+    data[OPCODE_FIELD_OWNER_PK] = sender_pk
     return data
 
 
@@ -112,7 +119,17 @@ def db_check(block_id, new_ops, opcode, op, txid, vtxindex, checked, db_state=No
 
     Return True if so; False if not.
     """
-    print "reference implementation of db_check"
+    if (not OPCODE_FIELD_OWNER in op) and (not OPCODE_FIELD_STREAM_ID in op):
+        return False
+    owner = op[OPCODE_FIELD_OWNER]
+    stream_id = op[OPCODE_FIELD_STREAM_ID]
+
+    cur_policy = db_state.get_policystate_temporary(owner, stream_id)
+
+    # if not create op and policy not exists -> invalid
+    if cur_policy is None and not opcode == CREATE_POLICY:
+        return False
+
     return True
 
 
@@ -126,8 +143,10 @@ def db_commit(block_id, opcode, op, txid, vtxindex, db_state=None):
     data to pass on to db_serialize, or False if the op
     is to be rejected.
     """
-    print "reference implementation of db_commit"
-    print op
+    owner = op[OPCODE_FIELD_OWNER]
+    stream_id = op[OPCODE_FIELD_STREAM_ID]
+    cur_policy = db_state.get_policystate_temporary(owner, stream_id)
+    cur_policy.handle_op(opcode, op)
     return op
 
 def db_save(block_id, consensus_hash, pending_ops, filename, db_state=None):
@@ -137,9 +156,7 @@ def db_save(block_id, consensus_hash, pending_ops, filename, db_state=None):
     Return True on success
     Return False on failure.
     """
-    print "reference implementation of db_save"
-    print pending_ops
-    return True
+    return db_state.store_temporary_state()
 
 
 def db_continue(block_id, consensus_hash):
@@ -150,3 +167,22 @@ def db_continue(block_id, consensus_hash):
     """
     print "reference implementation of db_continue"
     return True
+
+
+def sync_blockchain(bc_config, last_block, expected_snapshots={}, **virtualchain_args ):
+    """
+    synchronize state with the blockchain.
+    Return True on success
+    Return False if we're supposed to stop indexing
+    Abort on error
+    """
+
+    impl = sys.modules[__name__]
+    if virtualchain.get_implementation() is not None:
+       impl = None
+
+    db_filename = virtualchain.get_db_filename(impl=impl)
+
+    new_db = TalosPolicyDB(db_filename, expected_snapshots=expected_snapshots, read_only=False)
+    rc = virtualchain.sync_virtualchain(bc_config, last_block, new_db, expected_snapshots=expected_snapshots)
+    return rc

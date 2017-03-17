@@ -22,7 +22,7 @@ def get_first_block_id():
     Get the id of the first block to start indexing.
     """
     print "reference implementation of get_first_block_id"
-    return 800
+    return 825
 
 
 def get_db_state():
@@ -122,7 +122,6 @@ def db_save(block_id, consensus_hash, y, filename, db_state=None):
     Return False on failure.
     """
     print "reference implementation of db_save"
-    print pending_ops
     return True
 
 
