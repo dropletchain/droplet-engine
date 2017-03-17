@@ -2,6 +2,7 @@ import unittest
 
 from talosvc.policy import Policy
 from talosvc.config import *
+from talosvc.policydb import create_db
 
 
 class TestPolicy(unittest.TestCase):
@@ -22,3 +23,8 @@ class TestRandom(unittest.TestCase):
         str = get_policy_cmd_create_str(1, 12, 13, 24, "ABDGFHDTARSGDTSF")
         res = parse_policy_cmd_create_data(str[3:])
         print res
+
+    def test_rand(self):
+        db = create_db("test.db")
+        db.close()
+        print "ok"

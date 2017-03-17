@@ -1,6 +1,6 @@
 cd protocoin
-sudo python setup.py install
+sudo python2.7 setup.py install
 cd ..
 cd virtualchain
-sudo python setup.py install
+sudo python2.7 setup.py install
 cd ..

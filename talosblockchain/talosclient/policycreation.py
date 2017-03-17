@@ -1,6 +1,7 @@
 from pybitcoin import BitcoinPrivateKey, BitcoindClient, broadcast_transaction
 from pybitcoin import make_op_return_tx
-from config import *
+from talosvc.config import *
+
 
 class BitcoinPolicyCreator:
     """

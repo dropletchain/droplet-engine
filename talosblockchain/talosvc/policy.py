@@ -1,15 +1,14 @@
 import json
 
-class Policy:
 
-    def __init__(self, owner, stream_id, version, nonce):
+class Policy:
+    def __init__(self, owner, stream_id, nonce, txid):
         self._shares = []
-        self._start_points = []
-        self._intervals = []
+        self._times = []
         self._owner = owner
         self._stream_id = stream_id
-        self._version = version
         self._nonce = nonce
+        self._txid = txid
 
     def add_share(self, share):
         if isinstance(share, list):
@@ -17,13 +16,14 @@ class Policy:
         else:
             self._shares.append(share)
 
-    def add_time_interval(self, time, interval):
-        if isinstance(time, list) and isinstance(interval, list):
-            self._intervals = self._intervals + interval
-            self._start_points = self._start_points + time
+    def remove_share(self, share):
+         self._shares.remove(share)
+
+    def add_time_tuple(self, time):
+        if isinstance(time, list):
+            self._times = self._times + time
         else:
-            self._start_points.append(time)
-            self._intervals.append(time)
+            self._times.append(time)
 
     def update_version(self, version):
         self._version = version
@@ -49,5 +49,15 @@ class Policy:
     def get_nonce(self):
         return self._nonce
 
+    def get_txid(self):
+        return self._txtid
+
     def to_json(self):
         return json.dumps(self.__dict__)
+
+
+def create_policy_from_db_tuple(policy_tuple):
+    """
+    tuple form: (stream_id, owner, owner_pubkey, nonce, txid)
+    """
+    return Policy(policy_tuple[1], policy_tuple[0], policy_tuple[3], policy_tuple[4])
