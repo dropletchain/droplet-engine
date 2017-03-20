@@ -22,8 +22,7 @@ def get_first_block_id():
     """
     Get the id of the first block to start indexing.
     """
-    print "reference implementation of get_first_block_id"
-    return 0
+    return 12242
 
 
 def get_db_state():
@@ -34,14 +33,13 @@ def get_db_state():
 
     impl = virtualchain.get_implementation()
     if impl is None:
-       impl = sys.modules[__name__]
+        impl = sys.modules[__name__]
 
     db_filename = virtualchain.get_db_filename(impl=impl)
 
-    db_inst = TalosPolicyDB( db_filename, )
+    db_inst = TalosPolicyDB(db_filename, )
 
     return db_inst
-
 
 
 def get_opcodes():
@@ -77,6 +75,7 @@ def db_parse(block_id, txid, txind, opcode, op_payload, senders, inputs, outputs
 
     NOTE: the virtual chain indexer reserves all keys that start with 'virtualchain_'
     """
+
     def match(to_compare):
         return to_compare == opcode
 
@@ -86,15 +85,16 @@ def db_parse(block_id, txid, txind, opcode, op_payload, senders, inputs, outputs
         if match(opcode_lst):
             try:
                 data = PARSE_HANDLERS[opcode_lst](op_payload)
+                break
             except RuntimeError:
                 return None
     if data is None:
         return data
 
-    #parse txtid
+    # parse txtid
     sender_pk = str(senders[0]['script_pubkey'])
     sender_address = str(senders[0]['addresses'][0])
-    data[OPCODE__TXTID] = txid
+    data[OPCODE_FIELD_TXTID] = txid
     data[OPCODE_FIELD_OWNER] = sender_address
     data[OPCODE_FIELD_OWNER_PK] = sender_pk
     return data
@@ -126,11 +126,12 @@ def db_check(block_id, new_ops, opcode, op, txid, vtxindex, checked, db_state=No
 
     cur_policy = db_state.get_policystate_temporary(owner, stream_id)
 
-    # if not create op and policy not exists -> invalid
-    if cur_policy is None and not opcode == CREATE_POLICY:
-        return False
+    # Check fields
+    for field in OPCODE_FIELDS[opcode]:
+        if field not in op:
+            return False
 
-    return True
+    return cur_policy.check_op(opcode, op)
 
 
 def db_commit(block_id, opcode, op, txid, vtxindex, db_state=None):
@@ -143,11 +144,14 @@ def db_commit(block_id, opcode, op, txid, vtxindex, db_state=None):
     data to pass on to db_serialize, or False if the op
     is to be rejected.
     """
+    if op is None:
+        return op
     owner = op[OPCODE_FIELD_OWNER]
     stream_id = op[OPCODE_FIELD_STREAM_ID]
     cur_policy = db_state.get_policystate_temporary(owner, stream_id)
     cur_policy.handle_op(opcode, op)
     return op
+
 
 def db_save(block_id, consensus_hash, pending_ops, filename, db_state=None):
     """
@@ -165,11 +169,22 @@ def db_continue(block_id, consensus_hash):
     has been saved, and that this is now the new consensus hash.
     Return value indicates whether or not we should continue indexing.
     """
-    print "reference implementation of db_continue"
     return True
 
 
-def sync_blockchain(bc_config, last_block, expected_snapshots={}, **virtualchain_args ):
+def _get_newest_block(bc_config):
+    rpc_connection = virtualchain.AuthServiceProxy("http://%s:%s@%s:%s" % (bc_config['bitcoind_user'],
+                                                                           bc_config['bitcoind_passwd'],
+                                                                           bc_config['bitcoind_server'],
+                                                                           bc_config['bitcoind_port']))
+    try:
+        resp = rpc_connection.getblockcount()
+    finally:
+        rpc_connection
+    return int(resp)
+
+
+def sync_blockchain(bc_config, last_block=None, expected_snapshots={}, **virtualchain_args):
     """
     synchronize state with the blockchain.
     Return True on success
@@ -179,10 +194,15 @@ def sync_blockchain(bc_config, last_block, expected_snapshots={}, **virtualchain
 
     impl = sys.modules[__name__]
     if virtualchain.get_implementation() is not None:
-       impl = None
+        impl = None
 
     db_filename = virtualchain.get_db_filename(impl=impl)
 
     new_db = TalosPolicyDB(db_filename, expected_snapshots=expected_snapshots, read_only=False)
-    rc = virtualchain.sync_virtualchain(bc_config, last_block, new_db, expected_snapshots=expected_snapshots)
+    try:
+        if last_block is None:
+            last_block = _get_newest_block(bc_config)
+        rc = virtualchain.sync_virtualchain(bc_config, last_block, new_db, expected_snapshots=expected_snapshots)
+    finally:
+        new_db.close()
     return rc

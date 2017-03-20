@@ -1,8 +1,8 @@
 import unittest
 
-from talosvc.policy import Policy
+from talosvc.policy import Policy, create_policy_from_json_str
 from talosvc.config import *
-from talosvc.policydb import create_db
+from talosvc.policydb import create_db, TalosPolicyDB
 
 
 class TestPolicy(unittest.TestCase):
@@ -16,11 +16,24 @@ class TestPolicy(unittest.TestCase):
         , "_version": 1, "_owner": "Me", "_stream_id": 12, "_nonce": "nonce"}"""
         self.assertEquals(res, policy.to_json())
 
+    def test_2(self):
+        state = TalosPolicyDB("./talos-virtualchain.db")
+        policyA = state.get_policy("mtr5ENEQ73HZMeZvUEjXdWRJvMhQJMHzcJ", 1)
+        policyA_str = policyA.to_json()
+        polcyB = create_policy_from_json_str(policyA_str)
+        self.assertEquals(policyA_str, polcyB.to_json())
+        print policyA_str
+
 
 class TestRandom(unittest.TestCase):
 
     def test_rand(self):
         str = get_policy_cmd_create_str(1, 12, 13, 24, "ABDGFHDTARSGDTSF")
+        res = parse_policy_cmd_create_data(str[3:])
+        print res
+
+    def test_addd(self):
+        str = get_policy_cmd_addaccess_str()
         res = parse_policy_cmd_create_data(str[3:])
         print res
 

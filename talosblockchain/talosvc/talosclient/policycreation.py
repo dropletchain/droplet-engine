@@ -1,4 +1,4 @@
-from pybitcoin import BitcoinPrivateKey, BitcoindClient, broadcast_transaction
+from pybitcoin import broadcast_transaction
 from pybitcoin import make_op_return_tx
 from talosvc.config import *
 

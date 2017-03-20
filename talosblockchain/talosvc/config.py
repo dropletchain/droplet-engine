@@ -1,5 +1,36 @@
 import struct
-from pybitcoin import BitcoinPrivateKey
+import os
+import base64
+
+from pybitcoin import BitcoinPrivateKey, address
+
+
+#################
+#BITCOIN RELATED#
+#################
+
+MAX_BITCOIN_BYTES = 80
+
+DEFAULT_FEE = 10000
+
+
+
+VERSION_BYTE_TESTNET = 111
+VERSION_BYTE_MAIN = 0
+
+if 'TALOS_MAINNET' in os.environ and os.environ['TALOS_MAINNET'] == "1":
+    USED_VERSIONBYTE = VERSION_BYTE_MAIN
+else:
+    USED_VERSIONBYTE = VERSION_BYTE_TESTNET
+
+
+class BitcoinVersionedPrivateKey(BitcoinPrivateKey):
+    _pubkeyhash_version_byte = USED_VERSIONBYTE
+
+
+def get_private_key(private_key):
+    return BitcoinVersionedPrivateKey(private_key)
+
 
 ##############
 #Virtualchain#
@@ -47,11 +78,11 @@ OPCODE_FIELD_NONCE = 'nonce'
 OPCODE_FIELD_PUBLIC_KEYS = 'pks'
 OPCODE_FIELD_OWNER = 'owner'
 OPCODE_FIELD_OWNER_PK = 'owner_pk'
-OPCODE__TXTID = 'txtid'
+OPCODE_FIELD_TXTID = 'txid'
 
 OPCODE_FIELDS = {
     CREATE_POLICY: [OPCODE_FIELD_TYPE, OPCODE_FIELD_STREAM_ID, OPCODE_FIELD_TIMESTAMP_START,
-                    OPCODE_FIELD_INTERVAL, INVALIDATE_POLICY],
+                    OPCODE_FIELD_INTERVAL, OPCODE_FIELD_NONCE],
     GRANT_ACCESS: [OPCODE_FIELD_STREAM_ID, OPCODE_FIELD_PUBLIC_KEYS],
     REVOKE_ACCESS: [OPCODE_FIELD_STREAM_ID, OPCODE_FIELD_PUBLIC_KEYS],
     CHANGE_INTERVAL: [OPCODE_FIELD_STREAM_ID, OPCODE_FIELD_TIMESTAMP_START, OPCODE_FIELD_INTERVAL],
@@ -66,7 +97,6 @@ NAME_OPCODES = {
     "INVALIDATE_POLICY": "INVALIDATE_POLICY"
 }
 
-
 def get_policy_cmd_create_str(type, stream_id, timestamp_start, interval, nonce):
     cmd = MAGIC_BYTES + CREATE_POLICY + struct.pack("BIQQ", type, stream_id, timestamp_start, interval) + nonce
     assert len(cmd) <= MAX_BITCOIN_BYTES
@@ -77,16 +107,18 @@ def get_policy_cmd_addaccess_str(stream_id, keys):
     assert len(keys) <= 2
     cmd = MAGIC_BYTES + GRANT_ACCESS + struct.pack("IB", stream_id, len(keys))
     for key in keys:
-        cmd = cmd + struct.pack("B", len(key)) + key
+        bin_key = address.address_to_bin_hash160(key)
+        cmd += struct.pack("B", len(bin_key)) + bin_key
     assert len(cmd) <= MAX_BITCOIN_BYTES
     return cmd
 
 
 def get_policy_cmd_removeacces_str(stream_id, keys):
     assert len(keys) <= 2
-    cmd = MAGIC_BYTES + GRANT_ACCESS + struct.pack("IB", stream_id, len(keys))
+    cmd = MAGIC_BYTES + REVOKE_ACCESS + struct.pack("IB", stream_id, len(keys))
     for key in keys:
-        cmd = cmd + struct.pack("B", len(key)) + key
+        bin_key = address.address_to_bin_hash160(key)
+        cmd += struct.pack("B", len(bin_key)) + bin_key
     assert len(cmd) <= MAX_BITCOIN_BYTES
     return cmd
 
@@ -112,7 +144,7 @@ def parse_policy_cmd_create_data(create_str_data):
         OPCODE_FIELD_STREAM_ID: stream_id,
         OPCODE_FIELD_TIMESTAMP_START: timestamp_start,
         OPCODE_FIELD_INTERVAL: interval,
-        OPCODE_FIELD_NONCE: nonce
+        OPCODE_FIELD_NONCE: base64.b64encode(nonce)
     }
 
 
@@ -123,7 +155,8 @@ def parse_policy_cmd_addaccess_data(addaccess_str_data):
     keys = []
     for key_id in range(num_keys):
         len, = struct.unpack("B", addaccess_str_data[size_struct:(size_struct+1)])
-        keys.append(addaccess_str_data[(size_struct+1):(size_struct+1 + len)])
+        bin_key = addaccess_str_data[(size_struct+1):(size_struct+1 + len)]
+        keys.append(address.bin_hash160_to_address(bin_key, USED_VERSIONBYTE))
         size_struct += len + 1
 
     return {
@@ -138,10 +171,10 @@ def parse_policy_removeacces_data(removeacces_str_data):
 
     keys = []
     for key_id in range(num_keys):
-        len, = struct.unpack("B", removeacces_str_data[size_struct:(size_struct+1)])
-        keys.append(removeacces_str_data[(size_struct+1):(size_struct+1 + len)])
+        len, = struct.unpack("B", removeacces_str_data[size_struct:(size_struct + 1)])
+        bin_key = removeacces_str_data[(size_struct + 1):(size_struct + 1 + len)]
+        keys.append(address.bin_hash160_to_address(bin_key, USED_VERSIONBYTE))
         size_struct += len + 1
-
     return {
         OPCODE_FIELD_STREAM_ID: stream_id,
         OPCODE_FIELD_PUBLIC_KEYS: ",".join(keys)
@@ -173,23 +206,7 @@ PARSE_HANDLERS = {
     INVALIDATE_POLICY: parse_policy_invalidate_data
 }
 
-#################
-#BITCOIN RELATED#
-#################
 
-MAX_BITCOIN_BYTES = 80
-
-DEFAULT_FEE = 10000
-
-VERSION_BYTE_TESTNET = 111
-
-
-class BitcoinTestnetPrivateKey(BitcoinPrivateKey):
-    _pubkeyhash_version_byte = VERSION_BYTE_TESTNET
-
-
-def get_private_key(private_key):
-    return BitcoinTestnetPrivateKey(private_key)
 
 
 
