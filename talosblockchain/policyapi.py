@@ -22,10 +22,10 @@ class TalosPrompt(Cmd):
         """Creates a policy <stream-id> <ts_start> <interval>"""
         parser = argparse.ArgumentParser("Create Policy")
         parser.add_argument('stream_id', type=int)
-        parser.add_argument('timestamp_start', type=long, nargs='?', default=long(time.time()))
+        parser.add_argument('timestamp_start', type=long, nargs='?', default=int(time.time()))
         parser.add_argument('interval', type=long, nargs='?', default=86200)
         args = parser.parse_args(args.split())
-        self.policy_creator.create_policy(self, type, args.stream_id,
+        self.policy_creator.create_policy(1, args.stream_id,
                                           args.timestamp_start, args.interval, os.urandom(16))
         self._generate_block()
 
@@ -58,8 +58,12 @@ class TalosPrompt(Cmd):
         self._generate_block()
 
     def do_invalidate_policy(self, args):
+        """Invalidate Policy <stream-id>"""
         parser = argparse.ArgumentParser("Interval")
         parser.add_argument('stream_id', type=int)
+        args = parser.parse_args(args.split())
+        self.policy_creator.invalidate_policy(args.stream_id)
+        self._generate_block()
 
     def do_exit(self, args):
         print "Quitting."
@@ -75,13 +79,15 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, help='dir', default=18332, required=False)
     parser.add_argument('--server', type=str, help='server', default="127.0.0.1", required=False)
     parser.add_argument('--vbyte', type=int, help='server', default=111, required=False)
+    parser.add_argument('--rpcuser', type=str, help='rpcuser', default='talos', required=False)
+    parser.add_argument('--rpcpw', type=str, help='rpcpw', default='talos', required=False)
     parser.add_argument('private_key', type=str)
     args = parser.parse_args()
 
     TESTNET = args.vbyte == 111
 
     private_key = BitcoinVersionedPrivateKey(args.private_key)
-    client = BitcoindClient("talos", "talos", server=args.server, port=args.port, version_byte=args.vbyte)
+    client = BitcoindClient(args.rpcuser, args.rpcpw, server=args.server, port=args.port, version_byte=args.vbyte)
     pclient = BitcoinPolicyCreator(client, args.private_key)
 
     prompt = TalosPrompt(pclient)

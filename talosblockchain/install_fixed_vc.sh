@@ -1,6 +1,8 @@
 cd protocoin
-sudo python2.7 setup.py install
+sudo python setup.py install
 cd ..
 cd virtualchain
-sudo python2.7 setup.py install
+sudo python setup.py install
 cd ..
+
+sudo pip install flask
