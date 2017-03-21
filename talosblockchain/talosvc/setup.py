@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-setup(name='talos-virtualchain',
+setup(name='talosvc',
       version='0.1',
       description='TalosVirtualchain',
       url='https://github.com/hosseinsh/blockchain/tree/master/talosblockchain/talosvc',
