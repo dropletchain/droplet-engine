@@ -2,6 +2,8 @@ from config import *
 import virtualchain
 import sys
 from talosvc.policydb import TalosPolicyDB
+from threading import Thread
+import time
 
 
 def get_virtual_chain_name():
@@ -206,3 +208,23 @@ def sync_blockchain(bc_config, last_block=None, expected_snapshots={}, **virtual
     finally:
         new_db.close()
     return rc
+
+
+class Synchronizer(Thread):
+    def __init__(self, logger, config=get_default_talos_config(), sleep_interval=60):
+        self.sleep_interval = sleep_interval
+        self.config = config
+        self.running = False
+        self.logger = logger
+        Thread.__init__(self)
+
+    def set_runnning_flag(self):
+        self.running = False
+
+    def run(self):
+        self.running = True
+        while self.running:
+            self.logger.info("Sync Virtualchain")
+            sync_blockchain(self.config)
+            time.sleep(self.sleep_interval)
+

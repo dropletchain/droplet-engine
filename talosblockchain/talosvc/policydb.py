@@ -45,6 +45,8 @@ SQL_FETCH_SHARES = "SELECT shares.pubkey, shares.txid FROM shares WHERE shares.t
 SQL_FETCH_TIMES = "SELECT timeintervals.starttime, timeintervals.timeinterval, timeintervals.txid  " \
                   "FROM timeintervals WHERE timeintervals.tx_policy=?"
 SQL_FETCH_POLICY_TXID = "SELECT policy.txid FROM policy WHERE policy.stream_id=? AND policy.owner=?"
+SQL_FETCH_POLICIES_FOR_OWNER = "SELECT policy.stream_id FROM policy WHERE policy.owner=?"
+SQL_FETCH_OWNERS = "SELECT DISTINCT policy.owner FROM policy LIMIT ? OFFSET ?"
 
 
 def create_db(db_filename):
@@ -138,6 +140,21 @@ def fetch_policy(conn, owner, stream_id):
     finally:
         c.close()
 
+def fetch_poilicies_for_owner(conn, owner):
+    c = conn.cursor()
+    try:
+        c.execute(SQL_FETCH_POLICIES_FOR_OWNER, (owner,))
+        return c.fetchall()
+    finally:
+        c.close()
+
+def fetch_owners(conn, limit, offset):
+    c = conn.cursor()
+    try:
+        c.execute(SQL_FETCH_OWNERS, (limit, offset))
+        return c.fetchall()
+    finally:
+        c.close()
 
 class PolicyState:
     def __init__(self, policy):
@@ -295,3 +312,10 @@ class TalosPolicyDB(virtualchain.StateEngine):
 
     def get_policy(self, owner, streamid):
         return fetch_policy(self.db, owner, streamid)
+
+    def get_policies_for_owner(self, owner):
+        return fetch_poilicies_for_owner(self.db, owner)
+
+    def get_owners(self, limit, offset):
+        return fetch_owners(self.db, limit, offset)
+

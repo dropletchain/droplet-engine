@@ -4,16 +4,15 @@ import base64
 
 from pybitcoin import BitcoinPrivateKey, address
 
+from virtualchain import get_working_dir
 
 #################
-#BITCOIN RELATED#
+# BITCOIN RELATED#
 #################
 
 MAX_BITCOIN_BYTES = 80
 
 DEFAULT_FEE = 10000
-
-
 
 VERSION_BYTE_TESTNET = 111
 VERSION_BYTE_MAIN = 0
@@ -32,8 +31,17 @@ def get_private_key(private_key):
     return BitcoinVersionedPrivateKey(private_key)
 
 
+def get_default_talos_config():
+    return {"bitcoind_port": 18332,
+            "bitcoind_user": "talos",
+            "bitcoind_passwd": "talos",
+            "bitcoind_server": "127.0.0.1",
+            "bitcoind_p2p_port": 18444,
+            "bitcoind_spv_path": os.path.join(get_working_dir(), "tmp.dat")}
+
+
 ##############
-#Virtualchain#
+# Virtualchain#
 ##############
 
 """
@@ -97,6 +105,7 @@ NAME_OPCODES = {
     "INVALIDATE_POLICY": "INVALIDATE_POLICY"
 }
 
+
 def get_policy_cmd_create_str(type, stream_id, timestamp_start, interval, nonce):
     cmd = MAGIC_BYTES + CREATE_POLICY + struct.pack("BIQQ", type, stream_id, timestamp_start, interval) + nonce
     assert len(cmd) <= MAX_BITCOIN_BYTES
@@ -154,8 +163,8 @@ def parse_policy_cmd_addaccess_data(addaccess_str_data):
 
     keys = []
     for key_id in range(num_keys):
-        len, = struct.unpack("B", addaccess_str_data[size_struct:(size_struct+1)])
-        bin_key = addaccess_str_data[(size_struct+1):(size_struct+1 + len)]
+        len, = struct.unpack("B", addaccess_str_data[size_struct:(size_struct + 1)])
+        bin_key = addaccess_str_data[(size_struct + 1):(size_struct + 1 + len)]
         keys.append(address.bin_hash160_to_address(bin_key, USED_VERSIONBYTE))
         size_struct += len + 1
 
@@ -198,6 +207,7 @@ def parse_policy_invalidate_data(invalidate_interval_data_str):
         OPCODE_FIELD_STREAM_ID: stream_id
     }
 
+
 PARSE_HANDLERS = {
     CREATE_POLICY: parse_policy_cmd_create_data,
     GRANT_ACCESS: parse_policy_cmd_addaccess_data,
@@ -205,8 +215,3 @@ PARSE_HANDLERS = {
     CHANGE_INTERVAL: parse_policy_change_interval_data,
     INVALIDATE_POLICY: parse_policy_invalidate_data
 }
-
-
-
-
-
