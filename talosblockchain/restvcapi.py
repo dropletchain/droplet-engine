@@ -143,6 +143,8 @@ if __name__ == "__main__":
 
     SYNC_INTERVAL = args.sync
 
+    print "Running with conf %s " % conf
+
     sync_blockchain(conf)
     app.run(debug=True)
 
