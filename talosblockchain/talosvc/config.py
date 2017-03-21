@@ -4,7 +4,7 @@ import base64
 
 from pybitcoin import BitcoinPrivateKey, address
 
-from virtualchain import get_working_dir
+from virtualchain import get_working_dir, get_db_filename
 
 #################
 # BITCOIN RELATED#
@@ -40,6 +40,14 @@ def get_default_talos_config():
             "bitcoind_p2p_port": 18444,
             "bitcoind_spv_path": os.path.join(get_working_dir(impl=talosvirtualchain), "tmp.dat")}
 
+
+def get_working_db():
+    import talosvirtualchain
+    return get_db_filename(impl=talosvirtualchain)
+
+def get_working_path_file():
+    import talosvirtualchain
+    return os.path.join(get_working_dir(impl=talosvirtualchain), "tmp.dat")
 
 ##############
 # Virtualchain#

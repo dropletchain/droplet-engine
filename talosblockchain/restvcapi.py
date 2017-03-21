@@ -5,6 +5,7 @@ from flask import Flask
 from flask import request, g
 from threading import Timer
 
+from talosvc.config import get_working_db, get_default_talos_config
 from talosvc.policydb import TalosPolicyDB
 from talosvc.talosvirtualchain import sync_blockchain
 
@@ -15,18 +16,13 @@ app = Flask("Talos-Virtualchain")
 
 RUNNING = True
 
-conf = {"bitcoind_port": 18332,
-        "bitcoind_user": "talos",
-        "bitcoind_passwd": "talos",
-        "bitcoind_server": "127.0.0.1",
-        "bitcoind_p2p_port": 18444,
-        "bitcoind_spv_path": "./tmp.dat"}
+conf = get_default_talos_config()
 
 
 def get_state():
     state = getattr(g, '_state', None)
     if state is None:
-        state = g._state = TalosPolicyDB("./talosvc/test/talos-virtualchain.db")
+        state = g._state = TalosPolicyDB(get_working_db())
     return state
 
 
@@ -142,10 +138,11 @@ if __name__ == "__main__":
     RUNNING = True
 
     SYNC_INTERVAL = args.sync
-
+    print get_working_db()
     print "Running with conf %s " % conf
 
     sync_blockchain(conf)
+    print "Sync done"
     app.run(debug=True)
 
 
