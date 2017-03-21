@@ -24,7 +24,7 @@ def get_first_block_id():
     """
     Get the id of the first block to start indexing.
     """
-    return 12242
+    return FIRST_BLOCK_OF_INTEREST
 
 
 def get_db_state():

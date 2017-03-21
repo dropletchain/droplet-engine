@@ -12,6 +12,8 @@ from virtualchain import get_working_dir, get_db_filename
 
 MAX_BITCOIN_BYTES = 80
 
+FIRST_BLOCK_OF_INTEREST = 12242
+
 DEFAULT_FEE = 10000
 
 VERSION_BYTE_TESTNET = 111

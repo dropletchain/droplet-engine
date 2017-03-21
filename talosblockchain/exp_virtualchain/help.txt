@@ -1,5 +1,12 @@
 bitcoin-qt -regtest -dnsseed=0 -addnode=13.93.3.195:13000 -datadir=./localnet_tmp -server -rpcuser="talos" -rpcpassword="talos" -debug -txindex
 
+start server:
+/Applications/Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt -regtest -dnsseed=0 -connect=.93.113.195:49020 -datadir=./localnet_tmp -server -rpcuser="talos" -rpcpassword="talos"
+
+https://en.bitcoin.it/wiki/List_of_address_prefixes
+
+
+
 change:
 blocks.py (virtualchain)
 client.py (protocoin)
