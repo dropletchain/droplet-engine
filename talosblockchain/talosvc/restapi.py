@@ -45,7 +45,7 @@ def close_connection(exception):
 API:
 /get_policy?owner=<some_value>&stream-id=<some-value>
 """
-@app.route('/get_policy', methods=['GET'])
+@app.route('/policy', methods=['GET'])
 def get_policy():
     owner = request.args.get('owner')
     stream_id = request.args.get('stream-id')
