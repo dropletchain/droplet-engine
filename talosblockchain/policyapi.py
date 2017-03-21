@@ -2,9 +2,7 @@ from cmd import Cmd
 import argparse
 import time
 import os
-
 from pybitcoin import BitcoindClient
-
 from talosvc.config import BitcoinVersionedPrivateKey
 from talosvc.talosclient.policycreation import BitcoinPolicyCreator
 
@@ -27,7 +25,7 @@ class TalosPrompt(Cmd):
         parser.add_argument('timestamp_start', type=long, nargs='?', default=long(time.time()))
         parser.add_argument('interval', type=long, nargs='?', default=86200)
         args = parser.parse_args(args.split())
-        self.policy_creator.create_policy(1, args.stream_id,
+        self.policy_creator.create_policy(self, type, args.stream_id,
                                           args.timestamp_start, args.interval, os.urandom(16))
         self._generate_block()
 

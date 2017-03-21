@@ -1,5 +1,4 @@
 import virtualchain
-import os
 import sqlite3
 from config import *
 from policy import create_policy_from_db_tuple, Policy
@@ -318,4 +317,3 @@ class TalosPolicyDB(virtualchain.StateEngine):
 
     def get_owners(self, limit, offset):
         return fetch_owners(self.db, limit, offset)
-
