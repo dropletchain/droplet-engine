@@ -1,28 +1,53 @@
 import unittest
 import time
 
-from talosstorage.chunk import *
+from cryptography.exceptions import InvalidSignature, InvalidTag
+
+from talosstorage.chunkdata import *
 
 
 class TestChunk(unittest.TestCase):
     def test_chunk1(self):
-        chunk = Chunk()
+        chunk = ChunkData()
         for i in range(1000):
             entry = DoubleEntry(int(time.time()), "test", float(i))
             chunk.add_entry(entry)
         key = os.urandom(32)
         private_key = ec.generate_private_key(ec.SECP256K1, default_backend())
+        stream_ident = DataStreamIdentifier("pubaddr", 3, "asvcgdterategdts")
 
-        compressed_chunk = compress_data(chunk.encode())
-        encypted_data = encrypt_aes_gcm_data(key, compressed_chunk)
-        signed_data = hash_sign_data(private_key, encypted_data)
+        cd = create_cloud_chunk(stream_ident, 1, private_key, 1, key, chunk)
+        self.assertTrue(cd.check_signature(private_key.public_key()))
+        chunk_after = cd.get_and_check_chunk_data(key)
 
-        encypted_data_after, ok = check_and_unpack_hash_sign_data(private_key.public_key(), signed_data)
-        print ok
-        compressed_chunk_after = decrypt_aes_gcm_data(key, encypted_data_after)
-        chunk_after = Chunk.decode(decompress_data(compressed_chunk_after))
-        print "len compressed len normal %d, %d" % (len(signed_data), len(chunk.encode()))
-        for index in range(len(chunk_after.entries)):
-            self.assertEquals(str(chunk_after.entries[index]), str(chunk.entries[index]))
+        for i in range(len(chunk_after.entries)):
+            self.assertEquals(str(chunk_after.entries[i]), str(chunk.entries[i]))
+
+        encoded_cloud_chunk = cd.encode()
+        cloud_chunk_after = CloudChunk.decode(encoded_cloud_chunk)
+
+        self.assertTrue(cloud_chunk_after.check_signature(private_key.public_key()))
+        chunk_after = cd.get_and_check_chunk_data(key)
+
+        for i in range(len(chunk_after.entries)):
+            self.assertEquals(str(chunk_after.entries[i]), str(chunk.entries[i]))
+        encoded_cloud_chunk = list(encoded_cloud_chunk)
+        encoded_cloud_chunk[2] = 'x'
+        encoded_cloud_chunk = "".join(encoded_cloud_chunk)
+        cloud_chunk_after = CloudChunk.decode(encoded_cloud_chunk)
+
+        ok = False
+        try:
+            cloud_chunk_after.check_signature(private_key.public_key())
+        except InvalidSignature:
+            ok = True
+        self.assertTrue(ok)
+
+        ok = False
+        try:
+            cloud_chunk_after.get_and_check_chunk_data(key)
+        except InvalidTag:
+            ok = True
+        self.assertTrue(ok)
 
 
