@@ -2,6 +2,7 @@ import struct
 import zlib
 import os
 import hashlib
+from binascii import unhexlify
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -136,18 +137,14 @@ class ChunkData:
 
 
 class DataStreamIdentifier:
-    def __init__(self, owner, streamid, nonce):
+    def __init__(self, owner, streamid, nonce, txid_create_policy):
         self.owner = owner
         self.streamid = streamid
         self.nonce = nonce
+        self.txid_create_policy = txid_create_policy
 
     def get_tag(self):
-        hasher = hashlib.sha256()
-        hasher.update(self.owner)
-        hasher.update(str(self.streamid))
-        hasher.update(self.nonce)
-        hasher.update("TAG")
-        return hasher.digest()
+        return unhexlify(self.txid_create_policy)
 
     def get_key_for_blockid(self, block_id):
         hasher = hashlib.sha256()
@@ -177,7 +174,7 @@ class CloudChunk:
     """
         Key = H(Owner-addr  Stream-id  nonce  blockid) 32 bytes
         Symmetric Key-Version (to know which key version to use ) 4 bytes
-        Policy-TAG = H(Owner,stream-id, nonce, 'TAG') 32 bytes
+        Policy-TAG = Create_txt_id
         Len-Chunk + Encrypted Chunk (symmetric Key Ki) X bytes
         MAC (symmetric Key Ki) 16 bytes
         Signature (Public-Key of Owner) X bytes

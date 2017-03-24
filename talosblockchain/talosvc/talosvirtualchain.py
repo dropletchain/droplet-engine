@@ -39,7 +39,7 @@ def get_db_state():
 
     db_filename = virtualchain.get_db_filename(impl=impl)
 
-    db_inst = TalosPolicyDB(db_filename, )
+    db_inst = TalosPolicyDB(db_filename)
 
     return db_inst
 
@@ -94,7 +94,7 @@ def db_parse(block_id, txid, txind, opcode, op_payload, senders, inputs, outputs
         return data
 
     # parse txtid
-    sender_pk = str(senders[0]['script_pubkey'])
+    sender_pk = str(inputs[0]['scriptSig']['asm'].split()[1])
     sender_address = str(senders[0]['addresses'][0])
     data[OPCODE_FIELD_TXTID] = txid
     data[OPCODE_FIELD_OWNER] = sender_address

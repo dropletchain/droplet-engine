@@ -220,10 +220,12 @@ class PolicyState:
     def check_GRANT_ACCESS(policy_state, data):
         if policy_state.policy is None:
             return False
+
         keys = data[OPCODE_FIELD_PUBLIC_KEYS].split(',')
         for key in keys:
             if policy_state.policy.has_shared_key(key):
                 return False
+
         return True
 
     @staticmethod
