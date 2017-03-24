@@ -1,3 +1,5 @@
+from cryptography.exceptions import InvalidSignature
+
 from chunkdata import *
 from pybitcoin import BitcoinPublicKey
 import os
@@ -65,3 +67,13 @@ def check_access_allowed(hex_pubkey, policy):
 def check_access_key_valid(access_key, policy, blockid):
     stream_ident = get_stream_identifier_from_policy(policy)
     return access_key == stream_ident.get_key_for_blockid(blockid)
+
+
+def check_pubkey_valid(data, signature, pubkey):
+    pub = BitcoinVersionedPublicKey(pubkey)
+    pub_key = serialization.load_pem_public_key(pub.to_pem(), backend=default_backend())
+    try:
+        check_signed_data(pub_key, signature, data)
+    except InvalidSignature:
+        return False
+    return True

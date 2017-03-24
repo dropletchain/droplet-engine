@@ -46,6 +46,7 @@ SQL_FETCH_TIMES = "SELECT timeintervals.starttime, timeintervals.timeinterval, t
 SQL_FETCH_POLICY_TXID = "SELECT policy.txid FROM policy WHERE policy.stream_id=? AND policy.owner=?"
 SQL_FETCH_POLICIES_FOR_OWNER = "SELECT policy.stream_id FROM policy WHERE policy.owner=?"
 SQL_FETCH_OWNERS = "SELECT DISTINCT policy.owner FROM policy LIMIT ? OFFSET ?"
+SQL_FETCH_POLICY_WITH_TXID = "SELECT * FROM policy WHERE policy.txid=?"
 
 
 def create_db(db_filename):
@@ -139,6 +140,7 @@ def fetch_policy(conn, owner, stream_id):
     finally:
         c.close()
 
+
 def fetch_poilicies_for_owner(conn, owner):
     c = conn.cursor()
     try:
@@ -147,6 +149,7 @@ def fetch_poilicies_for_owner(conn, owner):
     finally:
         c.close()
 
+
 def fetch_owners(conn, limit, offset):
     c = conn.cursor()
     try:
@@ -154,6 +157,29 @@ def fetch_owners(conn, limit, offset):
         return c.fetchall()
     finally:
         c.close()
+
+
+def fetch_policy_with_txid(conn, txid):
+    c = conn.cursor()
+    try:
+        c.execute(SQL_FETCH_POLICY_WITH_TXID, (txid, ))
+        policy_data = c.fetchone()
+        if policy_data is None:
+            return None
+        policy = create_policy_from_db_tuple(policy_data)
+
+        # Add shares to policy
+        c.execute(SQL_FETCH_SHARES, (policy.get_txid(),))
+        for share in c:
+            policy.add_share(share)
+
+        c.execute(SQL_FETCH_TIMES, (policy.get_txid(),))
+        for time in c:
+            policy.add_time_tuple(time)
+        return policy
+    finally:
+        c.close()
+
 
 class PolicyState:
     def __init__(self, policy):
@@ -319,3 +345,6 @@ class TalosPolicyDB(virtualchain.StateEngine):
 
     def get_owners(self, limit, offset):
         return fetch_owners(self.db, limit, offset)
+
+    def get_policy_with_txid(self, txid):
+        return fetch_policy_with_txid(txid)

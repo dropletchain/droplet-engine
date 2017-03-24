@@ -8,6 +8,7 @@ from talosvc.talosclient.policycreation import BitcoinPolicyCreator
 
 TESTNET = True
 
+
 class TalosPrompt(Cmd):
 
     def __init__(self, policy_creator):

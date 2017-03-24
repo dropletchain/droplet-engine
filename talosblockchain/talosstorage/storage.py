@@ -2,6 +2,7 @@ from cryptography.exceptions import InvalidSignature
 import leveldb
 
 from checks import *
+from chunkdata import CloudChunk
 
 
 class InvalidChunkError(Exception):
@@ -61,4 +62,7 @@ class LevelDBStorage(TalosStorage):
         self.db.Put(chunk.key, chunk.get_encoded_without_key())
 
     def _get_chunk(self, chunk_key):
-        return self.db.Get(chunk_key)
+        bin_chunk = self.db.Get(chunk_key)
+        if bin_chunk is None:
+            return None
+        return CloudChunk.decode(chunk_key + bin_chunk)

@@ -51,17 +51,23 @@ def get_policy():
     """
     API:
     /get_policy?owner=<some_value>&stream-id=<some-value>
+    /get_policy?txid=<some_value>
     """
     owner = request.args.get('owner')
     stream_id = request.args.get('stream-id')
+    txid = request.args.get('txid')
 
-    if owner is None or stream_id is None:
+    if (owner is None or stream_id is None) and txid is None:
         return "ERROR", 400
+
 
     vc_state = get_state()
 
     try:
-        res = vc_state.get_policy(owner, int(stream_id))
+        if not txid is None:
+            res = vc_state.get_policy_with_txid(txid)
+        else:
+            res = vc_state.get_policy(owner, int(stream_id))
         if res is None:
             return "NO RESULT FOUND", 400
         else:
