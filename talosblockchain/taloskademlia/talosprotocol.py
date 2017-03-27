@@ -8,10 +8,11 @@ from taloskademlia.node import Node
 from taloskademlia.routing import RoutingTable
 from taloskademlia.log import Logger
 from taloskademlia.utils import digest
+from talosstorage.checks import check_query_token_valid, InvalidQueryToken
 
 
 class KademliaProtocol(RPCProtocol):
-    def __init__(self, sourceNode, storage, ksize):
+    def __init__(self, sourceNode, storage, ksize, max_time_check=10):
         RPCProtocol.__init__(self)
         self.router = RoutingTable(self, ksize, sourceNode)
         self.storage = storage
@@ -49,13 +50,21 @@ class KademliaProtocol(RPCProtocol):
         node = Node(key)
         return map(tuple, self.router.findNeighbors(node, exclude=source))
 
-    def rpc_find_value(self, sender, nodeid, key):
+    def rpc_find_value(self, sender, nodeid, key, token):
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
         value = self.storage.get(key, None)
+
         if value is None:
             return self.rpc_find_node(sender, nodeid, key)
-        return { 'value': value }
+        else:
+            try:
+                check_query_token_valid(token, self.max_time_check)
+                # check policy for correctness
+                return {'value': value}
+            except InvalidQueryToken as e:
+                self.log.info("Invalid query token received %s" % (e.value,))
+                return {'error': e.value}
 
     def callFindNode(self, nodeToAsk, nodeToFind):
         address = (nodeToAsk.ip, nodeToAsk.port)
