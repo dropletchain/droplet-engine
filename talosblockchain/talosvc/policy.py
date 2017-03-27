@@ -1,4 +1,5 @@
 import json
+import base64
 from collections import OrderedDict
 
 from talosvc.config import *
@@ -8,11 +9,11 @@ class Policy:
     def __init__(self, owner, owner_pk, stream_id, nonce, txid):
         self.shares = []
         self.times = []
-        self.owner = owner
+        self.owner = str(owner)
         self.stream_id = stream_id
         self.nonce = nonce
-        self.txid = txid
-        self.owner_pk = owner_pk
+        self.txid = str(txid)
+        self.owner_pk = str(owner_pk)
 
     def add_share(self, share):
         if isinstance(share, list):
@@ -49,6 +50,9 @@ class Policy:
 
     def get_txid(self):
         return self.txid
+
+    def get_nonce_bin(self):
+        return base64.b64decode(self.nonce)
 
     def has_shared_key(self, key):
         for (a, _) in self.shares:

@@ -347,4 +347,4 @@ class TalosPolicyDB(virtualchain.StateEngine):
         return fetch_owners(self.db, limit, offset)
 
     def get_policy_with_txid(self, txid):
-        return fetch_policy_with_txid(txid)
+        return fetch_policy_with_txid(self.db, txid)

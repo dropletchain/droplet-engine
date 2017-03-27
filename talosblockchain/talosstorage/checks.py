@@ -27,17 +27,17 @@ class BitcoinVersionedPublicKey(BitcoinPublicKey):
 
 
 def get_crypto_ecdsa_pubkey_from_bitcoin_hex(bitcoin_hex_key):
-    pub = BitcoinVersionedPublicKey(bitcoin_hex_key)
+    pub = BitcoinVersionedPublicKey(str(bitcoin_hex_key))
     return serialization.load_pem_public_key(pub.to_pem(), backend=default_backend())
 
 
 def get_bitcoin_address_for_pubkey(hex_pubkey):
-    pub = BitcoinVersionedPublicKey(hex_pubkey)
+    pub = BitcoinVersionedPublicKey(str(hex_pubkey))
     return pub.address()
 
 
 def get_stream_identifier_from_policy(policy):
-    return DataStreamIdentifier(policy.owner, policy.stream_id, policy.nonce, policy.txid)
+    return DataStreamIdentifier(policy.owner, policy.stream_id, policy.get_nonce_bin(), policy.txid)
 
 
 def check_key_matches(cloud_chunk, policy, chunkid):
@@ -51,12 +51,12 @@ def check_tag_matches(cloud_chunk, policy):
 
 
 def check_signature(cloud_chunk, policy):
-    pub_key = get_crypto_ecdsa_pubkey_from_bitcoin_hex(policy.owner_pk)
+    pub_key = get_crypto_ecdsa_pubkey_from_bitcoin_hex(str(policy.owner_pk))
     return cloud_chunk.check_signature(pub_key)
 
 
 def check_access_allowed(hex_pubkey, policy):
-    addr = get_bitcoin_address_for_pubkey(hex_pubkey)
+    addr = get_bitcoin_address_for_pubkey(str(hex_pubkey))
     if addr == policy.owner:
         return True
     if addr in policy.shares:
@@ -70,7 +70,7 @@ def check_access_key_valid(access_key, policy, blockid):
 
 
 def check_pubkey_valid(data, signature, pubkey):
-    pub = BitcoinVersionedPublicKey(pubkey)
+    pub = BitcoinVersionedPublicKey(str(pubkey))
     pub_key = serialization.load_pem_public_key(pub.to_pem(), backend=default_backend())
     try:
         check_signed_data(pub_key, signature, data)

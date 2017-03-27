@@ -2,7 +2,7 @@ import struct
 import zlib
 import os
 import hashlib
-from binascii import unhexlify
+from binascii import unhexlify, hexlify
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -210,6 +210,9 @@ class CloudChunk:
 
     def get_encoded_without_key(self):
         return self.encode()[HASH_BYTES:]
+
+    def get_tag_hex(self):
+        return hexlify(self.policy_tag)
 
     @staticmethod
     def decode(encoded):

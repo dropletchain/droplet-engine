@@ -101,3 +101,4 @@ def decode_key(encoded_key):
     if len(key) > len_struct:
         seed = key[len_struct:(len_struct+32)]
     return key_version, n, key_final, seed
+
