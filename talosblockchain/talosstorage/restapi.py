@@ -3,7 +3,7 @@ import base64
 from flask import Flask
 from flask import request, g
 from talosstorage.storage import InvalidChunkError, InvalidAccess, InvalidQueryToken
-from talosstorage.checks import JSON_CHUNK_IDENT, check_query_token_valid
+from talosstorage.checks import JSON_CHUNK_IDENT, check_query_token_valid, JSON_OWNER, JSON_STREAM_ID, JSON_PUB_KEY
 from talosstorage.chunkdata import CloudChunk
 
 from talosvc.talosclient.restapiclient import TalosVCRestClient
@@ -45,23 +45,23 @@ def get_policy_with_txid(txid):
 """
 Post:
 {
+"owner": "sdfsdf",
+"stream_id": "3",
 "unix_timestamp": "x",
 "chunk_key" : "base64(asdadsda)",
-"signature" : "base64(H(timestamp | chunk_key) signature)"
+"signature" : "base64(H(owner | str(stream_id) | str(timestamp) | chunk_key) signature)",
 "pubkey" : "hex public key"
 }
 """
-@app.route('/get_chunk/<owner>/<int:streamid>/<int:chunkid>/<hex_pub>', methods=['POST'])
-def get_chunk(owner, streamid, chunkid, hex_pub):
+@app.route('/get_chunk', methods=['POST'])
+def get_chunk():
     msg = request.get_json(force=True)
     try:
         check_query_token_valid(msg, MAX_TIME)
-        if owner is None or streamid is None or chunkid is None:
-            return "ERROR Invalid Resource", 400
         chunk_key = base64.b64decode(msg[JSON_CHUNK_IDENT])
-        policy = get_policy(owner, streamid)
+        policy = get_policy(msg[JSON_OWNER], msg[JSON_STREAM_ID])
         storage = get_storage()
-        chunk = storage.get_check_chunk(chunk_key, chunkid, hex_pub, policy)
+        chunk = storage.get_check_chunk(chunk_key, msg[JSON_PUB_KEY], policy)
         return chunk.encode()
     except InvalidAccess:
         return "ERROR Invalid access", 400

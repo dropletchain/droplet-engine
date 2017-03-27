@@ -33,9 +33,7 @@ class TalosStorage(object):
         except InvalidSignature:
             raise InvalidChunkError("Chunk key doesn't match")
 
-    def check_access_valid(self, chunk_key, chunk_id, pubkey, policy):
-        if not check_access_key_valid(chunk_key, policy, chunk_id):
-            raise InvalidAccess("Chunk key doesnt match policy")
+    def check_access_valid(self, pubkey, policy):
         if not check_access_allowed(pubkey, policy):
             raise InvalidAccess("Pubkey not in policy")
 
@@ -43,9 +41,12 @@ class TalosStorage(object):
         self.check_chunk_valid(chunk, chunk_id, policy)
         return self._store_chunk(chunk)
 
-    def get_check_chunk(self, chunk_key, chunk_id, pubkey, policy):
-        self.check_access_valid(chunk_key, chunk_id, pubkey, policy)
-        return self._get_chunk(chunk_key)
+    def get_check_chunk(self, chunk_key, pubkey, policy):
+        self.check_access_valid(pubkey, policy)
+        chunk = self._get_chunk(chunk_key)
+        if not check_tag_matches(chunk, policy):
+            raise InvalidAccess("Chunk not matches policy")
+        return chunk
 
     def _store_chunk(self, chunk):
         pass

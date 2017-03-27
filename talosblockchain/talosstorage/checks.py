@@ -95,7 +95,10 @@ JSON_PUB_KEY = "pubkey"
 
 
 def check_valid(json_msg, max_time):
-    data = str(json_msg[JSON_TIMESTAMP]) + base64.b64decode(json_msg[JSON_CHUNK_IDENT])
+    data = json_msg[JSON_OWNER] + \
+           str(json_msg[JSON_STREAM_ID]) + \
+           str(json_msg[JSON_TIMESTAMP]) + \
+           base64.b64decode(json_msg[JSON_CHUNK_IDENT])
     signature = base64.b64decode(json_msg[JSON_SIGNATURE])
     if not check_pubkey_valid(data, signature, json_msg[JSON_PUB_KEY]):
         return False
@@ -105,7 +108,9 @@ def check_valid(json_msg, max_time):
 
 
 def check_json_query_token_valid(json_msg):
-    return JSON_TIMESTAMP in json_msg \
+    return JSON_OWNER in json_msg \
+           and JSON_STREAM_ID in json_msg \
+           and JSON_TIMESTAMP in json_msg \
            and JSON_CHUNK_IDENT in json_msg \
            and JSON_SIGNATURE in json_msg \
            and JSON_PUB_KEY in json_msg
@@ -118,15 +123,18 @@ def get_priv_key(bvpk_private_key):
     backend = default_backend())
 
 
-def generate_json_query_token(chunk_key, bvpk_private_key):
+def generate_json_query_token(owner, streamid, chunk_key, bvpk_private_key):
     private_key = get_priv_key(bvpk_private_key)
     timestamp = int(time.time())
-    signature = hash_sign_data(private_key, str(timestamp) + chunk_key)
+    data = owner + str(streamid) + str(timestamp) + chunk_key
+    signature = hash_sign_data(private_key, data)
     return {
+        JSON_OWNER: owner,
+        JSON_STREAM_ID: streamid,
         JSON_TIMESTAMP: timestamp,
         JSON_CHUNK_IDENT: base64.b64encode(chunk_key),
         JSON_SIGNATURE:  base64.b64encode(signature),
-        JSON_PUB_KEY: bvpk_private_key.to_hex()
+        JSON_PUB_KEY: bvpk_private_key.public_key().to_hex()
     }
 
 

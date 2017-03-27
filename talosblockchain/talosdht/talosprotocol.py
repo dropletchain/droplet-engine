@@ -1,23 +1,22 @@
 import random
 
+from kademlia.protocol import KademliaProtocol
 from twisted.internet import defer
 
 from rpcudp.protocol import RPCProtocol
 
-from taloskademlia.node import Node
-from taloskademlia.routing import RoutingTable
-from taloskademlia.log import Logger
-from taloskademlia.utils import digest
+from kademlia.node import Node
+from kademlia.utils import digest
 from talosstorage.checks import check_query_token_valid, InvalidQueryToken
+from talosvc.talosclient.restapiclient import TalosVCRestClient
 
 
-class KademliaProtocol(RPCProtocol):
-    def __init__(self, sourceNode, storage, ksize, max_time_check=10):
+class TalosKademliaProtocol(KademliaProtocol):
+    def __init__(self, sourceNode, storage, ksize, talos_vc=TalosVCRestClient(),max_time_check=10):
         RPCProtocol.__init__(self)
-        self.router = RoutingTable(self, ksize, sourceNode)
-        self.storage = storage
-        self.sourceNode = sourceNode
-        self.log = Logger(system=self)
+        KademliaProtocol.__init__(sourceNode, storage, ksize)
+        self.max_time_check = max_time_check
+        self.talos_vc()
 
     def getRefreshIDs(self):
         """
