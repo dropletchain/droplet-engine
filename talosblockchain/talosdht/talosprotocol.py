@@ -1,22 +1,31 @@
 import random
 
+from kademlia.log import Logger
 from kademlia.protocol import KademliaProtocol
+from kademlia.routing import RoutingTable
 from twisted.internet import defer
 
 from rpcudp.protocol import RPCProtocol
 
 from kademlia.node import Node
 from kademlia.utils import digest
-from talosstorage.checks import check_query_token_valid, InvalidQueryToken
+from talosstorage.checks import check_query_token_valid, InvalidQueryToken, get_and_check_query_token, CloudChunk
+from talosstorage.storage import InvalidChunkError
 from talosvc.talosclient.restapiclient import TalosVCRestClient
 
 
-class TalosKademliaProtocol(KademliaProtocol):
-    def __init__(self, sourceNode, storage, ksize, talos_vc=TalosVCRestClient(),max_time_check=10):
+class TalosKademliaProtocol(RPCProtocol):
+    """
+    New protocol for the talos storage, base protocol from bmuller's implementation
+    """
+    def __init__(self, sourceNode, storage, ksize, talos_vc=TalosVCRestClient(), max_time_check=10):
         RPCProtocol.__init__(self)
-        KademliaProtocol.__init__(sourceNode, storage, ksize)
+        self.router = RoutingTable(self, ksize, sourceNode)
+        self.storage = storage
+        self.sourceNode = sourceNode
+        self.log = Logger(system=self)
         self.max_time_check = max_time_check
-        self.talos_vc()
+        self.talos_vc = talos_vc
 
     def getRefreshIDs(self):
         """
@@ -39,8 +48,14 @@ class TalosKademliaProtocol(KademliaProtocol):
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
         self.log.debug("got a store request from %s, storing value" % str(sender))
-        self.storage[key] = value
-        return True
+        try:
+            chunk = CloudChunk.decode(value)
+            policy = self.talos_vc.get_policy_with_txid(chunk.get_tag_hex())
+            # Hack no chunk id given -> no key checks, key is in the encoded chunk
+            self.storage.store_check_chunk(chunk, None, policy)
+        except InvalidChunkError as e:
+            return {'error': e.value}
+        return {'value': 'ok'}
 
     def rpc_find_node(self, sender, nodeid, key):
         self.log.info("finding neighbors of %i in local table" % long(nodeid.encode('hex'), 16))
@@ -52,27 +67,30 @@ class TalosKademliaProtocol(KademliaProtocol):
     def rpc_find_value(self, sender, nodeid, key, token):
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        value = self.storage.get(key, None)
 
-        if value is None:
-            return self.rpc_find_node(sender, nodeid, key)
-        else:
+        if self.storage.has_value():
             try:
+                self.log.info("Check access correct (value found) %s" % nodeid.encode('hex'))
+                token = get_and_check_query_token(token)
                 check_query_token_valid(token, self.max_time_check)
+                policy = self.talos_vc.get_policy(token.owner, token.streamid)
                 # check policy for correctness
-                return {'value': value}
+                chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
+                return {'value': chunk.encoded()}
             except InvalidQueryToken as e:
                 self.log.info("Invalid query token received %s" % (e.value,))
                 return {'error': e.value}
+        else:
+            return self.rpc_find_node(sender, nodeid, key)
 
     def callFindNode(self, nodeToAsk, nodeToFind):
         address = (nodeToAsk.ip, nodeToAsk.port)
         d = self.find_node(address, self.sourceNode.id, nodeToFind.id)
         return d.addCallback(self.handleCallResponse, nodeToAsk)
 
-    def callFindValue(self, nodeToAsk, nodeToFind):
+    def callFindValue(self, nodeToAsk, nodeToFind, token):
         address = (nodeToAsk.ip, nodeToAsk.port)
-        d = self.find_value(address, self.sourceNode.id, nodeToFind.id)
+        d = self.find_value(address, self.sourceNode.id, nodeToFind.id, token)
         return d.addCallback(self.handleCallResponse, nodeToAsk)
 
     def callPing(self, nodeToAsk):

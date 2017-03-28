@@ -2,6 +2,8 @@ import hashlib
 import os
 import struct
 
+from talosstorage.checks import BitcoinVersionedPublicKey
+
 
 def hash_sha256(to_hash):
     return hashlib.sha256(to_hash).digest()
@@ -101,4 +103,31 @@ def decode_key(encoded_key):
     if len(key) > len_struct:
         seed = key[len_struct:(len_struct+32)]
     return key_version, n, key_final, seed
+
+
+class KeyShareStorage:
+
+    def __init__(self, to_share_key, pubkeys=[]):
+        self.to_share_key = to_share_key
+        self.pubkeys = pubkeys
+
+    def add_pubkey(self, pk):
+        self.pubkeys.append(pk)
+
+    def remove_pubkey(self, pk):
+        self.pubkeys.remove(pk)
+
+    def generate_storage(self, policy_tag):
+        """
+        Encoding:
+        policy tag | num_keys (1 byte) | k1hash160 | lenEnc | ENCpk(key) ..... | signature owner 
+        :param policy_tag: 
+        :return: 
+        """
+        assert len(policy_tag) == 32
+        data = policy_tag
+        for key in self.pubkeys:
+            bc_key = BitcoinVersionedPublicKey(key)
+            data += bc_key.hash160()
+            # use ec-el gamal?
 

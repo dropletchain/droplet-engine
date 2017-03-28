@@ -22,9 +22,10 @@ class InvalidAccess(Exception):
 
 
 class TalosStorage(object):
-    def check_chunk_valid(self, chunk, chunk_id, policy):
-        if not check_key_matches(chunk, policy, chunk_id):
-            raise InvalidChunkError("Chunk key doesn't match")
+    def check_chunk_valid(self, chunk, policy, chunk_id=None):
+        if not chunk_id is None:
+            if not check_key_matches(chunk, policy, chunk_id):
+                raise InvalidChunkError("Chunk key doesn't match")
 
         if not check_tag_matches(chunk, policy):
             raise InvalidChunkError("Chunk Tag is invalid")
@@ -38,7 +39,7 @@ class TalosStorage(object):
             raise InvalidAccess("Pubkey not in policy")
 
     def store_check_chunk(self, chunk, chunk_id, policy):
-        self.check_chunk_valid(chunk, chunk_id, policy)
+        self.check_chunk_valid(chunk, policy, chunk_id=chunk_id)
         return self._store_chunk(chunk)
 
     def get_check_chunk(self, chunk_key, pubkey, policy):

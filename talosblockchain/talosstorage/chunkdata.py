@@ -2,6 +2,7 @@ import struct
 import zlib
 import os
 import hashlib
+import base64
 from binascii import unhexlify, hexlify
 
 from cryptography.hazmat.backends import default_backend
@@ -214,6 +215,9 @@ class CloudChunk:
     def get_tag_hex(self):
         return hexlify(self.policy_tag)
 
+    def get_base64_encoded(self):
+        return base64.b64encode(self.encode())
+
     @staticmethod
     def decode(encoded):
         cur_pos = 0
@@ -233,6 +237,9 @@ class CloudChunk:
         signature = encoded[cur_pos:]
         return CloudChunk(key, key_version, policy_tag, encrypted_data, mac_tag, signature)
 
+    @staticmethod
+    def decode_base64_str(encoded):
+        return CloudChunk.decode(base64.b64decode(encoded))
 
 def create_cloud_chunk(data_stream_identifier, block_id, private_key, key_version,
                        symmetric_key, chunk_data, use_compression=True):

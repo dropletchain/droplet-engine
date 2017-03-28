@@ -3,7 +3,7 @@ import base64
 from flask import Flask
 from flask import request, g
 from talosstorage.storage import InvalidChunkError, InvalidAccess, InvalidQueryToken
-from talosstorage.checks import JSON_CHUNK_IDENT, check_query_token_valid, JSON_OWNER, JSON_STREAM_ID, JSON_PUB_KEY
+from talosstorage.checks import JSON_CHUNK_IDENT, check_query_token_valid, get_and_check_query_token
 from talosstorage.chunkdata import CloudChunk
 
 from talosvc.talosclient.restapiclient import TalosVCRestClient
@@ -57,18 +57,18 @@ Post:
 def get_chunk():
     msg = request.get_json(force=True)
     try:
-        check_query_token_valid(msg, MAX_TIME)
-        chunk_key = base64.b64decode(msg[JSON_CHUNK_IDENT])
-        policy = get_policy(msg[JSON_OWNER], msg[JSON_STREAM_ID])
+        token = get_and_check_query_token(msg)
+        check_query_token_valid(token, MAX_TIME)
+        policy = get_policy(token.owner, token.streamid)
         storage = get_storage()
-        chunk = storage.get_check_chunk(chunk_key, msg[JSON_PUB_KEY], policy)
+        chunk = storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
         return chunk.encode()
     except InvalidAccess:
         return "ERROR Invalid access", 400
     except InvalidQueryToken as e:
         return e.value, 400
-    except:
-        return "ERROR", 400
+    #except:
+        #return "ERROR", 400
 
 
 """
