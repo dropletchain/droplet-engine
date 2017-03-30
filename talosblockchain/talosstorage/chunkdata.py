@@ -215,6 +215,9 @@ class CloudChunk:
     def get_tag_hex(self):
         return hexlify(self.policy_tag)
 
+    def get_key_hex(self):
+        return hexlify(self.key)
+
     def get_base64_encoded(self):
         return base64.b64encode(self.encode())
 
@@ -240,6 +243,7 @@ class CloudChunk:
     @staticmethod
     def decode_base64_str(encoded):
         return CloudChunk.decode(base64.b64decode(encoded))
+
 
 def create_cloud_chunk(data_stream_identifier, block_id, private_key, key_version,
                        symmetric_key, chunk_data, use_compression=True):

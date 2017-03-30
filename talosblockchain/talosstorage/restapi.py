@@ -67,8 +67,8 @@ def get_chunk():
         return "ERROR Invalid access", 400
     except InvalidQueryToken as e:
         return e.value, 400
-    #except:
-        #return "ERROR", 400
+    except:
+        return "ERROR", 400
 
 
 """

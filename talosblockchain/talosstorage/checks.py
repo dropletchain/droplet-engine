@@ -122,7 +122,7 @@ class QueryToken(object):
     @staticmethod
     def from_json(json_msg):
         owner = str(json_msg[JSON_OWNER])
-        streamid = str(json_msg[JSON_STREAM_ID])
+        streamid = int(json_msg[JSON_STREAM_ID])
         timestamp = int(json_msg[JSON_TIMESTAMP])
         chunk_key = base64.b64decode(json_msg[JSON_CHUNK_IDENT])
         signature = base64.b64decode(json_msg[JSON_SIGNATURE])

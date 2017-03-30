@@ -22,7 +22,7 @@ class TalosVCRestClient(object):
             raise TalosVCRestClientError(reason)
 
     def get_policy(self, owner, streamid):
-        req = requests.get("http://%s:%d/policy?owner=%s&stream-id=%d" % (self.ip, self.port, owner, streamid))
+        req = requests.get("http://%s:%d/policy?owner=%s&stream-id=%d" % (self.ip, self.port, owner, int(streamid)))
         self._check_code(req.status_code, req.reason)
         return create_policy_from_json_str(req.text)
 

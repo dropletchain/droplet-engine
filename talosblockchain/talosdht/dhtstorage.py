@@ -1,4 +1,6 @@
 import time
+
+from talosstorage.chunkdata import CloudChunk
 from talosstorage.storage import LevelDBStorage
 from kademlia.storage import IStorage
 import sqlite3
@@ -15,9 +17,10 @@ CREATE TABLE updatetimes(
 CREATE INDEX lastupdate_idx  on updatetimes(lastupdate);
 """
 
-SQL_UPDATE_TIME = "INSERT OR REPLACE INTO updatetimes VALUES (?.?)"
+SQL_UPDATE_TIME = "INSERT OR REPLACE INTO updatetimes VALUES (?,?)"
 SQL_FETCH_KEYS_OLDER_THAN = "SELECT updatetimes.key FROM updatetimes WHERE updatetimes.lastupdate<?"
 SQL_FETCH_KEYS = "SELECT updatetimes.key FROM updatetimes"
+SQL_CHECK_KEY_EXISTS = "SELECT COUNT(*) FROM updatetimes WHERE updatetimes.key=?"
 
 
 def create_db(db_filename):
@@ -35,10 +38,10 @@ def connect_to_db(db_filename):
 
 
 def update_key_time(conn, key):
-    time_update = time.time()
+    time_update = int(time.time())
     c = conn.cursor()
     try:
-        c.execute(SQL_UPDATE_TIME, (time_update, base64.b64encode(key)))
+        c.execute(SQL_UPDATE_TIME, (time_update, str(base64.b64encode(key))))
         conn.commit()
     finally:
         c.close()
@@ -52,31 +55,41 @@ def get_keys_older_than(conn, unix_time):
         c.close()
 
 
+def check_key_exists(conn, chunk_key):
+    c = conn.cursor()
+    try:
+        c.execute(SQL_CHECK_KEY_EXISTS, (base64.b64encode(chunk_key),))
+        data = c.fetchall()
+        return len(data) > 0
+    finally:
+        c.close()
+
+
 class TalosLevelDBDHTStorage(LevelDBStorage):
     implements(IStorage)
 
     def __init__(self, db_dir, time_db_name="dhttimedb"):
         db_path_sqlite = os.path.join(db_dir, time_db_name)
-        LevelDBStorage.__init__(db_dir)
+        LevelDBStorage.__init__(self, db_dir)
         if os.path.exists(db_path_sqlite):
             self.db_update = connect_to_db(db_path_sqlite)
         else:
             self.db_update = create_db(db_path_sqlite)
 
     def iteritemsOlderThan(self, secondsOld):
-        for key in get_keys_older_than(time.time() - secondsOld):
-            yield self._get_chunk(key)
+        for key in get_keys_older_than(int(time.time()) - secondsOld):
+            yield (key, self.db.Get(key))
 
     def _store_chunk(self, chunk):
-        update_key_time(self.db_update, time.time())
-        super(LevelDBStorage, self)._store_chunk(chunk)
+        update_key_time(self.db_update, chunk.key)
+        self.db.Put(chunk.key, chunk.encode())
 
     def iteritems(self):
         c = self.db_update.cursor()
         try:
             for x in c.execute(SQL_FETCH_KEYS):
                 key = base64.b64decode(x[0])
-                yield self._get_chunk(key)
+                yield (key, self.db.Get(key))
         finally:
             c.close()
 
@@ -89,3 +102,19 @@ class TalosLevelDBDHTStorage(LevelDBStorage):
     def get(self, key, default=None):
         res = self._get_chunk(key)
         return default if res is None else res
+
+    def has_value(self, to_find):
+        try:
+            self.db.Get(to_find)
+            return True
+        except KeyError:
+            return False
+
+    def _get_chunk(self, chunk_key):
+        try:
+            bin_chunk = self.db.Get(chunk_key)
+        except KeyError:
+            return None
+        return CloudChunk.decode(bin_chunk)
+
+

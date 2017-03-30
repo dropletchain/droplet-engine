@@ -50,6 +50,8 @@ class TalosKademliaProtocol(RPCProtocol):
         self.log.debug("got a store request from %s, storing value" % str(sender))
         try:
             chunk = CloudChunk.decode(value)
+            if not digest(chunk.key) == key:
+                return {'error': 'key missmatch'}
             policy = self.talos_vc.get_policy_with_txid(chunk.get_tag_hex())
             # Hack no chunk id given -> no key checks, key is in the encoded chunk
             self.storage.store_check_chunk(chunk, None, policy)
@@ -67,16 +69,17 @@ class TalosKademliaProtocol(RPCProtocol):
     def rpc_find_value(self, sender, nodeid, key, token):
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-
-        if self.storage.has_value():
+        token = get_and_check_query_token(token)
+        if self.storage.has_value(token.chunk_key):
             try:
                 self.log.info("Check access correct (value found) %s" % nodeid.encode('hex'))
-                token = get_and_check_query_token(token)
                 check_query_token_valid(token, self.max_time_check)
                 policy = self.talos_vc.get_policy(token.owner, token.streamid)
                 # check policy for correctness
                 chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
-                return {'value': chunk.encoded()}
+                if not digest(chunk.key) == key:
+                    return {'error': 'key missmatch'}
+                return {'value': chunk.encode()}
             except InvalidQueryToken as e:
                 self.log.info("Invalid query token received %s" % (e.value,))
                 return {'error': e.value}

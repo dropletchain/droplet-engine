@@ -24,12 +24,12 @@ STREAMID=1
 TXID="8fd55b2955757337475c727f60de322b3b03fb8c32dc6ca51723eb0748a1d414"
 
 
-def store_chunk(chunkid, chunk, ip="127.0.0.1", port=12000):
-    req = requests.post("http://%s:%d/store_chunk/%d" % (ip, port, chunkid), data=chunk.encode())
+def store_chunk(chunkid, chunk, ip="127.0.0.1", port=13000):
+    req = requests.post("http://%s:%d/store_chunk" % (ip, port), data=chunk.encode())
     return req.reason, req.status_code
 
 
-def get_chunk(json_token, ip="127.0.0.1", port=12000):
+def get_chunk(json_token, ip="127.0.0.1", port=13000):
     url = "http://%s:%d/get_chunk" % (ip, port)
     req = requests.post(url, json=json_token)
     return req.reason, req.status_code, req.text
@@ -66,7 +66,7 @@ class TestStorageApi(unittest.TestCase):
         stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                             TXID)
         token = generate_query_token(owner, STREAMID, stream_ident.get_key_for_blockid(0), PRIVATE_KEY)
-        a, b, chunk = get_chunk(token)
+        a, b, chunk = get_chunk(token.to_json())
         self.assertEquals(b, 200)
         chunk = CloudChunk.decode(chunk)
         print chunk.key

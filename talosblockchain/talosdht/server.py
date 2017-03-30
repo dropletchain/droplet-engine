@@ -16,9 +16,20 @@ from kademlia.node import Node
 from kademlia.crawling import ValueSpiderCrawl
 from kademlia.crawling import NodeSpiderCrawl
 
+from talosdht.crawlers import TalosChunkSpiderCrawl
 from talosdht.dhtstorage import TalosLevelDBDHTStorage
 from talosdht.talosprotocol import TalosKademliaProtocol
+from talosstorage.checks import get_and_check_query_token, check_query_token_valid, InvalidQueryToken
+from talosstorage.chunkdata import CloudChunk
 from talosvc.talosclient.restapiclient import TalosVCRestClient
+
+
+class TalosDHTServerError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
 
 
 class TalosDHTServer(object):
@@ -28,8 +39,8 @@ class TalosDHTServer(object):
     to start listening as an active node on the network.
     """
 
-    def __init__(self, ksize=20, alpha=3, id=None, storage=TalosLevelDBDHTStorage("./leveldb"),
-                 talos_vc=TalosVCRestClient(), max_time_check=10):
+    def __init__(self, ksize=20, alpha=3, id=None, storage=None,
+                 talos_vc=None, max_time_check=10):
         """
         Create a server instance.  This will start listening on the given port.
         Args:
@@ -41,10 +52,13 @@ class TalosDHTServer(object):
         self.ksize = ksize
         self.alpha = alpha
         self.log = Logger(system=self)
-        self.storage = storage or ForgetfulStorage()
+        self.storage = storage or TalosLevelDBDHTStorage("./leveldb")
         self.node = Node(id or digest(random.getrandbits(255)))
-        self.protocol = TalosKademliaProtocol(self.node, self.storage, ksize, talos_vc=talos_vc, max_time_check=max_time_check)
         self.refreshLoop = LoopingCall(self.refreshTable).start(3600)
+        self.talos_vc = talos_vc or TalosVCRestClient()
+        self.max_time_check = max_time_check
+        self.protocol = TalosKademliaProtocol(self.node, self.storage, ksize, talos_vc=self.talos_vc,
+                                              max_time_check=self.max_time_check)
 
     def listen(self, port, interface=""):
         """
@@ -53,7 +67,7 @@ class TalosDHTServer(object):
             reactor.listenUDP(port, server.protocol)
         Provide interface="::" to accept ipv6 address
         """
-        return reactor.listenUDP(port, self.protocol, interface)
+        return reactor.listenUDP(port, self.protocol, interface, maxPacketSize=65535)
 
     def refreshTable(self):
         """
@@ -71,7 +85,7 @@ class TalosDHTServer(object):
             ds = []
             # Republish keys older than one hour
             for dkey, value in self.storage.iteritemsOlderThan(3600):
-                ds.append(self.digest_set(dkey, value))
+                ds.append(self.digest_set(digest(dkey), value))
             return defer.gatherResults(ds)
 
         return defer.gatherResults(ds).addCallback(republishKeys)
@@ -149,14 +163,34 @@ class TalosDHTServer(object):
         return self.digest_set(dkey, value)
     """
 
-    def store_chunk(self, chunk):
+    def store_chunk(self, chunk, policy=None):
         dkey = digest(chunk.key)
         self.log.debug("Storing chunk with key %s" % (binascii.hexlify(dkey),))
-        return self.digest_set(dkey, chunk.encode())
+        return self.digest_set(dkey, chunk.encode(), policy_in=policy)
 
-    def get_chunk(self):
+    def get_chunk(self, token, policy_in=None):
+        # if this node has it, return it
+        if self.storage.has_value(token.chunk_key):
+            try:
+                check_query_token_valid(token, self.max_time_check)
+                policy = policy_in or self.talos_vc.get_policy(token.owner, token.streamid)
+                # check policy for correctness
+                chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
+                return defer.succeed(chunk)
+            except InvalidQueryToken as e:
+                self.log.info("Invalid query token received %s" % (e.value,))
+                raise TalosDHTServerError(e.value)
+        dkey = digest(token.chunk_key)
+        node = Node(dkey)
+        nearest = self.protocol.router.findNeighbors(node)
+        self.log.debug("Crawling for key %s" % (binascii.hexlify(dkey),))
+        if len(nearest) == 0:
+            self.log.warning("There are no known neighbors to get key %s" % binascii.hexlify(dkey))
+            return defer.succeed(None)
+        spider = TalosChunkSpiderCrawl(self.protocol, node, token, nearest, self.ksize, self.alpha)
+        return spider.find()
 
-    def digest_set(self, dkey, value):
+    def digest_set(self, dkey, value, policy_in=None):
         """
         Set the given SHA1 digest key to the given value in the network.
         """
@@ -168,7 +202,12 @@ class TalosDHTServer(object):
             self.log.info("setting '%s' on %s" % (hkey, map(str, nodes)))
             # if this node is close too, then store here as well
             if self.node.distanceTo(node) < max([n.distanceTo(node) for n in nodes]):
-                self.storage[dkey] = value
+                chunk = CloudChunk.decode(value)
+                if not digest(chunk.key) == dkey:
+                    return {'error': 'key missmatch'}
+                policy = policy_in or self.talos_vc.get_policy_with_txid(chunk.get_tag_hex())
+                # Hack no chunk id given -> no key checks, key is in the encoded chunk
+                self.storage.store_check_chunk(chunk, None, policy)
             ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
             return defer.DeferredList(ds).addCallback(self._anyRespondSuccess)
 
