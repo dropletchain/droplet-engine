@@ -70,3 +70,24 @@ class TestStorageApi(unittest.TestCase):
         self.assertEquals(b, 200)
         chunk = CloudChunk.decode(chunk)
         print chunk.key
+
+    def test_multiple(self):
+        for i in range(0, 100):
+            key = os.urandom(32)
+            chunk = generate_random_chunk(i, key=key)
+            _, code = store_chunk(i, chunk)
+            self.assertEquals(code, 200)
+
+
+            owner = PRIVATE_KEY.public_key().address()
+            stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
+                                                TXID)
+            token = generate_query_token(owner, STREAMID, stream_ident.get_key_for_blockid(i), PRIVATE_KEY)
+            a, b, chunk_after = get_chunk(token.to_json())
+            self.assertEquals(b, 200)
+            #print "before: %s after %s" % (chunk.get_base64_encoded(), base64.b64encode(chunk_after))
+            def to_hex(s):
+                return ":".join("{:02x}".format(ord(c)) for c in s)
+            #print "before: %s \nafter %s" % (to_hex(chunk.encode()), to_hex(chunk_after))
+            self.assertEquals(to_hex(chunk_after), to_hex(chunk.encode()))
+            print "OK %d \n" % i
