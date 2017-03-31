@@ -111,6 +111,7 @@ class TalosLevelDBDHTStorage(LevelDBStorage):
             return False
 
     def _get_chunk(self, chunk_key):
+        update_key_time(self.db_update, chunk_key)
         try:
             bin_chunk = self.db.Get(chunk_key)
         except KeyError:

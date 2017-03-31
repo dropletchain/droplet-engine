@@ -13,5 +13,8 @@ sudo python setup.py install
 cd ..
 
 sudo pip install flask
+sudo pip install kademlia
+sudo pip install requests
+sudo pip install cryptography
 
 cd $CUR_PATH

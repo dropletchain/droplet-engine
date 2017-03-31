@@ -3,6 +3,15 @@ import sqlite3
 from config import *
 from policy import create_policy_from_db_tuple, Policy
 
+"""
+Implementation of the talos virtualchain state machine.
+A SQL Lite database is used for storing the state.
+"""
+
+################
+# DB Functions #
+################
+
 DB_SCRIPT = """
 CREATE TABLE policy(
                         stream_id TEXT NOT NULL,
@@ -180,8 +189,16 @@ def fetch_policy_with_txid(conn, txid):
     finally:
         c.close()
 
+#################
+# State Machine #
+#################
+
 
 class PolicyState:
+    """
+    Class which implements the handlers and checkers
+    for each operation found in the blockchain
+    """
     def __init__(self, policy):
         self.policy = policy
         self.ops = []
@@ -278,8 +295,18 @@ class PolicyState:
 
 
 class TalosPolicyDB(virtualchain.StateEngine):
-    def __init__(self, db_filename, expected_snapshots={}, read_only=True):
+    """
+    Implements the state machine 
+    """
 
+    def __init__(self, db_filename, expected_snapshots={}, read_only=True):
+        """
+        Inititalizes a db state given a sql lite database.
+        If the database not exists, a new database and state is created
+        :param db_filename: the file name of the sql lite database
+        :param expected_snapshots: the expected snapchosts (consensus hashes)
+        :param read_only: indicates if the state is readonly
+        """
         # set implementation of virtualchain
         import talosvirtualchain
         blockstack_impl = talosvirtualchain

@@ -8,6 +8,9 @@ from talosvc.config import get_working_db, get_default_talos_config
 from talosvc.policydb import TalosPolicyDB
 from talosvc.talosvirtualchain import sync_blockchain
 
+"""
+Implements a REST Api for the talos virtualchain
+"""
 
 SYNC_INTERVAL = 60
 

@@ -5,6 +5,11 @@ from talosvc.policydb import TalosPolicyDB
 from threading import Thread
 import time
 
+"""
+Implementation of the blockstack virtualchain library hooks.
+The updates are feeded to our state machine implementation.
+"""
+
 
 def get_virtual_chain_name():
     """
@@ -76,6 +81,9 @@ def db_parse(block_id, txid, txind, opcode, op_payload, senders, inputs, outputs
     Return None if not.
 
     NOTE: the virtual chain indexer reserves all keys that start with 'virtualchain_'
+    
+    Talos: 
+    Parses the OP_RETURN data of the transactions belonging to our operation sequence.
     """
 
     def match(to_compare):
@@ -120,6 +128,9 @@ def db_check(block_id, new_ops, opcode, op, txid, vtxindex, checked, db_state=No
     for the purposes of this virtual chain's database.
 
     Return True if so; False if not.
+    
+    Talos:
+    Checks the if a operation is valid on the current temporary state
     """
     if (not OPCODE_FIELD_OWNER in op) and (not OPCODE_FIELD_STREAM_ID in op):
         return False
@@ -179,10 +190,7 @@ def _get_newest_block(bc_config):
                                                                            bc_config['bitcoind_passwd'],
                                                                            bc_config['bitcoind_server'],
                                                                            bc_config['bitcoind_port']))
-    try:
-        resp = rpc_connection.getblockcount()
-    finally:
-        rpc_connection
+    resp = rpc_connection.getblockcount()
     return int(resp)
 
 
@@ -211,6 +219,10 @@ def sync_blockchain(bc_config, last_block=None, expected_snapshots={}, **virtual
 
 
 class Synchronizer(Thread):
+    """
+    A thread that synchronizes the virtualchain in a certain interval
+    """
+
     def __init__(self, logger, config=get_default_talos_config(), sleep_interval=60):
         self.sleep_interval = sleep_interval
         self.config = config

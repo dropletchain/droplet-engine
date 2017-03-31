@@ -1,7 +1,7 @@
 from rpcudp.protocol import RPCProtocol
 from twisted.internet import reactor
 
-from test_leveldbstorage_api import generate_random_chunk, generate_token
+from test_storage_api import generate_random_chunk, generate_token
 
 
 class RPCClient(RPCProtocol):

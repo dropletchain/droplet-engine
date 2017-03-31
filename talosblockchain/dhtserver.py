@@ -7,7 +7,7 @@ from twisted.python import log
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 
-from talosdht.dhtrest import AddChunk, GetChunk
+from talosdht.dhtrestapi import AddChunk, GetChunk
 from talosdht.dhtstorage import TalosLevelDBDHTStorage
 from talosdht.server import TalosDHTServer
 from talosvc.talosclient.restapiclient import TalosVCRestClient

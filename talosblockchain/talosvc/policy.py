@@ -6,7 +6,17 @@ from talosvc.config import *
 
 
 class Policy:
+    """
+    Represents a Policy in the system, which has to be enforced on the datastreams.
+    """
     def __init__(self, owner, owner_pk, stream_id, nonce, txid):
+        """
+        :param owner: owner bitcoin address
+        :param owner_pk: public key as hex
+        :param stream_id: stream identifier as an integer
+        :param nonce: a 16 byte random nonce
+        :param txid: the transaction id of the policy creation
+        """
         self.shares = []
         self.times = []
         self.owner = str(owner)

@@ -86,7 +86,7 @@ def check_pubkey_valid(data, signature, pubkey):
     return True
 
 
-JSON_TIMESTAMP = "unix_timestamp"
+JSON_NONCE = "nonce"
 JSON_OWNER = "owner"
 JSON_STREAM_ID = "stream_id"
 JSON_CHUNK_IDENT = "chunk_key"
@@ -95,10 +95,10 @@ JSON_PUB_KEY = "pubkey"
 
 
 class QueryToken(object):
-    def __init__(self, owner, streamid, timestamp, chunk_key, signature, pubkey):
+    def __init__(self, owner, streamid, nonce, chunk_key, signature, pubkey):
         self.owner = owner
         self.streamid = streamid
-        self.timestamp = timestamp
+        self.nonce = nonce
         self.chunk_key = chunk_key
         self.signature = signature
         self.pubkey = pubkey
@@ -106,14 +106,14 @@ class QueryToken(object):
     def get_signature_data(self):
         return str(self.owner) + \
                str(self.streamid) + \
-               str(self.timestamp) + \
+               str(self.nonce) + \
                self.chunk_key
 
     def to_json(self):
         return {
             JSON_OWNER: self.owner,
             JSON_STREAM_ID: self.streamid,
-            JSON_TIMESTAMP: self.timestamp,
+            JSON_NONCE: self.nonce,
             JSON_CHUNK_IDENT:  base64.b64encode(self.chunk_key),
             JSON_SIGNATURE: base64.b64encode(self.signature),
             JSON_PUB_KEY: self.pubkey
@@ -123,26 +123,26 @@ class QueryToken(object):
     def from_json(json_msg):
         owner = str(json_msg[JSON_OWNER])
         streamid = int(json_msg[JSON_STREAM_ID])
-        timestamp = int(json_msg[JSON_TIMESTAMP])
+        nonce = int(json_msg[JSON_NONCE])
         chunk_key = base64.b64decode(json_msg[JSON_CHUNK_IDENT])
         signature = base64.b64decode(json_msg[JSON_SIGNATURE])
         pubkey = str(json_msg[JSON_PUB_KEY])
-        return QueryToken(owner, streamid, timestamp, chunk_key, signature, pubkey)
+        return QueryToken(owner, streamid, nonce, chunk_key, signature, pubkey)
 
 
-def check_valid(token, max_time):
+def check_valid(token):
     data = token.get_signature_data()
     if not check_pubkey_valid(data, token.signature, token.pubkey):
         return False
-    if int(time.time()) - int(token.timestamp) > max_time:
-        return False
+    # if int(time.time()) - int(token.timestamp) > max_time:
+    #    return False
     return True
 
 
 def check_json_query_token_valid(json_msg):
     return JSON_OWNER in json_msg \
            and JSON_STREAM_ID in json_msg \
-           and JSON_TIMESTAMP in json_msg \
+           and JSON_NONCE in json_msg \
            and JSON_CHUNK_IDENT in json_msg \
            and JSON_SIGNATURE in json_msg \
            and JSON_PUB_KEY in json_msg
@@ -179,7 +179,7 @@ def get_and_check_query_token(json_token):
     return QueryToken.from_json(json_token)
 
 
-def check_query_token_valid(query_token, max_time):
-    if not check_valid(query_token, max_time):
+def check_query_token_valid(query_token):
+    if not check_valid(query_token):
         raise InvalidQueryToken("ERROR pulibc key not valid")
     return True

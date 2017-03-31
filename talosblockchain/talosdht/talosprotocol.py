@@ -1,18 +1,33 @@
+import json
+import os
 import random
+import base64
+from StringIO import StringIO
+from threading import Lock
 
+from cachetools import TTLCache
 from kademlia.log import Logger
 from kademlia.protocol import KademliaProtocol
 from kademlia.routing import RoutingTable
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from rpcudp.protocol import RPCProtocol
 
 from kademlia.node import Node
 from kademlia.utils import digest
+from twisted.internet.task import LoopingCall
+from twisted.web.client import Agent, FileBodyProducer
+from twisted.web.http_headers import Headers
+from twisted.web.resource import Resource
+
 from talosstorage.checks import check_query_token_valid, InvalidQueryToken, get_and_check_query_token, CloudChunk
 from talosstorage.storage import InvalidChunkError
 from talosvc.talosclient.restapiclient import TalosVCRestClient
 
+
+######################
+# Talos RPC Prototol #
+######################
 
 class TalosKademliaProtocol(RPCProtocol):
     """
@@ -66,20 +81,13 @@ class TalosKademliaProtocol(RPCProtocol):
         node = Node(key)
         return map(tuple, self.router.findNeighbors(node, exclude=source))
 
-    def rpc_find_value(self, sender, nodeid, key, token):
+    def rpc_find_value(self, sender, nodeid, key, chunk_key):
         source = Node(nodeid, sender[0], sender[1])
         self.welcomeIfNewNode(source)
-        token = get_and_check_query_token(token)
-        if self.storage.has_value(token.chunk_key):
+        if self.storage.has_value(chunk_key):
             try:
-                self.log.info("Check access correct (value found) %s" % nodeid.encode('hex'))
-                check_query_token_valid(token, self.max_time_check)
-                policy = self.talos_vc.get_policy(token.owner, token.streamid)
-                # check policy for correctness
-                chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
-                if not digest(chunk.key) == key:
-                    return {'error': 'key missmatch'}
-                return {'value': chunk.encode()}
+                myaddress = self.transport.getHost()
+                return {'value': "%s:%d" % (myaddress.host, myaddress.port)}
             except InvalidQueryToken as e:
                 self.log.info("Invalid query token received %s" % (e.value,))
                 return {'error': e.value}
@@ -91,9 +99,9 @@ class TalosKademliaProtocol(RPCProtocol):
         d = self.find_node(address, self.sourceNode.id, nodeToFind.id)
         return d.addCallback(self.handleCallResponse, nodeToAsk)
 
-    def callFindValue(self, nodeToAsk, nodeToFind, token):
+    def callFindValue(self, nodeToAsk, nodeToFind, chunk_key):
         address = (nodeToAsk.ip, nodeToAsk.port)
-        d = self.find_value(address, self.sourceNode.id, nodeToFind.id, token)
+        d = self.find_value(address, self.sourceNode.id, nodeToFind.id, chunk_key)
         return d.addCallback(self.handleCallResponse, nodeToAsk)
 
     def callPing(self, nodeToAsk):
@@ -145,3 +153,135 @@ class TalosKademliaProtocol(RPCProtocol):
             self.log.debug("no response from %s, removing from router" % node)
             self.router.removeContact(node)
         return result
+
+
+#################
+# http protocol #
+#################
+
+
+class QueryChunk(Resource):
+    allowedMethods = ('GET', 'POST')
+
+    def __init__(self, storage, talos_vc=TalosVCRestClient(), max_nonce_cache=1000, nonce_ttl=10):
+        Resource.__init__(self)
+        self.storage = storage
+        self.log = Logger(system=self)
+        self.talos_vc = talos_vc
+        self.nonce_cache = TTLCache(max_nonce_cache, nonce_ttl)
+        self.refreshLoop = LoopingCall(self.nonce_cache.expire()).start(3600)
+        self.lock = Lock()
+
+    def renderGET(self, request):
+        nonce = os.urandom(16)
+        self.nonce_cache[nonce] = True
+        return nonce
+
+    def _check_cache(self, nonce):
+        self.lock.aquire()
+        try:
+            ok = self.nonce_cache[nonce]
+            if ok:
+                self.nonce_cache[nonce] = False
+            return ok
+        except KeyError:
+            return False
+        finally:
+            self.lock.release()
+
+    def render_POST(self, request):
+        msg = json.loads(request.content.read())
+        try:
+            token = get_and_check_query_token(msg)
+            check_query_token_valid(token)
+
+            # Check nonce ok
+            if not self._check_cache(token.nonce):
+                raise InvalidQueryToken("Nonce not valid")
+
+            policy = self.talos_vc.get_policy(token.owner, token.streamid)
+            # check policy for correctness
+            chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
+            return chunk.encode()
+        except InvalidQueryToken:
+            request.setResponseCode(400)
+            return "ERROR: token verification failure"
+        except:
+            request.setResponseCode(400)
+            return "ERROR: error occured"
+
+
+# POST /storelargechunk/<b64 node-id>/<port>/<b64 key>
+class StoreLargeChunk(Resource):
+    allowedMethods = ('POST',)
+
+    def __init__(self, storage, rpc_protocol, talos_vc=TalosVCRestClient()):
+        Resource.__init__(self)
+        self.storage = storage
+        self.log = Logger(system=self)
+        self.talos_vc = talos_vc
+        self.rpc_protocol = rpc_protocol
+
+    def getChild(self, path, request):
+        return self
+
+    def render_POST(self, request):
+        if len(request.prepath) < 4:
+            request.setResponseCode(400)
+            return "ERROR"
+        try:
+            nodeid = base64.b64decode(request.prepath[1])
+            source_ip = request.client.host
+            source_port = int(request.prepath[2])
+            kad_key = base64.b64decode(request.prepath[3])
+
+            source = Node(nodeid, source_ip, source_port)
+            self.rpc_protocol.welcomeIfNewNode(source)
+
+            encoded_chunk = request.content.read()
+            chunk = CloudChunk.decode(encoded_chunk)
+
+            if not digest(chunk.key) == kad_key:
+                request.setResponseCode(400)
+                return "ERROR: key missmatch"
+            policy = self.talos_vc.get_policy_with_txid(chunk.get_tag_hex())
+            # Hack no chunk id given -> no key checks, key is in the encoded chunk
+            self.storage.store_check_chunk(chunk, None, policy)
+            return "OK"
+        except InvalidChunkError as e:
+            request.setResponseCode(400)
+            return "ERROR: %s" % str(e.value)
+        except:
+            request.setResponseCode(400)
+            return "ERROR"
+
+
+class TalosHTTPClient:
+    def __init__(self, rpc_protocol, my_tcp_port):
+        self.agent = Agent(reactor)
+        self.rpc_protocol = rpc_protocol
+        self.my_tcp_port = my_tcp_port
+
+    def call_store_large_chunk(self, nodeToAsk, key, value):
+        res = "storelargechunk/%s/%d/%s" % (base64.b64encode(self.rpc_protocol.sourceNode.id),
+                                               self.my_tcp_port,
+                                               base64.b64encode(key))
+        body = FileBodyProducer(StringIO(value))
+        d = self.agent.request(
+            'POST',
+            'http://%s:%d/%s' % (nodeToAsk.ip, nodeToAsk.port, res),
+            Headers({'User-Agent': ['TalosDHTNode']}),
+            body)
+
+        def handle_store_ok(result, node):
+            self.rpc_protocol.welcomeIfNewNode(node)
+            return result
+
+        def handle_store_error(result, node):
+            self.rpc_protocol.router.removeContact(node)
+            return result
+
+        return d.addCallbacks(handle_store_ok, errback=handle_store_error,
+                     callbackArgs=nodeToAsk, callbackKeywords=None,
+                     errbackArgs=nodeToAsk, errbackKeywords=None)
+
