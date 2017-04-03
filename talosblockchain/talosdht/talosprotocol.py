@@ -177,7 +177,7 @@ class QueryChunk(Resource):
         self.log = Logger(system=self)
         self.talos_vc = talos_vc
         self.nonce_cache = TTLCache(max_nonce_cache, nonce_ttl)
-        self.refreshLoop = LoopingCall(self.nonce_cache.expire()).start(3600)
+        self.refreshLoop = LoopingCall(self.nonce_cache.expire).start(3600)
         self.sem = Semaphore(1)
 
     def render_GET(self, request):

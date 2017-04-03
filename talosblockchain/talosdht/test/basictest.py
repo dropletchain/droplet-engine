@@ -17,7 +17,7 @@ from talosstorage.chunkdata import CloudChunk
 log.startLogging(sys.stdout)
 
 start_port = 12000
-num_servers = 3
+num_servers = 100
 servers = []
 counter_iter = itertools.count()
 
@@ -91,7 +91,7 @@ def bootstrapDone(found, server):
     count = counter_iter.next()
     print "Server %d bootstrap done\n" % count
     if count == num_servers:
-        chunk = generate_random_chunk(0, size=10000)
+        chunk = generate_random_chunk(0, size=100000)
         servers[0].store_chunk(chunk).addCallback(findAddr, (servers[-1], chunk, 0))
     else:
         servers[count].bootstrap([('127.0.0.1', start_port + count - 1)]).addCallback(bootstrapDone, servers[count])

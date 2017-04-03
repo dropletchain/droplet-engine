@@ -187,7 +187,7 @@ class TalosDHTServer(object):
         if len(nearest) == 0:
             self.log.warning("There are no known neighbors to get key %s" % binascii.hexlify(dkey))
             return defer.succeed(None)
-        spider = TalosChunkSpiderCrawl(self.protocol, node, chunk_key, nearest, self.ksize, self.alpha)
+        spider = TalosChunkSpiderCrawl(self.protocol, self.httpprotocol_client, node, chunk_key, nearest, self.ksize, self.alpha)
         return spider.find()
 
     def digest_set(self, dkey, value, policy_in=None):

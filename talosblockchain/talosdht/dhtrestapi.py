@@ -1,4 +1,5 @@
 import json
+import binascii
 
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
@@ -32,14 +33,51 @@ class AddChunk(Resource):
             return "ERROR"
 
 
-class GetChunk(Resource):
-    allowedMethods = ('POST',)
+"""
+<resource>/<hex chunk key>
+"""
+class GetChunkLoaction(Resource):
+    allowedMethods = ('GET',)
 
     def __init__(self, dhtstorage):
         Resource.__init__(self)
         self.dhtstorage = dhtstorage
 
-    def render_POST(self, request):
+    def getChild(self, path, request):
+        return self
+
+    def render_GET(self, request):
+        def respond(result):
+            if result is None:
+                request.setResponseCode(400)
+                request.write("No Result found")
+            else:
+                request.setResponseCode(200)
+                request.write(result)
+            request.finish()
+
+        if len(request.prepath) < 2:
+            request.setResponseCode(400)
+            return json.dumps({'error': "Illegal URL"})
+        try:
+            chunk_key = binascii.unhexlify(request.prepath[1])
+            self.dhtstorage.get_addr_chunk(chunk_key).addCallback(respond)
+            return NOT_DONE_YET
+        except RuntimeError as e:
+            print e.message
+            request.setResponseCode(400)
+            return "ERROR"
+
+
+"""
+class GetChunkLoaction(Resource):
+    allowedMethods = ('GET',)
+
+    def __init__(self, dhtstorage):
+        Resource.__init__(self)
+        self.dhtstorage = dhtstorage
+
+    def render_GET(self, request):
         def respond(result):
             if result is None:
                 request.setResponseCode(400)
@@ -61,4 +99,5 @@ class GetChunk(Resource):
         except:
             request.setResponseCode(400)
             return "ERROR"
+"""
 

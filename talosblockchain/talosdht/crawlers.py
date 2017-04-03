@@ -56,8 +56,8 @@ class TalosSpiderCrawl(SpiderCrawl):
 
 
 class TalosChunkSpiderCrawl(TalosSpiderCrawl):
-    def __init__(self, protocol, http_client, node, token, peers, ksize, alpha):
-        TalosSpiderCrawl.__init__(self, protocol, node, token, peers, ksize, alpha)
+    def __init__(self, protocol, http_client, node, chunk_key, peers, ksize, alpha):
+        TalosSpiderCrawl.__init__(self, protocol, node, chunk_key, peers, ksize, alpha)
         # keep track of the single nearest node without value - per
         # section 2.3 so we can set the key there if found
         self.nearestWithoutValue = NodeHeap(self.node, 1)
