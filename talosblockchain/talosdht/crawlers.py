@@ -11,20 +11,19 @@ class TalosSpiderCrawl(SpiderCrawl):
     """
     Crawl the network and look for given 160-bit keys.
     """
-    def __init__(self, protocol, node, token, peers, ksize, alpha):
+    def __init__(self, protocol, node, chunk_key, peers, ksize, alpha):
         """
         Create a new C{SpiderCrawl}er.
 
         Args:
             protocol: A :class:`~kademlia.protocol.KademliaProtocol` instance.
             node: A :class:`~kademlia.node.Node` representing the key we're looking for
-            token: the token we are looking for
             peers: A list of :class:`~kademlia.node.Node` instances that provide the entry point for the network
             ksize: The value for k based on the paper
             alpha: The value for alpha based on the paper
         """
         SpiderCrawl.__init__(self, protocol, node, peers, ksize, alpha)
-        self.token = token
+        self.chunk_key = chunk_key
 
     def _find_value(self, rpcmethod):
         """
@@ -51,17 +50,18 @@ class TalosSpiderCrawl(SpiderCrawl):
 
         ds = {}
         for peer in self.nearest.getUncontacted()[:count]:
-            ds[peer.id] = rpcmethod(peer, self.node, self.token.to_json())
+            ds[peer.id] = rpcmethod(peer, self.node, self.chunk_key)
             self.nearest.markContacted(peer)
         return deferredDict(ds).addCallback(self._nodesFound)
 
 
 class TalosChunkSpiderCrawl(TalosSpiderCrawl):
-    def __init__(self, protocol, node, token, peers, ksize, alpha):
+    def __init__(self, protocol, http_client, node, token, peers, ksize, alpha):
         TalosSpiderCrawl.__init__(self, protocol, node, token, peers, ksize, alpha)
         # keep track of the single nearest node without value - per
         # section 2.3 so we can set the key there if found
         self.nearestWithoutValue = NodeHeap(self.node, 1)
+        self.http_client = http_client
 
     def find(self):
         """
@@ -112,8 +112,8 @@ class TalosChunkSpiderCrawl(TalosSpiderCrawl):
         peerToSaveTo = self.nearestWithoutValue.popleft()
         if peerToSaveTo is not None:
             d = self.protocol.callStore(peerToSaveTo, self.node.id, value)
-            return d.addCallback(lambda _: CloudChunk.decode(value))
-        return CloudChunk.decode(value)
+            return d.addCallback(lambda _: value)
+        return value
 
 
 class TalosRPCFindValueResponse(object):

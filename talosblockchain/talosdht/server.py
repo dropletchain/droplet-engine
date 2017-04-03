@@ -15,10 +15,12 @@ from kademlia.storage import ForgetfulStorage
 from kademlia.node import Node
 from kademlia.crawling import ValueSpiderCrawl
 from kademlia.crawling import NodeSpiderCrawl
+from twisted.web.resource import Resource
+from twisted.web.server import Site
 
 from talosdht.crawlers import TalosChunkSpiderCrawl
 from talosdht.dhtstorage import TalosLevelDBDHTStorage
-from talosdht.talosprotocol import TalosKademliaProtocol
+from talosdht.talosprotocol import TalosKademliaProtocol, TalosHTTPClient, QueryChunk, StoreLargeChunk
 from talosstorage.checks import get_and_check_query_token, check_query_token_valid, InvalidQueryToken
 from talosstorage.chunkdata import CloudChunk
 from talosvc.talosclient.restapiclient import TalosVCRestClient
@@ -40,7 +42,7 @@ class TalosDHTServer(object):
     """
 
     def __init__(self, ksize=20, alpha=3, id=None, storage=None,
-                 talos_vc=None, max_time_check=10):
+                 talos_vc=None):
         """
         Create a server instance.  This will start listening on the given port.
         Args:
@@ -56,17 +58,22 @@ class TalosDHTServer(object):
         self.node = Node(id or digest(random.getrandbits(255)))
         self.refreshLoop = LoopingCall(self.refreshTable).start(3600)
         self.talos_vc = talos_vc or TalosVCRestClient()
-        self.max_time_check = max_time_check
-        self.protocol = TalosKademliaProtocol(self.node, self.storage, ksize, talos_vc=self.talos_vc,
-                                              max_time_check=self.max_time_check)
+        self.protocol = TalosKademliaProtocol(self.node, self.storage, ksize, talos_vc=self.talos_vc)
+        self.httpprotocol_client = None
 
-    def listen(self, port, interface=""):
+    def listen(self, port, interface="127.0.0.1"):
         """
+        Init tcp/udp protocol on the given port
         Start listening on the given port.
-        This is the same as calling::
-            reactor.listenUDP(port, server.protocol)
-        Provide interface="::" to accept ipv6 address
         """
+        root = Resource()
+        root.putChild("get_chunk", QueryChunk(self.storage, talos_vc=self.talos_vc))
+        root.putChild("storelargechunk", StoreLargeChunk(self.storage, self.protocol, talos_vc=self.talos_vc))
+        factory = Site(root)
+
+        self.httpprotocol_client = TalosHTTPClient(self.protocol, port)
+        self.protocol.http_client = self.httpprotocol_client
+        reactor.listenTCP(port, factory, interface=interface)
         return reactor.listenUDP(port, self.protocol, interface, maxPacketSize=65535)
 
     def refreshTable(self):
@@ -168,26 +175,19 @@ class TalosDHTServer(object):
         self.log.debug("Storing chunk with key %s" % (binascii.hexlify(dkey),))
         return self.digest_set(dkey, chunk.encode(), policy_in=policy)
 
-    def get_chunk(self, token, policy_in=None):
+    def get_addr_chunk(self, chunk_key, policy_in=None):
         # if this node has it, return it
-        if self.storage.has_value(token.chunk_key):
-            try:
-                check_query_token_valid(token, self.max_time_check)
-                policy = policy_in or self.talos_vc.get_policy(token.owner, token.streamid)
-                # check policy for correctness
-                chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
-                return defer.succeed(chunk)
-            except InvalidQueryToken as e:
-                self.log.info("Invalid query token received %s" % (e.value,))
-                raise TalosDHTServerError(e.value)
-        dkey = digest(token.chunk_key)
+        if self.storage.has_value(chunk_key):
+            addr = self.protocol.get_address()
+            return defer.succeed("%s:%d" % (addr[0], addr[1]))
+        dkey = digest(chunk_key)
         node = Node(dkey)
         nearest = self.protocol.router.findNeighbors(node)
         self.log.debug("Crawling for key %s" % (binascii.hexlify(dkey),))
         if len(nearest) == 0:
             self.log.warning("There are no known neighbors to get key %s" % binascii.hexlify(dkey))
             return defer.succeed(None)
-        spider = TalosChunkSpiderCrawl(self.protocol, node, token, nearest, self.ksize, self.alpha)
+        spider = TalosChunkSpiderCrawl(self.protocol, node, chunk_key, nearest, self.ksize, self.alpha)
         return spider.find()
 
     def digest_set(self, dkey, value, policy_in=None):

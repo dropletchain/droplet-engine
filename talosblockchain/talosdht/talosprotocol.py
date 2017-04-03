@@ -1,9 +1,10 @@
 import json
 import os
 import random
-import base64
+from binascii import hexlify, unhexlify
+
 from StringIO import StringIO
-from threading import Lock
+from threading import Lock, Semaphore
 
 from cachetools import TTLCache
 from kademlia.log import Logger
@@ -16,7 +17,7 @@ from rpcudp.protocol import RPCProtocol
 from kademlia.node import Node
 from kademlia.utils import digest
 from twisted.internet.task import LoopingCall
-from twisted.web.client import Agent, FileBodyProducer
+from twisted.web.client import Agent, FileBodyProducer, readBody
 from twisted.web.http_headers import Headers
 from twisted.web.resource import Resource
 
@@ -33,14 +34,14 @@ class TalosKademliaProtocol(RPCProtocol):
     """
     New protocol for the talos storage, base protocol from bmuller's implementation
     """
-    def __init__(self, sourceNode, storage, ksize, talos_vc=TalosVCRestClient(), max_time_check=10):
+    def __init__(self, sourceNode, storage, ksize, talos_vc=TalosVCRestClient()):
         RPCProtocol.__init__(self)
         self.router = RoutingTable(self, ksize, sourceNode)
         self.storage = storage
         self.sourceNode = sourceNode
         self.log = Logger(system=self)
-        self.max_time_check = max_time_check
         self.talos_vc = talos_vc
+        self.http_client = None
 
     def getRefreshIDs(self):
         """
@@ -111,7 +112,10 @@ class TalosKademliaProtocol(RPCProtocol):
 
     def callStore(self, nodeToAsk, key, value):
         address = (nodeToAsk.ip, nodeToAsk.port)
-        d = self.store(address, self.sourceNode.id, key, value)
+        if len(value) < 8192:
+            d = self.store(address, self.sourceNode.id, key, value)
+        else:
+            d = self.http_client.call_store_large_chunk(nodeToAsk, key, value)
         return d.addCallback(self.handleCallResponse, nodeToAsk)
 
     def welcomeIfNewNode(self, node):
@@ -137,7 +141,7 @@ class TalosKademliaProtocol(RPCProtocol):
                     newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
                     thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
                 if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
-                    ds.append(self.callStore(node, key, value))
+                    ds.append(self.callStore(node, digest(key), value))
             self.router.addContact(node)
             return defer.gatherResults(ds)
 
@@ -153,6 +157,10 @@ class TalosKademliaProtocol(RPCProtocol):
             self.log.debug("no response from %s, removing from router" % node)
             self.router.removeContact(node)
         return result
+
+    def get_address(self):
+        host = self.transport.getHost()
+        return host.host, host.port
 
 
 #################
@@ -170,15 +178,15 @@ class QueryChunk(Resource):
         self.talos_vc = talos_vc
         self.nonce_cache = TTLCache(max_nonce_cache, nonce_ttl)
         self.refreshLoop = LoopingCall(self.nonce_cache.expire()).start(3600)
-        self.lock = Lock()
+        self.sem = Semaphore(1)
 
-    def renderGET(self, request):
+    def render_GET(self, request):
         nonce = os.urandom(16)
         self.nonce_cache[nonce] = True
         return nonce
 
     def _check_cache(self, nonce):
-        self.lock.aquire()
+        self.sem.acquire(True)
         try:
             ok = self.nonce_cache[nonce]
             if ok:
@@ -187,7 +195,7 @@ class QueryChunk(Resource):
         except KeyError:
             return False
         finally:
-            self.lock.release()
+            self.sem.release()
 
     def render_POST(self, request):
         msg = json.loads(request.content.read())
@@ -211,7 +219,7 @@ class QueryChunk(Resource):
             return "ERROR: error occured"
 
 
-# POST /storelargechunk/<b64 node-id>/<port>/<b64 key>
+# POST /storelargechunk/<hex node-id>/<port>/<hex key>
 class StoreLargeChunk(Resource):
     allowedMethods = ('POST',)
 
@@ -228,12 +236,12 @@ class StoreLargeChunk(Resource):
     def render_POST(self, request):
         if len(request.prepath) < 4:
             request.setResponseCode(400)
-            return "ERROR"
+            return json.dumps({'error': "Illegal URL"})
         try:
-            nodeid = base64.b64decode(request.prepath[1])
+            nodeid = unhexlify(request.prepath[1])
             source_ip = request.client.host
             source_port = int(request.prepath[2])
-            kad_key = base64.b64decode(request.prepath[3])
+            kad_key = unhexlify(request.prepath[3])
 
             source = Node(nodeid, source_ip, source_port)
             self.rpc_protocol.welcomeIfNewNode(source)
@@ -243,17 +251,17 @@ class StoreLargeChunk(Resource):
 
             if not digest(chunk.key) == kad_key:
                 request.setResponseCode(400)
-                return "ERROR: key missmatch"
+                return json.dumps({'error': "key missmatch"})
             policy = self.talos_vc.get_policy_with_txid(chunk.get_tag_hex())
             # Hack no chunk id given -> no key checks, key is in the encoded chunk
             self.storage.store_check_chunk(chunk, None, policy)
-            return "OK"
+            return json.dumps({'value': "ok"})
         except InvalidChunkError as e:
             request.setResponseCode(400)
-            return "ERROR: %s" % str(e.value)
+            return json.dumps({'error': e.value})
         except:
             request.setResponseCode(400)
-            return "ERROR"
+            return json.dumps({'error': "Error occured"})
 
 
 class TalosHTTPClient:
@@ -263,9 +271,9 @@ class TalosHTTPClient:
         self.my_tcp_port = my_tcp_port
 
     def call_store_large_chunk(self, nodeToAsk, key, value):
-        res = "storelargechunk/%s/%d/%s" % (base64.b64encode(self.rpc_protocol.sourceNode.id),
+        res = "storelargechunk/%s/%d/%s" % (hexlify(self.rpc_protocol.sourceNode.id),
                                                self.my_tcp_port,
-                                               base64.b64encode(key))
+                                               hexlify(key))
         body = FileBodyProducer(StringIO(value))
         d = self.agent.request(
             'POST',
@@ -273,15 +281,15 @@ class TalosHTTPClient:
             Headers({'User-Agent': ['TalosDHTNode']}),
             body)
 
-        def handle_store_ok(result, node):
-            self.rpc_protocol.welcomeIfNewNode(node)
-            return result
+        def handle_result_value(body):
+            return True, json.loads(body)
 
-        def handle_store_error(result, node):
-            self.rpc_protocol.router.removeContact(node)
-            return result
+        def handle_response(response):
+            d = readBody(response)
+            return d.addCallback(handle_result_value)
 
-        return d.addCallbacks(handle_store_ok, errback=handle_store_error,
-                     callbackArgs=nodeToAsk, callbackKeywords=None,
-                     errbackArgs=nodeToAsk, errbackKeywords=None)
+        def handle_error(error):
+            return False, None
+
+        return d.addCallbacks(handle_response, errback=handle_error)
 

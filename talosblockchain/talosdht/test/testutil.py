@@ -25,8 +25,8 @@ def generate_random_chunk(block_id, key=os.urandom(32), size=1000, min_val=0, ma
     return create_cloud_chunk(stream_ident, block_id, get_priv_key(PRIVATE_KEY), 10, key, chunk)
 
 
-def generate_token(block_id):
+def generate_token(block_id, nonce):
     owner = PRIVATE_KEY.public_key().address()
     stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                         TXID)
-    return generate_query_token(owner, STREAMID, stream_ident.get_key_for_blockid(block_id), PRIVATE_KEY)
+    return generate_query_token(owner, STREAMID, nonce, stream_ident.get_key_for_blockid(block_id), PRIVATE_KEY)

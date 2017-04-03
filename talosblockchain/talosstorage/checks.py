@@ -113,17 +113,18 @@ class QueryToken(object):
         return {
             JSON_OWNER: self.owner,
             JSON_STREAM_ID: self.streamid,
-            JSON_NONCE: self.nonce,
+            JSON_NONCE: base64.b64encode(self.nonce),
             JSON_CHUNK_IDENT:  base64.b64encode(self.chunk_key),
             JSON_SIGNATURE: base64.b64encode(self.signature),
             JSON_PUB_KEY: self.pubkey
         }
 
+
     @staticmethod
     def from_json(json_msg):
         owner = str(json_msg[JSON_OWNER])
         streamid = int(json_msg[JSON_STREAM_ID])
-        nonce = int(json_msg[JSON_NONCE])
+        nonce = base64.b64decode(json_msg[JSON_NONCE])
         chunk_key = base64.b64decode(json_msg[JSON_CHUNK_IDENT])
         signature = base64.b64decode(json_msg[JSON_SIGNATURE])
         pubkey = str(json_msg[JSON_PUB_KEY])
@@ -155,12 +156,11 @@ def get_priv_key(bvpk_private_key):
     backend = default_backend())
 
 
-def generate_query_token(owner, streamid, chunk_key, bvpk_private_key):
+def generate_query_token(owner, streamid, nonce, chunk_key, bvpk_private_key):
     private_key = get_priv_key(bvpk_private_key)
-    timestamp = int(time.time())
-    data = owner + str(streamid) + str(timestamp) + chunk_key
+    data = owner + str(streamid) + str(nonce) + chunk_key
     signature = hash_sign_data(private_key, data)
-    return QueryToken(owner, streamid, timestamp, chunk_key, signature, bvpk_private_key.public_key().to_hex())
+    return QueryToken(owner, streamid, nonce, chunk_key, signature, bvpk_private_key.public_key().to_hex())
 
 
 class InvalidQueryToken(Exception):
