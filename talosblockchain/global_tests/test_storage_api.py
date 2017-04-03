@@ -101,7 +101,7 @@ class TestStorageApi(unittest.TestCase):
     def test_multiple(self):
         for i in range(0, 100):
             key = os.urandom(32)
-            chunk = generate_random_chunk(i, key=key)
+            chunk = generate_random_chunk(i, key=key, size=1000000)
             _, code = store_chunk(i, chunk)
             self.assertEquals(code, 200)
 
