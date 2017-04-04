@@ -5,6 +5,7 @@ CUR_PATH=$(pwd)
 
 sudo apt-get install python-pip libffi-dev python-dev build-essential libssl-dev libffi-dev
 
+
 cd $LOCAL_PATH
 cd ..
 cd protocoin
@@ -14,10 +15,14 @@ cd virtualchain
 sudo python setup.py install
 cd ..
 
-sudo pip install flask
-sudo pip install kademlia
-sudo pip install requests
-sudo pip install cryptography
-sudo pip install cachetools
+
+pip install flask
+pip install kademlia
+pip install requests
+pip install cryptography
+pip install cachetools
+pip install leveldb
+pip install --upgrade pyopenssl
+pip install service_identity
 
 cd $CUR_PATH

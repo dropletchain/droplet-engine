@@ -6,6 +6,6 @@ CUR_PATH=$(pwd)
 cd $LOCAL_PATH
 cd ..
 
-python2.7 policyapi.py "$@"
+python policyapi.py "$@"
 
 cd $CUR_PATH

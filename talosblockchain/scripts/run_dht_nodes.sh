@@ -29,14 +29,14 @@ fi
 
 
 echo "Start main node"
-$PYTHON_CMD dhtserver.py --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH/mainstate.state --logfile $LOG_PATH/mainlog.log --vcport &
+$PYTHON_CMD dhtserver.py --dhtserver 0.0.0.0 --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH/mainstate.state --logfile $LOG_PATH/mainlog.log --vcport &
 
 sleep 5
 
 for ((c=1; c<=NUM_EXTRA_NODES; c++))
 do
     echo "Start extra node $c"
-    $PYTHON_CMD dhtserveronly.py --bootstrap 127.0.0.1:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH/nodestate$c.state --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log &
+    $PYTHON_CMD dhtserveronly.py --dhtserver 0.0.0.0 --bootstrap 0.0.0.0:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH/nodestate$c.state --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log &
 	CUR_PORT=$((CUR_PORT + 1))
 	sleep 5
 done
