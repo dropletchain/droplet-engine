@@ -19,13 +19,15 @@ class BitcoinVersionedPrivateKey(BitcoinPrivateKey):
     _pubkeyhash_version_byte = 111
 
 
+#PRIVATE_KEY = BitcoinVersionedPrivateKey("cRR1K6arfF5TtVxDZzAaf3EmXkhymqrteUPbfDvLHdJr753kPM1m")
 PRIVATE_KEY = BitcoinVersionedPrivateKey("cRR1K6arfF5TtVxDZzAaf3EmXkhymqrteUPbfDvLHdJr753kPM1m")
-NONCE = base64.b64decode("YnoT+AJ20SgZFG67exkf1w==")
+NONCE = base64.b64decode("OU2HliHRUUZJokNvn84a+A==")
 STREAMID = 1
-TXID = "8fd55b2955757337475c727f60de322b3b03fb8c32dc6ca51723eb0748a1d414"
+TXID = "8cf71b7ed09acf896b40fc087e56d3d4dbd8cc346a869bb8a81624153c0c2b8c"
+IP = "46.101.113.112"
+PORT = 14000
 
-
-def store_chunk(chunkid, chunk, ip="127.0.0.1", port=13000):
+def store_chunk(chunkid, chunk, ip=IP, port=PORT):
     req = requests.post("http://%s:%d/store_chunk" % (ip, port), data=chunk.encode())
     return req.reason, req.status_code
 
@@ -42,7 +44,7 @@ def get_chunk_peer(json_token, ip, port):
     return req.reason, req.status_code, req.text
 
 
-def get_chunk_addr(chunk_key, ip="127.0.0.1", port=13000):
+def get_chunk_addr(chunk_key, ip=IP, port=PORT):
     url = "http://%s:%d/chunk_address/%s" % (ip, port, binascii.hexlify(chunk_key))
     req = requests.get(url)
     return req.reason, req.status_code, req.text
