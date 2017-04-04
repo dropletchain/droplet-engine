@@ -7,10 +7,10 @@ from twisted.python import log
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 
+from talosdht.asyncpolicy import AsyncPolicyApiClient
 from talosdht.dhtrestapi import AddChunk, GetChunkLoaction
 from talosdht.dhtstorage import TalosLevelDBDHTStorage
 from talosdht.server import TalosDHTServer
-from talosvc.talosclient.restapiclient import TalosVCRestClient
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Run storage server client")
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     log.startLogging(sys.stdout)
 
     storage = TalosLevelDBDHTStorage(args.dhtdbpath)
-    vc_server = TalosVCRestClient(ip=args.vcserver, port=args.vcport)
+    vc_server = AsyncPolicyApiClient(ip=args.vcserver, port=args.vcport)
 
     if args.dht_cache_file is None:
         server = TalosDHTServer(ksize=args.ksize, alpha=args.alpha, storage=storage,

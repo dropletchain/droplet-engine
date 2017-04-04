@@ -67,7 +67,6 @@ def generate_token(nonce):
     return generate_query_token(owner, STREAMID, nonce, stream_ident.get_key_for_blockid(0), PRIVATE_KEY)
 
 
-
 class TestStorageApi(unittest.TestCase):
 
     def _test_get_chunk_for_blockid(self, owner, stream_ident, block_Id):
@@ -101,7 +100,7 @@ class TestStorageApi(unittest.TestCase):
     def test_multiple(self):
         for i in range(0, 100):
             key = os.urandom(32)
-            chunk = generate_random_chunk(i, key=key, size=1000000)
+            chunk = generate_random_chunk(i, key=key, size=1000)
             _, code = store_chunk(i, chunk)
             self.assertEquals(code, 200)
 

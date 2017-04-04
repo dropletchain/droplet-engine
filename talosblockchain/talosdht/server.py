@@ -18,6 +18,7 @@ from kademlia.crawling import NodeSpiderCrawl
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 
+from talosdht.asyncpolicy import AsyncPolicyApiClient
 from talosdht.crawlers import TalosChunkSpiderCrawl
 from talosdht.dhtstorage import TalosLevelDBDHTStorage
 from talosdht.talosprotocol import TalosKademliaProtocol, TalosHTTPClient, QueryChunk, StoreLargeChunk
@@ -57,7 +58,7 @@ class TalosDHTServer(object):
         self.storage = storage or TalosLevelDBDHTStorage("./leveldb")
         self.node = Node(id or digest(random.getrandbits(255)))
         self.refreshLoop = LoopingCall(self.refreshTable).start(3600)
-        self.talos_vc = talos_vc or TalosVCRestClient()
+        self.talos_vc = talos_vc or AsyncPolicyApiClient()
         self.protocol = TalosKademliaProtocol(self.node, self.storage, ksize, talos_vc=self.talos_vc)
         self.httpprotocol_client = None
 
@@ -205,9 +206,17 @@ class TalosDHTServer(object):
                 chunk = CloudChunk.decode(value)
                 if not digest(chunk.key) == dkey:
                     return {'error': 'key missmatch'}
-                policy = policy_in or self.talos_vc.get_policy_with_txid(chunk.get_tag_hex())
-                # Hack no chunk id given -> no key checks, key is in the encoded chunk
-                self.storage.store_check_chunk(chunk, None, policy)
+
+                def handle_policy(policy):
+                    # Hack no chunk id given -> no key checks, key is in the encoded chunk
+                    self.storage.store_check_chunk(chunk, None, policy)
+                    ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
+                    return defer.DeferredList(ds).addCallback(self._anyRespondSuccess)
+
+                if not policy_in is None:
+                    return handle_policy(policy_in)
+                return self.talos_vc.get_policy_with_txid(chunk.get_tag_hex()).addCallback(handle_policy)
+
             ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
             return defer.DeferredList(ds).addCallback(self._anyRespondSuccess)
 

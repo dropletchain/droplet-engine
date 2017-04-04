@@ -20,6 +20,7 @@ from twisted.internet.task import LoopingCall
 from twisted.web.client import Agent, FileBodyProducer, readBody
 from twisted.web.http_headers import Headers
 from twisted.web.resource import Resource
+from twisted.web.server import NOT_DONE_YET
 
 from talosstorage.checks import check_query_token_valid, InvalidQueryToken, get_and_check_query_token, CloudChunk
 from talosstorage.storage import InvalidChunkError
@@ -68,12 +69,14 @@ class TalosKademliaProtocol(RPCProtocol):
             chunk = CloudChunk.decode(value)
             if not digest(chunk.key) == key:
                 return {'error': 'key missmatch'}
-            policy = self.talos_vc.get_policy_with_txid(chunk.get_tag_hex())
-            # Hack no chunk id given -> no key checks, key is in the encoded chunk
-            self.storage.store_check_chunk(chunk, None, policy)
+
+            def handle_policy(policy):
+                # Hack no chunk id given -> no key checks, key is in the encoded chunk
+                self.storage.store_check_chunk(chunk, None, policy)
+                return {'value': 'ok'}
+            return self.talos_vc.get_policy_with_txid(chunk.get_tag_hex()).addCallback(handle_policy)
         except InvalidChunkError as e:
             return {'error': e.value}
-        return {'value': 'ok'}
 
     def rpc_find_node(self, sender, nodeid, key):
         self.log.info("finding neighbors of %i in local table" % long(nodeid.encode('hex'), 16))
@@ -207,10 +210,17 @@ class QueryChunk(Resource):
             if not self._check_cache(token.nonce):
                 raise InvalidQueryToken("Nonce not valid")
 
-            policy = self.talos_vc.get_policy(token.owner, token.streamid)
-            # check policy for correctness
-            chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
-            return chunk.encode()
+            def handle_policy(policy):
+                if policy is None:
+                    request.setResponseCode(400)
+                    request.write("No Policy Found")
+                    request.finish()
+                # check policy for correctness
+                chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
+                request.write(chunk.encode())
+                request.finish()
+            self.talos_vc.get_policy(token.owner, token.streamid).addCallback(handle_policy)
+            return NOT_DONE_YET
         except InvalidQueryToken:
             request.setResponseCode(400)
             return "ERROR: token verification failure"
@@ -252,10 +262,13 @@ class StoreLargeChunk(Resource):
             if not digest(chunk.key) == kad_key:
                 request.setResponseCode(400)
                 return json.dumps({'error': "key missmatch"})
-            policy = self.talos_vc.get_policy_with_txid(chunk.get_tag_hex())
-            # Hack no chunk id given -> no key checks, key is in the encoded chunk
-            self.storage.store_check_chunk(chunk, None, policy)
-            return json.dumps({'value': "ok"})
+
+            def handle_policy(policy):
+                self.storage.store_check_chunk(chunk, None, policy)
+                request.write(json.dumps({'value': "ok"}))
+                request.finish()
+            self.talos_vc.get_policy_with_txid(chunk.get_tag_hex()).addCallback(handle_policy)
+            return NOT_DONE_YET
         except InvalidChunkError as e:
             request.setResponseCode(400)
             return json.dumps({'error': e.value})
