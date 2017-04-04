@@ -30,7 +30,7 @@ fi
 
 
 echo "Start main node"
-$PYTHON_CMD dhtserver.py --dhtserver $PUBLIC_IP --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH/mainstate.state --logfile $LOG_PATH/mainlog.log &
+$PYTHON_CMD dhtserver.py --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH/mainstate.state --logfile $LOG_PATH/mainlog.log &
 
 sleep 5
 
