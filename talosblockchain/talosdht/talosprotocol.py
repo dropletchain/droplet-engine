@@ -24,7 +24,7 @@ from twisted.web.server import NOT_DONE_YET
 
 from talosstorage.checks import check_query_token_valid, InvalidQueryToken, get_and_check_query_token, CloudChunk
 from talosstorage.storage import InvalidChunkError
-from talosvc.talosclient.restapiclient import TalosVCRestClient
+from talosvc.talosclient.restapiclient import TalosVCRestClient, TalosVCRestClientError
 
 
 ######################
@@ -77,6 +77,8 @@ class TalosKademliaProtocol(RPCProtocol):
             return self.talos_vc.get_policy_with_txid(chunk.get_tag_hex()).addCallback(handle_policy)
         except InvalidChunkError as e:
             return {'error': e.value}
+        except TalosVCRestClientError:
+            return {'error': "No policy found"}
 
     def rpc_find_node(self, sender, nodeid, key):
         self.log.info("finding neighbors of %i in local table" % long(nodeid.encode('hex'), 16))
@@ -224,6 +226,9 @@ class QueryChunk(Resource):
         except InvalidQueryToken:
             request.setResponseCode(400)
             return "ERROR: token verification failure"
+        except TalosVCRestClientError:
+            request.setResponseCode(400)
+            return "ERROR: No policy found"
         except:
             request.setResponseCode(400)
             return "ERROR: error occured"
@@ -272,6 +277,9 @@ class StoreLargeChunk(Resource):
         except InvalidChunkError as e:
             request.setResponseCode(400)
             return json.dumps({'error': e.value})
+        except TalosVCRestClientError:
+            request.setResponseCode(400)
+            return "ERROR: No policy found"
         except:
             request.setResponseCode(400)
             return json.dumps({'error': "Error occured"})

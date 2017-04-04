@@ -26,7 +26,7 @@ class AsyncPolicyApiClient(TalosVCRestClient):
         def handle_response(response):
             d = readBody(response)
             if not response.code == 200:
-                raise TalosVCRestClientError("Illegal Request")
+                raise TalosVCRestClientError("No result found")
             return d
 
         def handle_error(error):

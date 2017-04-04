@@ -10,6 +10,6 @@ export BLOCKSTACK_TESTNET=1
 export VIRTUALCHAIN_WORKING_DIR=$LOCAL_PATH
 export BLOCKSTACK_DEBUG=1
 
-python2.7 restvcapi.py $* > $LOCAL_PATH/vc.log
+python2.7 restvcapi.py $* 2>&1 | tee $LOCAL_PATH/vc.log
 
 cd $CUR_PATH

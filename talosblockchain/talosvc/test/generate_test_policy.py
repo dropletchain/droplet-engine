@@ -10,15 +10,22 @@ from talosvc.talosclient.policycreation import BitcoinPolicyCreator
 class BitcoinTestnetPrivateKey(BitcoinPrivateKey):
     _pubkeyhash_version_byte = 111
 
-private_key_hex = 'cRR1K6arfF5TtVxDZzAaf3EmXkhymqrteUPbfDvLHdJr753kPM1m'
+#private_key_hex = 'cQ9BsS11H7UaRTDz5cS8H7L2pV57zEjXe7aC2A7dRNatDhkhrEDb'
+private_key_hex = 'cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1'
 private_key = BitcoinTestnetPrivateKey(private_key_hex)
 client = BitcoindClient("talos", "talos", port=18332, version_byte=111)
 
 policy_client = BitcoinPolicyCreator(client, private_key)
 
+"""
 clinetA = "mm6T8ASEjVW7TeYLmNqwepzM5u35xkyTEX"
 clinetB = "mpv24EBXgasKjBmuRHQp734oyC7vbTE1EA"
 clinetC = "mx6naH8SFmefgMnWuCft979tLBufRyX528"
+"""
+
+clinetA = "mtuVSpDMrtZi5GfZgEJbdR5dSD3ULsQ81y"
+clinetB = "muVo7RrtrAP8XPGvombhs7DxN1diBx3P5v"
+clinetC = "mwNCMtCiaNi6NxnU6yK1uiCwP7vGZzAXjS"
 
 timestamp = int(time.time())
 interval = 86400
