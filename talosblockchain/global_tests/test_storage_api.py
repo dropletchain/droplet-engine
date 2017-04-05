@@ -24,8 +24,9 @@ PRIVATE_KEY = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6
 NONCE = base64.b64decode("OU2HliHRUUZJokNvn84a+A==")
 STREAMID = 1
 TXID = "8cf71b7ed09acf896b40fc087e56d3d4dbd8cc346a869bb8a81624153c0c2b8c"
+IP = "127.0.0.1"
 #IP = "46.101.113.112"
-IP = "138.68.191.35"
+#IP = "138.68.191.35"
 PORT = 14000
 
 def store_chunk(chunkid, chunk, ip=IP, port=PORT):
@@ -125,3 +126,4 @@ class TestStorageApi(unittest.TestCase):
             stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                                 TXID)
             chunk_after = self._test_get_chunk_for_blockid(owner, stream_ident, i)
+            print "OK %d" % i

@@ -77,7 +77,7 @@ class TalosLevelDBDHTStorage(LevelDBStorage):
             self.db_update = create_db(db_path_sqlite)
 
     def iteritemsOlderThan(self, secondsOld):
-        for key in get_keys_older_than(int(time.time()) - secondsOld):
+        for key in get_keys_older_than(self.db_update, int(time.time()) - secondsOld):
             yield (key, self.db.Get(key))
 
     def _store_chunk(self, chunk):

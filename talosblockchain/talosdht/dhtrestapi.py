@@ -4,8 +4,9 @@ import binascii
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
 
-from talosstorage.checks import get_and_check_query_token, check_query_token_valid
 from talosstorage.chunkdata import CloudChunk
+from talosstorage.storage import InvalidChunkError
+from talosvc.talosclient.restapiclient import TalosVCRestClientError
 
 
 class AddChunk(Resource):
@@ -16,7 +17,7 @@ class AddChunk(Resource):
 
     def render_POST(self, request):
         def respond(result):
-            if result:
+            if not result is None:
                 request.setResponseCode(200)
                 request.write("OK")
             else:
@@ -28,6 +29,12 @@ class AddChunk(Resource):
             chunk = CloudChunk.decode(encoded_chunk)
             self.dhtstorage.store_chunk(chunk).addCallback(respond)
             return NOT_DONE_YET
+        except InvalidChunkError:
+            request.setResponseCode(400)
+            return "ERROR: Invalid Chunk"
+        except TalosVCRestClientError:
+            request.setResponseCode(400)
+            return "ERROR: No Policy found"
         except:
             request.setResponseCode(400)
             return "ERROR"
@@ -63,11 +70,12 @@ class GetChunkLoaction(Resource):
             chunk_key = binascii.unhexlify(request.prepath[1])
             self.dhtstorage.get_addr_chunk(chunk_key).addCallback(respond)
             return NOT_DONE_YET
-        except RuntimeError as e:
-            print e.message
+        except TalosVCRestClientError:
+            request.setResponseCode(400)
+            return "ERROR: No Policy found"
+        except:
             request.setResponseCode(400)
             return "ERROR"
-
 
 """
 class GetChunkLoaction(Resource):

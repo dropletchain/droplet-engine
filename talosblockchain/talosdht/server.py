@@ -21,7 +21,9 @@ from twisted.web.server import Site
 from talosdht.asyncpolicy import AsyncPolicyApiClient
 from talosdht.crawlers import TalosChunkSpiderCrawl
 from talosdht.dhtstorage import TalosLevelDBDHTStorage
-from talosdht.talosprotocol import TalosKademliaProtocol, TalosHTTPClient, QueryChunk, StoreLargeChunk
+from talosdht.protocolsecurity import generate_keys_with_crypto_puzzle, pub_to_node_id, serialize_priv_key
+from talosdht.talosprotocol import TalosKademliaProtocol, TalosHTTPClient, QueryChunk, StoreLargeChunk, \
+    TalosSKademliaProtocol
 from talosstorage.checks import get_and_check_query_token, check_query_token_valid, InvalidQueryToken
 from talosstorage.chunkdata import CloudChunk
 from talosvc.talosclient.restapiclient import TalosVCRestClient
@@ -40,6 +42,8 @@ class TalosDHTServer(object):
     Modified implementation of bmullers DHT for talos
     High level view of a node instance.  This is the object that should be created
     to start listening as an active node on the network.
+    
+    We assume public ip addresses! No NAT etc
     """
 
     def __init__(self, ksize=20, alpha=3, id=None, storage=None,
@@ -150,27 +154,6 @@ class TalosDHTServer(object):
             ds.append(self.protocol.stun(neighbor))
         return defer.gatherResults(ds).addCallback(handle)
 
-    """
-    def get(self, key):
-        dkey = digest(key)
-        # if this node has it, return it
-        if self.storage.get(dkey) is not None:
-            return defer.succeed(self.storage.get(dkey))
-        node = Node(dkey)
-        nearest = self.protocol.router.findNeighbors(node)
-        if len(nearest) == 0:
-            self.log.warning("There are no known neighbors to get key %s" % key)
-            return defer.succeed(None)
-        spider = ValueSpiderCrawl(self.protocol, node, nearest, self.ksize, self.alpha)
-        return spider.find()
-   
-    OLD:
-    def set(self, key, value):
-        self.log.debug("setting '%s' = '%s' on network" % (key, value))
-        dkey = digest(key)
-        return self.digest_set(dkey, value)
-    """
-
     def store_chunk(self, chunk, policy=None):
         dkey = digest(chunk.key)
         self.log.debug("Storing chunk with key %s" % (binascii.hexlify(dkey),))
@@ -278,3 +261,63 @@ class TalosDHTServer(object):
         loop = LoopingCall(self.saveState, fname)
         loop.start(frequency)
         return loop
+
+
+class TalosSecureDHTServer(TalosDHTServer):
+
+    def __init__(self, ksize=20, alpha=3, priv_key=None, storage=None,
+                 talos_vc=None, c1bits=10):
+        """
+        Create a server instance.  This will start listening on the given port.
+        Args:
+            ksize (int): The k parameter from the paper
+            alpha (int): The alpha parameter from the paper
+            id: The id for this node on the network.
+            storage: An instance that implements :interface:`~kademlia.storage.IStorage`
+        """
+        self.ksize = ksize
+        self.alpha = alpha
+        self.log = Logger(system=self)
+        self.storage = storage or TalosLevelDBDHTStorage("./leveldb")
+
+        if priv_key is None:
+            self.priv_key, node_id = generate_keys_with_crypto_puzzle(c1bits)
+        else:
+            self.priv_key = priv_key
+            node_id = pub_to_node_id(self.priv_key.public_key())
+
+        self.node = Node(node_id)
+
+        self.refreshLoop = LoopingCall(self.refreshTable).start(3600)
+        self.talos_vc = talos_vc or AsyncPolicyApiClient()
+        self.protocol = TalosSKademliaProtocol(self.priv_key, self.node,
+                                               self.storage, ksize, talos_vc=self.talos_vc)
+        self.httpprotocol_client = None
+
+    def saveState(self, fname):
+        """
+        Save the state of this node (the alpha/ksize/id/immediate neighbors)
+        to a cache file with the given fname.
+        """
+        data = { 'ksize': self.ksize,
+                 'alpha': self.alpha,
+                 'priv_key': serialize_priv_key(self.priv_key),
+                 'neighbors': self.bootstrappableNeighbors() }
+        if len(data['neighbors']) == 0:
+            self.log.warning("No known neighbors, so not writing to cache.")
+            return
+        with open(fname, 'w') as f:
+            pickle.dump(data, f)
+
+    @classmethod
+    def loadState(self, fname):
+        """
+        Load the state of this node (the alpha/ksize/id/immediate neighbors)
+        from a cache file with the given fname.
+        """
+        with open(fname, 'r') as f:
+            data = pickle.load(f)
+        s = TalosSecureDHTServer(data['ksize'], data['alpha'], data['priv_key'])
+        if len(data['neighbors']) > 0:
+            s.bootstrap(data['neighbors'])
+        return s
