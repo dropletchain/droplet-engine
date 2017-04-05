@@ -21,7 +21,8 @@ from twisted.web.server import Site
 from talosdht.asyncpolicy import AsyncPolicyApiClient
 from talosdht.crawlers import TalosChunkSpiderCrawl
 from talosdht.dhtstorage import TalosLevelDBDHTStorage
-from talosdht.protocolsecurity import generate_keys_with_crypto_puzzle, pub_to_node_id, serialize_priv_key
+from talosdht.protocolsecurity import generate_keys_with_crypto_puzzle, pub_to_node_id, serialize_priv_key, \
+    deserialize_priv_key
 from talosdht.talosprotocol import TalosKademliaProtocol, TalosHTTPClient, QueryChunk, StoreLargeChunk, \
     TalosSKademliaProtocol
 from talosstorage.checks import get_and_check_query_token, check_query_token_valid, InvalidQueryToken
@@ -317,7 +318,7 @@ class TalosSecureDHTServer(TalosDHTServer):
         """
         with open(fname, 'r') as f:
             data = pickle.load(f)
-        s = TalosSecureDHTServer(data['ksize'], data['alpha'], data['priv_key'])
+        s = TalosSecureDHTServer(data['ksize'], data['alpha'], deserialize_priv_key(data['priv_key']))
         if len(data['neighbors']) > 0:
             s.bootstrap(data['neighbors'])
         return s
