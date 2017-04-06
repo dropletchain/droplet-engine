@@ -1,6 +1,6 @@
 import json
 from twisted.internet import reactor, defer
-from twisted.web.client import Agent, readBody
+from twisted.web.client import Agent, readBody, HTTPConnectionPool
 from twisted.web.http_headers import Headers
 
 from talosvc.policy import create_policy_from_json_str
@@ -14,7 +14,8 @@ class AsyncPolicyApiClient(TalosVCRestClient):
     """
     def __init__(self, ip='127.0.0.1', port=5000):
         TalosVCRestClient.__init__(self, ip, port)
-        self.agent = Agent(reactor)
+        self.pool = HTTPConnectionPool(reactor)
+        self.agent = Agent(reactor, pool=self.pool)
 
     def _perform_request(self, url):
         d = self.agent.request(

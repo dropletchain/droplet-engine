@@ -14,7 +14,7 @@ from twisted.internet import defer, reactor
 from kademlia.node import Node
 from kademlia.utils import digest
 from twisted.internet.task import LoopingCall
-from twisted.web.client import Agent, FileBodyProducer, readBody
+from twisted.web.client import Agent, FileBodyProducer, readBody, HTTPConnectionPool
 from twisted.web.http_headers import Headers
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
@@ -284,7 +284,8 @@ class StoreLargeChunk(Resource):
 
 class TalosHTTPClient:
     def __init__(self, rpc_protocol, my_tcp_port):
-        self.agent = Agent(reactor)
+        self.pool = HTTPConnectionPool(reactor)
+        self.agent = Agent(reactor, pool=self.pool)
         self.rpc_protocol = rpc_protocol
         self.my_tcp_port = my_tcp_port
 

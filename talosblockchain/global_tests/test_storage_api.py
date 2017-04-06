@@ -103,12 +103,16 @@ class TestStorageApi(unittest.TestCase):
         self._test_get_chunk_for_blockid(owner, stream_ident, 0)
 
     def test_multiple(self):
-        for i in range(1, 100):
+        num_iter = 100
+        avg_store = 0
+        avg_get = 0
+        for i in range(0, num_iter):
             key = os.urandom(32)
             chunk = generate_random_chunk(i, key=key, size=1000)
             cur_time = timer()
             _, code = store_chunk(i, chunk)
             store_time = timer() - cur_time
+            avg_store += store_time
             self.assertEquals(code, 200)
 
             owner = PRIVATE_KEY.public_key().address()
@@ -117,6 +121,7 @@ class TestStorageApi(unittest.TestCase):
             cur_time = timer()
             chunk_after = self._test_get_chunk_for_blockid(owner, stream_ident, i)
             get_time = timer() - cur_time
+            avg_get += get_time
             # print "before: %s after %s" % (chunk.get_base64_encoded(), base64.b64encode(chunk_after))
 
             def to_hex(s):
@@ -124,14 +129,19 @@ class TestStorageApi(unittest.TestCase):
             #print "before: %s \nafter %s" % (to_hex(chunk.encode()), to_hex(chunk_after))
             self.assertEquals(to_hex(chunk_after), to_hex(chunk.encode()))
             print "OK %d Storetime %s Gettime %s" % (i, store_time, get_time)
+        print "Avg store: %s Avg get: %s" % ((avg_store/num_iter) * 1000, (avg_get/num_iter) * 1000)
 
     def test_gets_only(self):
-        for i in range(1, 100):
+        num_iter = 100
+        avg_get = 0
+        for i in range(0, num_iter):
             owner = PRIVATE_KEY.public_key().address()
             stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                                 TXID)
             cur_time=timer()
             chunk_after = self._test_get_chunk_for_blockid(owner, stream_ident, i)
             get_time = timer() - cur_time
+            avg_get += get_time
 
             print "OK %d Length: %d Time %s ms" % (i, len(chunk_after), get_time * 1000)
+        print "Avg get: %s" % ((avg_get / num_iter) * 1000)
