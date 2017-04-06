@@ -9,11 +9,8 @@ from twisted.internet.task import LoopingCall
 from twisted.internet import defer, reactor, task
 
 from kademlia.log import Logger
-from kademlia.protocol import KademliaProtocol
 from kademlia.utils import deferredDict, digest
-from kademlia.storage import ForgetfulStorage
 from kademlia.node import Node
-from kademlia.crawling import ValueSpiderCrawl
 from kademlia.crawling import NodeSpiderCrawl
 from twisted.web.resource import Resource
 from twisted.web.server import Site
@@ -25,9 +22,8 @@ from talosdht.protocolsecurity import generate_keys_with_crypto_puzzle, pub_to_n
     deserialize_priv_key
 from talosdht.talosprotocol import TalosKademliaProtocol, TalosHTTPClient, QueryChunk, StoreLargeChunk, \
     TalosSKademliaProtocol
-from talosstorage.checks import get_and_check_query_token, check_query_token_valid, InvalidQueryToken
 from talosstorage.chunkdata import CloudChunk
-from talosvc.talosclient.restapiclient import TalosVCRestClient
+
 
 
 class TalosDHTServerError(Exception):
@@ -48,7 +44,7 @@ class TalosDHTServer(object):
     """
 
     def __init__(self, ksize=20, alpha=3, id=None, storage=None,
-                 talos_vc=None):
+                 talos_vc=None, rebub_delay=3600):
         """
         Create a server instance.  This will start listening on the given port.
         Args:
@@ -62,7 +58,11 @@ class TalosDHTServer(object):
         self.log = Logger(system=self)
         self.storage = storage or TalosLevelDBDHTStorage("./leveldb")
         self.node = Node(id or digest(random.getrandbits(255)))
-        self.refreshLoop = LoopingCall(self.refreshTable).start(3600)
+
+        def start_looping_call(num_seconds):
+            self.refreshLoop = LoopingCall(self.refreshTable).start(num_seconds)
+        self.delay = rebub_delay
+        task.deferLater(reactor, rebub_delay, start_looping_call, rebub_delay)
         self.talos_vc = talos_vc or AsyncPolicyApiClient()
         self.protocol = TalosKademliaProtocol(self.node, self.storage, ksize, talos_vc=self.talos_vc)
         self.httpprotocol_client = None
@@ -87,6 +87,7 @@ class TalosDHTServer(object):
         Refresh buckets that haven't had any lookups in the last hour
         (per section 2.3 of the paper).
         """
+        self.log.info("Refreshing table")
         ds = []
         for id in self.protocol.getRefreshIDs():
             node = Node(id)
@@ -97,7 +98,7 @@ class TalosDHTServer(object):
         def republishKeys(_):
             ds = []
             # Republish keys older than one hour
-            for dkey, value in self.storage.iteritemsOlderThan(3600):
+            for dkey, value in self.storage.iteritemsOlderThan(self.delay):
                 ds.append(self.digest_set(digest(dkey), value))
             return defer.gatherResults(ds)
 
@@ -227,6 +228,7 @@ class TalosDHTServer(object):
         Save the state of this node (the alpha/ksize/id/immediate neighbors)
         to a cache file with the given fname.
         """
+        self.log.info("Save state to file %s" % fname)
         data = { 'ksize': self.ksize,
                  'alpha': self.alpha,
                  'id': self.node.id,
@@ -238,14 +240,14 @@ class TalosDHTServer(object):
             pickle.dump(data, f)
 
     @classmethod
-    def loadState(self, fname):
+    def loadState(self, fname, storage=None, talos_vc=None):
         """
         Load the state of this node (the alpha/ksize/id/immediate neighbors)
         from a cache file with the given fname.
         """
         with open(fname, 'r') as f:
             data = pickle.load(f)
-        s = TalosDHTServer(data['ksize'], data['alpha'], data['id'])
+        s = TalosDHTServer(data['ksize'], data['alpha'], data['id'], storage=None, talos_vc=None)
         if len(data['neighbors']) > 0:
             s.bootstrap(data['neighbors'])
         return s
@@ -259,15 +261,17 @@ class TalosDHTServer(object):
             frequencey: Frequency in seconds that the state should be saved.
                         By default, 10 minutes.
         """
-        loop = LoopingCall(self.saveState, fname)
-        loop.start(frequency)
-        return loop
+        def run_looping_call(freq):
+            loop = LoopingCall(self.saveState, fname).start(freq)
+            return defer.succeed(loop)
+        return task.deferLater(reactor, frequency, run_looping_call, frequency)
+
 
 
 class TalosSecureDHTServer(TalosDHTServer):
 
     def __init__(self, ksize=20, alpha=3, priv_key=None, storage=None,
-                 talos_vc=None, c1bits=10):
+                 talos_vc=None, rebub_delay=3600, c1bits=10):
         """
         Create a server instance.  This will start listening on the given port.
         Args:
@@ -280,6 +284,7 @@ class TalosSecureDHTServer(TalosDHTServer):
         self.alpha = alpha
         self.log = Logger(system=self)
         self.storage = storage or TalosLevelDBDHTStorage("./leveldb")
+        self.c1bits = c1bits
 
         if priv_key is None:
             self.priv_key, node_id = generate_keys_with_crypto_puzzle(c1bits)
@@ -289,7 +294,11 @@ class TalosSecureDHTServer(TalosDHTServer):
 
         self.node = Node(node_id)
 
-        self.refreshLoop = LoopingCall(self.refreshTable).start(3600)
+        def start_looping_call(num_seconds):
+            self.refreshLoop = LoopingCall(self.refreshTable).start(num_seconds)
+        delay = rebub_delay
+        task.deferLater(reactor, rebub_delay, start_looping_call, rebub_delay)
+
         self.talos_vc = talos_vc or AsyncPolicyApiClient()
         self.protocol = TalosSKademliaProtocol(self.priv_key, self.node,
                                                self.storage, ksize, talos_vc=self.talos_vc)
@@ -300,10 +309,12 @@ class TalosSecureDHTServer(TalosDHTServer):
         Save the state of this node (the alpha/ksize/id/immediate neighbors)
         to a cache file with the given fname.
         """
+        self.log.info("Save state to file %s" % fname)
         data = { 'ksize': self.ksize,
                  'alpha': self.alpha,
                  'priv_key': serialize_priv_key(self.priv_key),
-                 'neighbors': self.bootstrappableNeighbors() }
+                 'c1bits': self.c1bits,
+                 'neighbors': self.bootstrappableNeighbors()}
         if len(data['neighbors']) == 0:
             self.log.warning("No known neighbors, so not writing to cache.")
             return
@@ -311,14 +322,15 @@ class TalosSecureDHTServer(TalosDHTServer):
             pickle.dump(data, f)
 
     @classmethod
-    def loadState(self, fname):
+    def loadState(self, fname, storage=None, talos_vc=None):
         """
         Load the state of this node (the alpha/ksize/id/immediate neighbors)
         from a cache file with the given fname.
         """
         with open(fname, 'r') as f:
             data = pickle.load(f)
-        s = TalosSecureDHTServer(data['ksize'], data['alpha'], deserialize_priv_key(data['priv_key']))
+        s = TalosSecureDHTServer(data['ksize'], data['alpha'], deserialize_priv_key(data['priv_key']),
+                                 storage=None, talos_vc=None, c1bits=data['c1bits'])
         if len(data['neighbors']) > 0:
             s.bootstrap(data['neighbors'])
         return s

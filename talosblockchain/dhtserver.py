@@ -15,7 +15,7 @@ from talosdht.server import TalosDHTServer, TalosSecureDHTServer
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Run storage server client")
     parser.add_argument('--dhtport', type=int, help='dhtport', default=14001, required=False)
-    parser.add_argument('--dhtserver', type=str, help='dhtserver', default="127.0.0.2", required=False)
+    parser.add_argument('--dhtserver', type=str, help='dhtserver', default="127.0.0.1", required=False)
     parser.add_argument('--restport', type=int, help='restport', default=14000, required=False)
     parser.add_argument('--restserver', type=str, help='restserver', default="127.0.0.1", required=False)
     parser.add_argument('--dhtdbpath', type=str, help='dhtdbpath', default="./dhtdb", required=False)
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('--vcport', type=int, help='vcport', default=5000, required=False)
     parser.add_argument('--vcserver', type=str, help='vcserver', default="127.0.0.1", required=False)
     parser.add_argument('--dht_cache_file', type=str, help='dht_cache_file', default=None, required=False)
-    parser.add_argument('--store_state_file', type=str, help='store_state_file', default="./dhtstate.state",
+    parser.add_argument('--store_state_file', type=str, help='store_state_file', default="./dhtmainstate.state",
                         required=False)
     parser.add_argument('--logfile', type=str, help='store_state_file', default=None,
                         required=False)
@@ -55,9 +55,9 @@ if __name__ == "__main__":
             server.bootstrap([(x, int(y)) for (x, y) in map(lambda tmp: tmp.split(':'), args.bootstrap)])
     else:
         if args.secure:
-            server = TalosSecureDHTServer.loadState(args.dht_cache_file)
+            server = TalosSecureDHTServer.loadState(args.dht_cache_file, storage=storage, talos_vc=vc_server)
         else:
-            server = TalosDHTServer.loadState(args.dht_cache_file)
+            server = TalosDHTServer.loadState(args.dht_cache_file, storage=storage, talos_vc=vc_server)
 
     server.listen(args.dhtport, interface=args.dhtserver)
     server.saveStateRegularly(args.store_state_file)

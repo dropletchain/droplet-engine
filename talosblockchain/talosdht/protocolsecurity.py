@@ -59,6 +59,13 @@ def sign_msg(my_ip, my_port, priv_key):
     return signer.finalize(), timestamp
 
 
+def sign_nonce_msg(my_ip, my_port, nonce, priv_key):
+    data = my_ip + str(my_port) + nonce
+    signer = priv_key.signer(ec.ECDSA(hashes.SHA256()))
+    signer.update(data)
+    return signer.finalize()
+
+
 def serialize_pub_key(public_key):
     numbers = public_key.public_numbers()
     return numbers.encode_point()
@@ -82,6 +89,16 @@ def deserialize_priv_key(private_key_hex):
 def check_msg(ip, port, time, signature, pub_key):
     try:
         data = ip + str(port) + str(int(time))
+        verifier = pub_key.verifier(signature, ec.ECDSA(hashes.SHA256()))
+        verifier.update(data)
+        return verifier.verify()
+    except InvalidSignature:
+        return False
+
+
+def check_nonce_msg(ip, port, nonce, signature, pub_key):
+    try:
+        data = ip + str(port) + nonce
         verifier = pub_key.verifier(signature, ec.ECDSA(hashes.SHA256()))
         verifier.update(data)
         return verifier.verify()

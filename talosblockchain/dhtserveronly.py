@@ -52,9 +52,9 @@ if __name__ == "__main__":
             server.bootstrap([(x, int(y)) for (x, y) in map(lambda tmp: tmp.split(':'), args.bootstrap)])
     else:
         if args.secure:
-            server = TalosSecureDHTServer.loadState(args.dht_cache_file)
+            server = TalosSecureDHTServer.loadState(args.dht_cache_file, storage=storage, talos_vc=vc_server)
         else:
-            server = TalosDHTServer.loadState(args.dht_cache_file)
+            server = TalosDHTServer.loadState(args.dht_cache_file, storage=storage, talos_vc=vc_server)
 
     server.listen(args.dhtport, interface=args.dhtserver)
     server.saveStateRegularly(args.store_state_file)

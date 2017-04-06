@@ -116,7 +116,7 @@ class TalosWeakSignedRPCProtocol(TalosRPCProtocol):
         self.cbits = 10
 
     def _acceptResponse(self, msgID, data, address):
-        if not isinstance(data, list) or len(data) != 5:
+        if not isinstance(data, list) or len(data) != 4:
             raise MalformedMessage("Could not read packet: %s" % data)
         msgargs = (b64encode(msgID), address)
         if msgID not in self._outstanding:
@@ -127,10 +127,24 @@ class TalosWeakSignedRPCProtocol(TalosRPCProtocol):
         d, timeout = self._outstanding[msgID]
         timeout.cancel()
         del self._outstanding[msgID]
-        node_id, timestamp, signature, ser_pub, response = data
-        if not self._check_req_ok(address, node_id, timestamp, signature, ser_pub):
+        node_id, signature, ser_pub, response = data
+        if not self._check_resp_ok(address, node_id, msgID, signature, ser_pub):
             return
         d.callback((True, response))
+
+    def _check_resp_ok(self, address, node_id, msgID, signature, ser_pub):
+        ip, port = address
+        pub_key = deserialize_pub_key(ser_pub)
+        if not check_nonce_msg(ip, port, msgID, signature, pub_key):
+            log.err("Invalid signature on message")
+            return False
+        if not check_pubkey(node_id, ser_pub):
+            log.err("Pub key does not match node id")
+            return False
+        if not check_cbits(pub_to_id(node_id), self.cbits):
+            log.err("Puzzle not solved")
+            return False
+        return True
 
     def _check_req_ok(self, address, node_id, timestamp, signature, ser_pub):
         ip, port = address
@@ -168,10 +182,10 @@ class TalosWeakSignedRPCProtocol(TalosRPCProtocol):
             log.msg("sending response for msg id %s to %s" % (b64encode(msgID), address))
 
         (my_ip, my_port) = self.get_address()
-        signature, timestamp = sign_msg(my_ip, my_port, self.private_key)
+        signature = sign_nonce_msg(my_ip, my_port, msgID, self.private_key)
         ser_pub = serialize_pub_key(self.public_key)
 
-        txdata = b'\x01' + msgID + umsgpack.packb([self.my_node_id, timestamp, signature, ser_pub, response])
+        txdata = b'\x01' + msgID + umsgpack.packb([self.my_node_id, signature, ser_pub, response])
         self.transport.write(txdata, address)
 
     def __getattr__(self, name):

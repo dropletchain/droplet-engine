@@ -102,7 +102,7 @@ class TestStorageApi(unittest.TestCase):
         self._test_get_chunk_for_blockid(owner, stream_ident, 0)
 
     def test_multiple(self):
-        for i in range(1, 1000):
+        for i in range(1, 100):
             key = os.urandom(32)
             chunk = generate_random_chunk(i, key=key, size=1000)
             _, code = store_chunk(i, chunk)
