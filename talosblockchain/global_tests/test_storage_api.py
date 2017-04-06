@@ -5,6 +5,7 @@ import unittest
 import os
 import binascii
 
+from timeit import default_timer as timer
 from talosstorage.checks import generate_query_token, get_priv_key
 from talosstorage.chunkdata import ChunkData, DoubleEntry, DataStreamIdentifier, create_cloud_chunk, \
     CloudChunk
@@ -24,9 +25,9 @@ PRIVATE_KEY = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6
 NONCE = base64.b64decode("OU2HliHRUUZJokNvn84a+A==")
 STREAMID = 1
 TXID = "8cf71b7ed09acf896b40fc087e56d3d4dbd8cc346a869bb8a81624153c0c2b8c"
-IP = "127.0.0.1"
+#IP = "127.0.0.1"
 #IP = "46.101.113.112"
-#IP = "138.68.191.35"
+IP = "138.68.191.35"
 PORT = 14000
 
 def store_chunk(chunkid, chunk, ip=IP, port=PORT):
@@ -125,5 +126,8 @@ class TestStorageApi(unittest.TestCase):
             owner = PRIVATE_KEY.public_key().address()
             stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                                 TXID)
+            cur_time=timer()
             chunk_after = self._test_get_chunk_for_blockid(owner, stream_ident, i)
-            print "OK %d" % i
+            get_time = timer() - cur_time
+
+            print "OK %d Length: %d Time %s ms" % (i, len(chunk_after), get_time * 1000)

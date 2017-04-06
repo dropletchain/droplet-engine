@@ -296,7 +296,7 @@ class TalosSecureDHTServer(TalosDHTServer):
 
         def start_looping_call(num_seconds):
             self.refreshLoop = LoopingCall(self.refreshTable).start(num_seconds)
-        delay = rebub_delay
+        self.delay = rebub_delay
         task.deferLater(reactor, rebub_delay, start_looping_call, rebub_delay)
 
         self.talos_vc = talos_vc or AsyncPolicyApiClient()
