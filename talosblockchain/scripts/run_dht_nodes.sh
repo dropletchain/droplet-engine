@@ -1,12 +1,18 @@
 #!/bin/bash
 
-if [ $# -lt 1 ]: then
-    echo "usage ./cmd.sh <pulbic ip> [<bootstrap node>]"
+if [ $# -lt 2 ]; then
+    echo "usage ./cmd.sh <pulbic ip> <num_extra_nodes> [<bootstrap node>]"
     exit 1
 fi
 
-PYTHON_CMD=python
-NUM_EXTRA_NODES=3
+if hash python2.7 2>/dev/null; then
+    PYTHON_CMD=python2.7
+else
+    PYTHON_CMD=python
+fi
+echo $PYTHON_CMD
+
+NUM_EXTRA_NODES=$2
 CUR_PORT=14002
 MAIN_SERVER_PORT=14001
 
@@ -16,7 +22,9 @@ STATE_PATH="$ROOTPATH/dhtstates"
 LOG_PATH="$ROOTPATH/logs"
 
 PUBLIC_IP=$1
-BOOTSTRAP_NODES="$2"
+BOOTSTRAP_NODES="$3"
+
+PROCESS_ID=""
 
 LOCAL_PATH=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 CUR_PATH=$(pwd)
@@ -34,21 +42,41 @@ if [ ! -d "$ROOTPATH" ]; then
 fi
 
 
+
 echo "Start main node"
-cmd=$PYTHON_CMD dhtserver.py --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH/mainstate.state --logfile $LOG_PATH/mainlog.log
+STATE_PATH_FILE=$STATE_PATH/mainstate.state
+cmd="$PYTHON_CMD dhtserver.py --secure --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH_FILE --logfile $LOG_PATH/mainlog.log"
+
+if [ -d "$STATE_PATH_FILE" ]; then
+  cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
+fi
+
+
+
 if [[  -z  $BOOTSTRAP_NODES ]]; then
     $cmd &
+    PROCESS_ID="$PROCESS_ID $!"
 else
+    echo "Bootstrap nodes $BOOTSTRAP_NODES"
     $cmd --bootstrap $BOOTSTRAP_NODES &
+    PROCESS_ID="$PROCESS_ID $!"
 fi
 sleep 5
 
 for ((c=1; c<=NUM_EXTRA_NODES; c++))
 do
+    STATE_PATH_FILE=$STATE_PATH/nodestate$c.state
+    cmd="$PYTHON_CMD dhtserveronly.py --secure --dhtserver $PUBLIC_IP --bootstrap $PUBLIC_IP:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH_FILE --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log"
+    if [ -d "$STATE_PATH_FILE" ]; then
+        cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
+    fi
     echo "Start extra node $c"
-    $PYTHON_CMD dhtserveronly.py --dhtserver $PUBLIC_IP --bootstrap $PUBLIC_IP:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH/nodestate$c.state --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log &
+    $cmd &
+    PROCESS_ID="$PROCESS_ID $!"
 	CUR_PORT=$((CUR_PORT + 1))
 	sleep 5
 done
+
+echo $PROCESS_ID > $ROOTPATH/processes.pid
 
 cd $CUR_PATH

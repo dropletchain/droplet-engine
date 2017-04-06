@@ -13,10 +13,16 @@ if [ ! -d "FOLDER" ]; then
     mkdir $FOLDER
 fi
 
+if hash python2.7 2>/dev/null; then
+    cmd=python2.7
+else
+    cmd=python
+fi
+
 export BLOCKSTACK_TESTNET=1
 export VIRTUALCHAIN_WORKING_DIR=$LOCAL_PATH/../$FOLDER
 export BLOCKSTACK_DEBUG=1
 
-python restvcapi.py $* 2>&1 | tee $LOCAL_PATH/vc.log &
+$cmd restvcapi.py $* 2>&1 | tee $LOCAL_PATH/../$FOLDER/vc.log &
 
 cd $CUR_PATH

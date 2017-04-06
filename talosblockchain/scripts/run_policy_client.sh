@@ -6,6 +6,12 @@ CUR_PATH=$(pwd)
 cd $LOCAL_PATH
 cd ..
 
-python policyapi.py "$@"
+if hash python2.7 2>/dev/null; then
+    cmd=python2.7
+else
+    cmd=python
+fi
+
+$cmd policyapi.py "$@"
 
 cd $CUR_PATH
