@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -lt 2 ]; then
-    echo "usage ./cmd.sh <pulbic ip> <num_extra_nodes> [<bootstrap node>]"
+if [ $# -lt 3 ]; then
+    echo "usage ./cmd.sh <pulbic ip> <num_extra_nodes> <use_secure_dht_0_or_1> [<bootstrap node>]"
     exit 1
 fi
 
@@ -22,7 +22,9 @@ STATE_PATH="$ROOTPATH/dhtstates"
 LOG_PATH="$ROOTPATH/logs"
 
 PUBLIC_IP=$1
-BOOTSTRAP_NODES="$3"
+BOOTSTRAP_NODES="$4"
+
+DHT_SECURE=$3
 
 PROCESS_ID=""
 
@@ -45,13 +47,16 @@ fi
 
 echo "Start main node"
 STATE_PATH_FILE=$STATE_PATH/mainstate.state
-cmd="$PYTHON_CMD dhtserver.py --secure --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH_FILE --logfile $LOG_PATH/mainlog.log"
+cmd="$PYTHON_CMD dhtserver.py --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH_FILE --logfile $LOG_PATH/mainlog.log"
 
 if [ -d "$STATE_PATH_FILE" ]; then
-  cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
+    cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
 fi
 
-
+if [ $DHT_SECURE -eq 1 ]; then
+    echo "secure dht"
+    cmd="$cmd --secure"
+fi
 
 if [[  -z  $BOOTSTRAP_NODES ]]; then
     $cmd &
@@ -66,9 +71,14 @@ sleep 5
 for ((c=1; c<=NUM_EXTRA_NODES; c++))
 do
     STATE_PATH_FILE=$STATE_PATH/nodestate$c.state
-    cmd="$PYTHON_CMD dhtserveronly.py --secure --dhtserver $PUBLIC_IP --bootstrap $PUBLIC_IP:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH_FILE --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log"
+    cmd="$PYTHON_CMD dhtserveronly.py --dhtserver $PUBLIC_IP --bootstrap $PUBLIC_IP:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH_FILE --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log"
     if [ -d "$STATE_PATH_FILE" ]; then
         cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
+    fi
+
+    if [ $DHT_SECURE -eq 1 ]; then
+        echo "secure dht"
+        cmd="$cmd --secure"
     fi
     echo "Start extra node $c"
     $cmd &

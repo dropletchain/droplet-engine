@@ -3,9 +3,16 @@ import time
 from binascii import hexlify
 from cryptography.exceptions import InvalidSignature, InvalidTag
 
+from global_tests.test_storage_api import generate_random_chunk
+from talosstorage.checks import check_key_matches, check_tag_matches, check_signature, \
+    get_crypto_ecdsa_pubkey_from_bitcoin_hex
 from talosstorage.chunkdata import *
 
 import talosstorage.keymanagement as km
+from timeit import default_timer as timer
+
+from talosstorage.storage import InvalidChunkError
+from talosvc.talosclient.restapiclient import TalosVCRestClient
 
 
 class TestChunk(unittest.TestCase):
@@ -53,6 +60,45 @@ class TestChunk(unittest.TestCase):
         except InvalidTag:
             ok = True
         self.assertTrue(ok)
+
+
+def check_chunk_valid(chunk, policy, chunk_id=None):
+    try:
+        check_signature(chunk, policy)
+    except InvalidSignature:
+        raise InvalidChunkError("Chunk key doesn't match")
+
+
+class MeasureCheck(unittest.TestCase):
+    def test_chunk1(self):
+        client = TalosVCRestClient()
+        for i in range(100):
+            chunk = generate_random_chunk(i)
+            policy = client.get_policy_with_txid(chunk.get_tag_hex())
+            before = timer()
+            check_chunk_valid(chunk, policy, chunk_id=i)
+            print "Time check %s" % ((timer()-before)*1000,)
+
+    def test_signature(self):
+        data = "Hello"*1000
+
+        prv_key = ec.generate_private_key(ec.SECP256K1, default_backend())
+
+        for i in range(100):
+            signature = hash_sign_data(prv_key, data)
+            before = timer()
+            check_signed_data(prv_key.public_key(), signature, data)
+            print "Time check %s" % ((timer() - before) * 1000,)
+
+    def test_cross(self):
+
+        client = TalosVCRestClient()
+        for i in range(100):
+            chunk = generate_random_chunk(i)
+            policy = client.get_policy_with_txid(chunk.get_tag_hex())
+            before = timer()
+            pub_key = get_crypto_ecdsa_pubkey_from_bitcoin_hex(str(policy.owner_pk))
+            print "Time check %s" % ((timer() - before) * 1000,)
 
 
 class TestKeyReg(unittest.TestCase):

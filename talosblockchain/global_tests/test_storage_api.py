@@ -25,9 +25,9 @@ PRIVATE_KEY = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6
 NONCE = base64.b64decode("OU2HliHRUUZJokNvn84a+A==")
 STREAMID = 1
 TXID = "8cf71b7ed09acf896b40fc087e56d3d4dbd8cc346a869bb8a81624153c0c2b8c"
-#IP = "127.0.0.1"
+IP = "127.0.0.1"
 #IP = "46.101.113.112"
-IP = "138.68.191.35"
+#IP = "138.68.191.35"
 PORT = 14000
 
 def store_chunk(chunkid, chunk, ip=IP, port=PORT):
@@ -106,20 +106,24 @@ class TestStorageApi(unittest.TestCase):
         for i in range(1, 100):
             key = os.urandom(32)
             chunk = generate_random_chunk(i, key=key, size=1000)
+            cur_time = timer()
             _, code = store_chunk(i, chunk)
+            store_time = timer() - cur_time
             self.assertEquals(code, 200)
 
             owner = PRIVATE_KEY.public_key().address()
             stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                                 TXID)
+            cur_time = timer()
             chunk_after = self._test_get_chunk_for_blockid(owner, stream_ident, i)
+            get_time = timer() - cur_time
             # print "before: %s after %s" % (chunk.get_base64_encoded(), base64.b64encode(chunk_after))
 
             def to_hex(s):
                 return ":".join("{:02x}".format(ord(c)) for c in s)
             #print "before: %s \nafter %s" % (to_hex(chunk.encode()), to_hex(chunk_after))
             self.assertEquals(to_hex(chunk_after), to_hex(chunk.encode()))
-            print "OK %d" % i
+            print "OK %d Storetime %s Gettime %s" % (i, store_time, get_time)
 
     def test_gets_only(self):
         for i in range(1, 100):

@@ -1,10 +1,10 @@
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicNumbers
 
 from chunkdata import *
-from pybitcoin import BitcoinPublicKey, BitcoinPrivateKey
+from pybitcoin import BitcoinPrivateKey, extract_bin_ecdsa_pubkey
 import os
 import base64
-import time
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -34,8 +34,9 @@ class BitcoinVersionedPrivateKey(BitcoinPrivateKey):
 
 
 def get_crypto_ecdsa_pubkey_from_bitcoin_hex(bitcoin_hex_key):
-    pub = BitcoinVersionedPublicKey(str(bitcoin_hex_key))
-    return serialization.load_pem_public_key(pub.to_pem(), backend=default_backend())
+    bin_ecdsa_public_key = extract_bin_ecdsa_pubkey(bitcoin_hex_key)
+    numbers = EllipticCurvePublicNumbers.from_encoded_point(ec.SECP256K1(), b'\x04' + bin_ecdsa_public_key)
+    return numbers.public_key(backend=default_backend())
 
 
 def get_bitcoin_address_for_pubkey(hex_pubkey):
@@ -77,8 +78,7 @@ def check_access_key_valid(access_key, policy, blockid):
 
 
 def check_pubkey_valid(data, signature, pubkey):
-    pub = BitcoinVersionedPublicKey(str(pubkey))
-    pub_key = serialization.load_pem_public_key(pub.to_pem(), backend=default_backend())
+    pub_key = get_crypto_ecdsa_pubkey_from_bitcoin_hex(pubkey)
     try:
         check_signed_data(pub_key, signature, data)
     except InvalidSignature:

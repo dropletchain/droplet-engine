@@ -11,8 +11,6 @@ from kademlia.log import Logger
 from kademlia.routing import RoutingTable
 from twisted.internet import defer, reactor
 
-from rpcudp.protocol import RPCProtocol
-
 from kademlia.node import Node
 from kademlia.utils import digest
 from twisted.internet.task import LoopingCall

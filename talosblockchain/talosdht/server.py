@@ -263,7 +263,7 @@ class TalosDHTServer(object):
         """
         def run_looping_call(freq):
             loop = LoopingCall(self.saveState, fname).start(freq)
-            return defer.succeed(loop)
+            return loop
         return task.deferLater(reactor, frequency, run_looping_call, frequency)
 
 
