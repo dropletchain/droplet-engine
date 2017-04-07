@@ -4,11 +4,14 @@ import os
 import hashlib
 import base64
 from binascii import unhexlify, hexlify
+from pylepton.lepton import *
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
+
+from talosstorage.timebench import TimeKeeper
 
 
 def compress_data(data, level=6):
@@ -55,8 +58,14 @@ def check_signed_data(public_key, signature, data):
     verifier.update(data)
     return verifier.verify()
 
+TYPE_DOUBLE_ENTRY = 0
+TYPE_PICTURE_ENTRY = 1
+
 
 class Entry(object):
+    def get_type_id(self):
+        pass
+
     def encode(self):
         pass
 
@@ -67,12 +76,58 @@ class Entry(object):
         pass
 
 
+class PictureEntry(Entry):
+    def __init__(self, timestamp, metadata, picture_jpg_data, time_keeper=TimeKeeper(), use_compression=False):
+        self.timestamp = timestamp
+        self.metadata = metadata
+        self.picture_data = picture_jpg_data
+        self.time_keeper = time_keeper
+        self.use_compression = use_compression
+        Entry.__init__(self)
+
+    def get_type_id(self):
+        return TYPE_PICTURE_ENTRY
+
+    def get_encoded_size(self):
+        return struct.calcsize("IQI") + len(self.metadata) + len(self.picture_data)
+
+    def get_encoded_size_compressed(self, compressed_len):
+        return struct.calcsize("IQI") + len(self.metadata) + compressed_len
+
+    def encode(self):
+
+        if self.use_compression:
+            self.time_keeper.start_clock()
+            compressed_picture = compress_jpg_data(self.picture_data)
+            self.time_keeper.stop_clock("time_lepton_compression")
+            total_size = self.get_encoded_size_compressed(len(compressed_picture))
+        else:
+            compressed_picture = self.picture_data
+            total_size = self.get_encoded_size_compressed(len(compressed_picture))
+        return struct.pack("IQI", total_size, self.timestamp, len(self.metadata)) + self.metadata + compressed_picture
+
+    def __str__(self):
+        return "%s %s" % (str(self.timestamp), self.metadata)
+
+    @staticmethod
+    def decode(encoded):
+        len_struct = struct.calcsize("IQI")
+        len_tot, timestamp, len_meta = struct.unpack("IQI", encoded[:len_struct])
+        metadata = encoded[len_struct:(len_struct+len_meta)]
+        value = encoded[(len_struct+len_meta):]
+        decompressed_data = decompress_jpg_data(value)
+        return PictureEntry(timestamp, metadata, decompressed_data)
+
+
 class DoubleEntry(Entry):
     def __init__(self, timestamp, metadata, value):
         self.timestamp = timestamp
         self.metadata = metadata
         self.value = value
         Entry.__init__(self)
+
+    def get_type_id(self):
+        return TYPE_DOUBLE_ENTRY
 
     def get_encoded_size(self):
         return struct.calcsize("IQ") + len(self.metadata) + struct.calcsize("d")
@@ -93,13 +148,20 @@ class DoubleEntry(Entry):
         value, = struct.unpack("d", encoded[(len_struct+len_meta):])
         return DoubleEntry(timestamp, metadata, value)
 
+DECODER_FOR_TYPE = {
+    TYPE_DOUBLE_ENTRY: DoubleEntry.decode,
+    TYPE_PICTURE_ENTRY: PictureEntry.decode
+}
+
 
 class ChunkData:
-    def __init__(self, entries=[], max_size=1000):
+    def __init__(self, entries=[], max_size=1000, type=TYPE_DOUBLE_ENTRY):
         self.entries = entries
         self.max_size = max_size
+        self.type = type
 
     def add_entry(self, entry):
+        assert entry.get_type_id() == self.type
         if len(self.entries) >= self.max_size:
             return False
         self.entries.append(entry)
@@ -119,22 +181,24 @@ class ChunkData:
         res = ""
         for entry in self.entries:
             res += entry.encode()
-        return res
+        return struct.pack("B", self.type) + res
 
     @staticmethod
-    def decode(encoded, entry_decoder=DoubleEntry.decode):
+    def decode(encoded):
         """
         Assumes: |len_entry (4 byte)|encoded entry|
         """
         len_encoded = len(encoded)
         len_integer = struct.calcsize("I")
-        cur_pos = 0
+        type_entry, = struct.unpack("B", encoded[:1])
+        cur_pos = 1
         entries = []
+        entry_decoder = DECODER_FOR_TYPE[int(type_entry)]
         while cur_pos < len_encoded:
             len_entry, = struct.unpack("I", encoded[cur_pos:(cur_pos+len_integer)])
             entries.append(entry_decoder(encoded[cur_pos:(cur_pos+len_entry)]))
             cur_pos += len_entry
-        return ChunkData(entries=entries, max_size=len(entries))
+        return ChunkData(entries=entries, max_size=len(entries), type=int(type_entry))
 
 
 class DataStreamIdentifier:
@@ -246,15 +310,30 @@ class CloudChunk:
 
 
 def create_cloud_chunk(data_stream_identifier, block_id, private_key, key_version,
-                       symmetric_key, chunk_data, use_compression=True):
+                       symmetric_key, chunk_data, use_compression=True, time_keeper=TimeKeeper()):
     data = chunk_data.encode()
     if use_compression:
+        time_keeper.start_clock()
         data = compress_data(data)
+        time_keeper.stop_clock('chunk_compression')
     block_key = data_stream_identifier.get_key_for_blockid(block_id)
     tag = data_stream_identifier.get_tag()
+
+    time_keeper.start_clock()
     encrypted_data, mac_tag = encrypt_aes_gcm_data(symmetric_key,
                                                    _encode_cloud_chunk_public_part(block_key, key_version, tag), data)
+    time_keeper.stop_clock('gcm_encryption')
+
+    time_keeper.start_clock()
     signature = hash_sign_data(private_key,
                                _enocde_cloud_chunk_without_signature(block_key, key_version,
                                                                      tag, encrypted_data, mac_tag))
+    time_keeper.stop_clock('ecdsa_signature')
     return CloudChunk(block_key, key_version, tag, encrypted_data, mac_tag, signature)
+
+def get_chunk_data_from_cloud_chunk(cloud_chunk, symmetric_key, is_compressed=True):
+    pub_part = _encode_cloud_chunk_public_part(cloud_chunk.key, cloud_chunk.key_version, cloud_chunk.policy_tag)
+    data = decrypt_aes_gcm_data(symmetric_key, cloud_chunk.mac_tag, pub_part, cloud_chunk.encrypted_data)
+    if is_compressed:
+        data = decompress_data(data)
+    return ChunkData.decode(data)

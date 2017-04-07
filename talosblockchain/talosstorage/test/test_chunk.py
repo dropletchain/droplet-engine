@@ -1,11 +1,11 @@
 import unittest
 import time
-from binascii import hexlify
 from cryptography.exceptions import InvalidSignature, InvalidTag
+from cryptography.hazmat.primitives import serialization
 
 from global_tests.test_storage_api import generate_random_chunk
 from talosstorage.checks import check_key_matches, check_tag_matches, check_signature, \
-    get_crypto_ecdsa_pubkey_from_bitcoin_hex
+    get_crypto_ecdsa_pubkey_from_bitcoin_hex, BitcoinVersionedPrivateKey, get_priv_key
 from talosstorage.chunkdata import *
 
 import talosstorage.keymanagement as km
@@ -61,6 +61,17 @@ class TestChunk(unittest.TestCase):
             ok = True
         self.assertTrue(ok)
 
+    def test_picture_entry(self):
+        with open("./pylepton/haas.jpg", 'r') as f:
+            pic = f.read()
+        chunk = ChunkData(type=TYPE_PICTURE_ENTRY)
+        for i in range(5):
+            entry = PictureEntry(int(time.time()), "haas.jpg", pic)
+            chunk.add_entry(entry)
+        encoded = chunk.encode()
+        chunk_after = ChunkData.decode(encoded)
+        self.assertEquals(pic, chunk_after.entries[0].picture_data)
+
 
 def check_chunk_valid(chunk, policy, chunk_id=None):
     try:
@@ -91,7 +102,6 @@ class MeasureCheck(unittest.TestCase):
             print "Time check %s" % ((timer() - before) * 1000,)
 
     def test_cross(self):
-
         client = TalosVCRestClient()
         for i in range(100):
             chunk = generate_random_chunk(i)
@@ -99,6 +109,35 @@ class MeasureCheck(unittest.TestCase):
             before = timer()
             pub_key = get_crypto_ecdsa_pubkey_from_bitcoin_hex(str(policy.owner_pk))
             print "Time check %s" % ((timer() - before) * 1000,)
+
+    def test_key_siwtch(self):
+        key = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")
+
+        def get_priv_key2(bvpk_private_key):
+            return serialization.load_pem_private_key(
+                bvpk_private_key.to_pem(),
+                password=None,
+                backend=default_backend())
+
+        other = get_priv_key(key)
+        priv2 = get_priv_key2(key)
+
+        def serialize_priv_key(private_key):
+            numbers = private_key.private_numbers()
+            return '%x' % numbers.private_value
+        ser_priv1 = serialize_priv_key(other)
+        ser_priv2 = serialize_priv_key(priv2)
+        print "%s\n%s" % (ser_priv1, ser_priv2)
+
+        self.assertEquals(serialize_priv_key(other), serialize_priv_key(priv2))
+        self.assertEquals(other.private_numbers(), priv2.private_numbers())
+
+        data = "Hello"
+        signature1 = hash_sign_data(other, data)
+        signature2 = hash_sign_data(priv2, data)
+
+        self.assertTrue(check_signed_data(other.public_key(), signature2, data))
+        self.assertTrue(check_signed_data(priv2.public_key(), signature1, data))
 
 
 class TestKeyReg(unittest.TestCase):

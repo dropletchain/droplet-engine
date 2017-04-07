@@ -150,10 +150,10 @@ def check_json_query_token_valid(json_msg):
 
 
 def get_priv_key(bvpk_private_key):
-    return serialization.load_pem_private_key(
-        bvpk_private_key.to_pem(),
-    password = None,
-    backend = default_backend())
+    private_value = long(bvpk_private_key.to_hex()[:-2], 16)
+    return ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
+
+
 
 
 def generate_query_token(owner, streamid, nonce, chunk_key, bvpk_private_key):
