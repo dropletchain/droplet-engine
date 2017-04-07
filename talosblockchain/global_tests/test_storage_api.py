@@ -1,3 +1,5 @@
+from StringIO import StringIO
+
 import requests
 import time
 import base64
@@ -6,9 +8,12 @@ import os
 import binascii
 
 from timeit import default_timer as timer
+
+from PIL import Image
+
 from talosstorage.checks import generate_query_token, get_priv_key
 from talosstorage.chunkdata import ChunkData, DoubleEntry, DataStreamIdentifier, create_cloud_chunk, \
-    CloudChunk
+    CloudChunk, get_chunk_data_from_cloud_chunk
 from pybitcoin import BitcoinPrivateKey
 
 JSON_TIMESTAMP = "unix_timestamp"
@@ -44,7 +49,7 @@ def get_nonce_peer(ip, port):
 def get_chunk_peer(json_token, ip, port):
     url = "http://%s:%d/get_chunk" % (ip, port)
     req = requests.post(url, json=json_token)
-    return req.reason, req.status_code, req.text
+    return req.reason, req.status_code, req.content
 
 
 def get_chunk_addr(chunk_key, ip=IP, port=PORT):
@@ -101,6 +106,18 @@ class TestStorageApi(unittest.TestCase):
                                             TXID)
 
         self._test_get_chunk_for_blockid(owner, stream_ident, 0)
+
+    def test_get_image(self):
+        owner = PRIVATE_KEY.public_key().address()
+        stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
+                                            TXID)
+
+        chunk = self._test_get_chunk_for_blockid(owner, stream_ident, 0)
+        print len(chunk)
+        chunk_ = CloudChunk.decode(str(chunk))
+        data = get_chunk_data_from_cloud_chunk(chunk_, "a"*16)
+        img = Image.open(StringIO(data.entries[0].picture_data))
+        img.show()
 
     def test_multiple(self):
         num_iter = 100

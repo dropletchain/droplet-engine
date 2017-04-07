@@ -110,12 +110,15 @@ class PictureEntry(Entry):
         return "%s %s" % (str(self.timestamp), self.metadata)
 
     @staticmethod
-    def decode(encoded):
+    def decode(encoded, use_decompression=False):
         len_struct = struct.calcsize("IQI")
         len_tot, timestamp, len_meta = struct.unpack("IQI", encoded[:len_struct])
         metadata = encoded[len_struct:(len_struct+len_meta)]
         value = encoded[(len_struct+len_meta):]
-        decompressed_data = decompress_jpg_data(value)
+        if(use_decompression):
+            decompressed_data = decompress_jpg_data(value)
+        else:
+            decompressed_data = value
         return PictureEntry(timestamp, metadata, decompressed_data)
 
 
@@ -330,6 +333,7 @@ def create_cloud_chunk(data_stream_identifier, block_id, private_key, key_versio
                                                                      tag, encrypted_data, mac_tag))
     time_keeper.stop_clock('ecdsa_signature')
     return CloudChunk(block_key, key_version, tag, encrypted_data, mac_tag, signature)
+
 
 def get_chunk_data_from_cloud_chunk(cloud_chunk, symmetric_key, is_compressed=True):
     pub_part = _encode_cloud_chunk_public_part(cloud_chunk.key, cloud_chunk.key_version, cloud_chunk.policy_tag)

@@ -18,6 +18,7 @@ from talosstorage.timebench import TimeKeeper
 
 def capture_pi_image(filename):
     with picamera.PiCamera() as camera:
+        time.sleep(1)
         camera.capture(filename)
 
 
@@ -98,8 +99,6 @@ class ImageProducer(object):
                 time.sleep(interval)
             except RuntimeError as e:
                 print e.message
-                logging.error("Exception in round %d" % cur_block)
-            except:
                 logging.error("Exception in round %d" % cur_block)
 
 
