@@ -28,16 +28,6 @@ def dummy_capture(filename):
         return f.write(picture)
 
 
-PRIVATE_KEY = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")
-NONCE = base64.b64decode("OU2HliHRUUZJokNvn84a+A==")
-STREAMID = 1
-TXID = "8cf71b7ed09acf896b40fc087e56d3d4dbd8cc346a869bb8a81624153c0c2b8c"
-IP = "127.0.0.1"
-# IP = "46.101.113.112"
-# IP = "138.68.191.35"
-PORT = 14000
-
-
 def store_chunk(chunk, ip, port):
     req = requests.post("http://%s:%d/store_chunk" % (ip, port), data=chunk.encode())
     return req.reason, req.status_code
@@ -55,7 +45,6 @@ class ImageProducer(object):
         self.ip = ip
         self.port = port
         self.local_private_key = get_priv_key(self.bc_privatekey)
-        logging.basicConfig(filename='example.log', level=logging.DEBUG)
 
     def _generate_cloud_chunk(self, block_id, sym_key, chunk, timer_chunk):
         stream_ident = DataStreamIdentifier(self.bc_privatekey.public_key().address(),
@@ -97,18 +86,22 @@ class ImageProducer(object):
 
                 times = timer_chunk.logged_times
 
-                time_file.write("%s, %s, %s, %s, %s, %.4f\n" % (times['chunk_compression'],
+                time_file.write("%s, %s, %s, %s, %s, %d, %d\n" % (times['chunk_compression'],
                                                                 times['gcm_encryption'],
                                                                 times['ecdsa_signature'],
-                                                                chunk_creation,
-                                                                chunk_store,
-                                                                len_normal / len_compressed))
+                                                                chunk_creation * 1000,
+                                                                chunk_store * 100,
+                                                                len_normal,
+                                                                len_compressed))
                 cur_block += 1
                 time_file.flush()
                 time.sleep(interval)
             except RuntimeError as e:
                 print e.message
                 logging.error("Exception in round %d" % cur_block)
+            except:
+                logging.error("Exception in round %d" % cur_block)
+
 
 
 if __name__ == "__main__":
@@ -118,10 +111,8 @@ if __name__ == "__main__":
     parser.add_argument('--dhtserver', type=str, help='dhtserver', default="46.101.113.112", required=False)
     parser.add_argument('--configfile', type=str, help='configfile', default='./config', required=False)
     parser.add_argument('--timefile', type=str, help='timefile', default='./time.log', required=False)
-    parser.add_argument('--interval', type=int, help='start_block', default=3600, required=False)
+    parser.add_argument('--interval', type=int, help='interval', default=3600, required=False)
     args = parser.parse_args()
-
-    logging.basicConfig(filename='raspberry_time.log', level=logging.INFO)
 
     config = ConfigParser.RawConfigParser(allow_no_value=False)
     config.read(args.configfile)
@@ -133,10 +124,11 @@ if __name__ == "__main__":
     producer = ImageProducer('raspberry', args.start_block, private_key, policy_nonce,
                              stream_id, txid, ip=args.dhtserver, port=args.dhtport)
     with open(args.timefile, 'w') as time_file:
-        time_file.write("%s, %s, %s, %s, %s, %s\n" % ('chunk_compression',
+        time_file.write("%s, %s, %s, %s, %s, %s, %s\n" % ('chunk_compression',
                                                       'gcm_encryption',
                                                       'ecdsa_signature',
                                                       'total_creation',
                                                       'dht_store',
-                                                      'compression_ratio'))
+                                                      'length normal',
+                                                      'length compressed'))
         producer.run_loop(capture_pi_image, time_file, interval=args.interval)
