@@ -18,6 +18,8 @@ from talosstorage.timebench import TimeKeeper
 
 def capture_pi_image(filename):
     with picamera.PiCamera() as camera:
+        camera.hflip = True
+        camera.vflip = True
         time.sleep(1)
         camera.capture(filename)
 
