@@ -158,8 +158,8 @@ DECODER_FOR_TYPE = {
 
 
 class ChunkData:
-    def __init__(self, entries=[], max_size=1000, type=TYPE_DOUBLE_ENTRY):
-        self.entries = entries
+    def __init__(self, entries_in=None, max_size=1000, type=TYPE_DOUBLE_ENTRY):
+        self.entries = entries_in or []
         self.max_size = max_size
         self.type = type
 

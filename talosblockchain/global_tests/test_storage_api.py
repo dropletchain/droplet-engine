@@ -13,7 +13,7 @@ from PIL import Image
 
 from talosstorage.checks import generate_query_token, get_priv_key
 from talosstorage.chunkdata import ChunkData, DoubleEntry, DataStreamIdentifier, create_cloud_chunk, \
-    CloudChunk, get_chunk_data_from_cloud_chunk
+    CloudChunk, get_chunk_data_from_cloud_chunk, TYPE_PICTURE_ENTRY, PictureEntry
 from pybitcoin import BitcoinPrivateKey
 
 JSON_TIMESTAMP = "unix_timestamp"
@@ -108,18 +108,27 @@ class TestStorageApi(unittest.TestCase):
         self._test_get_chunk_for_blockid(owner, stream_ident, 0)
 
     def test_get_image(self):
+        block_id = 0
         owner = PRIVATE_KEY.public_key().address()
         stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                             TXID)
 
-        chunk = self._test_get_chunk_for_blockid(owner, stream_ident, 22)
+        chunk = self._test_get_chunk_for_blockid(owner, stream_ident, block_id)
         print len(chunk)
         chunk_ = CloudChunk.decode(str(chunk))
         data = get_chunk_data_from_cloud_chunk(chunk_, "a"*16)
         print chunk_.get_key_hex()
         print data.entries[0].metadata
+        print hash(data.entries[0].picture_data)
         img = Image.open(StringIO(data.entries[0].picture_data))
         img.show()
+
+    def test_tmp(self):
+        for i in range(100):
+            chunk_tmp = ChunkData(type=TYPE_PICTURE_ENTRY)
+            chunk_tmp.add_entry(PictureEntry(int(time.time()), "bla%d" % i, "sdfasdfasdf%d" % i))
+            print chunk_tmp.entries[0].metadata
+            print hash(chunk_tmp.entries[0].picture_data)
 
     def test_multiple(self):
         num_iter = 100

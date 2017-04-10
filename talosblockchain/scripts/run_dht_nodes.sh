@@ -63,7 +63,8 @@ if [[  -z  $BOOTSTRAP_NODES ]]; then
     PROCESS_ID="$PROCESS_ID $!"
 else
     echo "Bootstrap nodes $BOOTSTRAP_NODES"
-    $cmd --bootstrap $BOOTSTRAP_NODES &
+    cmd="$cmd --bootstrap $BOOTSTRAP_NODES"
+    $cmd &
     PROCESS_ID="$PROCESS_ID $!"
 fi
 sleep 5
