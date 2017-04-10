@@ -77,7 +77,7 @@ class Entry(object):
 
 
 class PictureEntry(Entry):
-    def __init__(self, timestamp, metadata, picture_jpg_data, time_keeper=TimeKeeper(), use_compression=False):
+    def __init__(self, timestamp, metadata, picture_jpg_data, time_keeper=TimeKeeper(), use_compression=True):
         self.timestamp = timestamp
         self.metadata = metadata
         self.picture_data = picture_jpg_data
@@ -110,7 +110,7 @@ class PictureEntry(Entry):
         return "%s %s" % (str(self.timestamp), self.metadata)
 
     @staticmethod
-    def decode(encoded, use_decompression=False):
+    def decode(encoded, use_decompression=True):
         len_struct = struct.calcsize("IQI")
         len_tot, timestamp, len_meta = struct.unpack("IQI", encoded[:len_struct])
         metadata = encoded[len_struct:(len_struct+len_meta)]

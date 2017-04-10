@@ -84,19 +84,22 @@ class ImageProducer(object):
                 len_normal = len(chunk_tmp.encode())
                 len_compressed = len(compress_data(chunk_tmp.encode()))
 
+                length_final = len(cloud_chunk)
                 cur_time = timer()
                 self._store_to_cloud(cloud_chunk)
                 chunk_store = timer() - cur_time
 
                 times = timer_chunk.logged_times
 
-                time_file.write("%s, %s, %s, %s, %s, %d, %d\n" % (times['chunk_compression'],
-                                                                times['gcm_encryption'],
-                                                                times['ecdsa_signature'],
-                                                                chunk_creation * 1000,
-                                                                chunk_store * 1000,
-                                                                len_normal,
-                                                                len_compressed))
+                time_file.write("%s, %s, %s, %s, %s, %s, %d, %d, %d,\n" % (times['chunk_compression'],
+                                                                           times['gcm_encryption'],
+                                                                           times['ecdsa_signature'],
+                                                                           times['time_lepton_compression'],
+                                                                           chunk_creation * 1000,
+                                                                           chunk_store * 1000,
+                                                                           len_normal,
+                                                                           len_compressed,
+                                                                           length_final))
                 cur_block += 1
                 time_file.flush()
                 time.sleep(interval)
@@ -126,11 +129,13 @@ if __name__ == "__main__":
     producer = ImageProducer(args.name, args.start_block, private_key, policy_nonce,
                              stream_id, txid, ip=args.dhtserver, port=args.dhtport)
     with open(args.timefile, 'w') as time_file:
-        time_file.write("%s, %s, %s, %s, %s, %s, %s\n" % ('chunk_compression',
-                                                      'gcm_encryption',
-                                                      'ecdsa_signature',
-                                                      'total_creation',
-                                                      'dht_store',
-                                                      'length normal',
-                                                      'length compressed'))
+        time_file.write("%s, %s, %s, %s, %s, %s, %s ,%s, %s\n" % ('chunk_compression',
+                                                                  'gcm_encryption',
+                                                                  'ecdsa_signature',
+                                                                  'lepton_compression',
+                                                                  'total_creation',
+                                                                  'dht_store',
+                                                                  'length normal',
+                                                                  'length compressed',
+                                                                  'final_length'))
         producer.run_loop(capture_pi_image, time_file, interval=args.interval)
