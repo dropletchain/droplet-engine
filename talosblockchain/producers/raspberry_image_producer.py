@@ -2,6 +2,7 @@ import ConfigParser
 import argparse
 import base64
 import logging
+import os
 
 import picamera
 import time
@@ -105,6 +106,9 @@ class ImageProducer(object):
 
 
 if __name__ == "__main__":
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(os.path.join(dir_path, '..'))
+
     parser = argparse.ArgumentParser("Run raspberrypi producer server client")
     parser.add_argument('--dhtport', type=int, help='dhtport', default=14000, required=False)
     parser.add_argument('--start_block', type=int, help='start_block', default=0, required=False)
