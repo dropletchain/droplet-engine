@@ -201,7 +201,7 @@ class ChunkData:
             len_entry, = struct.unpack("I", encoded[cur_pos:(cur_pos+len_integer)])
             entries.append(entry_decoder(encoded[cur_pos:(cur_pos+len_entry)]))
             cur_pos += len_entry
-        return ChunkData(entries=entries, max_size=len(entries), type=int(type_entry))
+        return ChunkData(entries_in=entries, max_size=len(entries), type=int(type_entry))
 
 
 class DataStreamIdentifier:

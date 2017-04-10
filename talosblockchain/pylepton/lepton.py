@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 """
@@ -7,8 +8,11 @@ https://github.com/dropbox/lepton
 Provides simple api for lepton, ! no configuration options
 """
 
+if os.uname()[4][:3] == 'arm':
+    CMD = ["lepton-scalar", '-memory=128M', '-']
+else:
+    CMD = ["lepton", '-']
 
-CMD = ["lepton", '-']
 
 def compress_jpg_file(jpg_file):
     with open(jpg_file, 'r') as f:
