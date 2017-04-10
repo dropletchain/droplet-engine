@@ -15,6 +15,7 @@ echo $PYTHON_CMD
 NUM_EXTRA_NODES=$2
 CUR_PORT=14002
 MAIN_SERVER_PORT=14001
+KSIZE=4
 
 ROOTPATH="./dhtstorage"
 DB_PATH="$ROOTPATH/dhtdbs"
@@ -47,7 +48,7 @@ fi
 
 echo "Start main node"
 STATE_PATH_FILE=$STATE_PATH/mainstate.state
-cmd="$PYTHON_CMD dhtserver.py --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH_FILE --logfile $LOG_PATH/mainlog.log"
+cmd="$PYTHON_CMD dhtserver.py --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --ksize $KSIZE --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH_FILE --logfile $LOG_PATH/mainlog.log"
 
 if [ -d "$STATE_PATH_FILE" ]; then
     cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
@@ -72,7 +73,7 @@ sleep 5
 for ((c=1; c<=NUM_EXTRA_NODES; c++))
 do
     STATE_PATH_FILE=$STATE_PATH/nodestate$c.state
-    cmd="$PYTHON_CMD dhtserveronly.py --dhtserver $PUBLIC_IP --bootstrap $PUBLIC_IP:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH_FILE --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log"
+    cmd="$PYTHON_CMD dhtserveronly.py --dhtserver $PUBLIC_IP --ksize $KSIZE --bootstrap $PUBLIC_IP:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH_FILE --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log"
     if [ -d "$STATE_PATH_FILE" ]; then
         cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
     fi
