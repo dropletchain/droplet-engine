@@ -68,20 +68,21 @@ class ImageProducer(object):
                 # Take a picture
                 picture_name = "%s%d.jpg" % (self.name, cur_block)
                 image_capture(picture_name)
+                print picture_name
 
                 # load image
                 with open(picture_name, 'r') as f:
                     picture = f.read()
 
-                chunk = ChunkData(type=TYPE_PICTURE_ENTRY)
-                chunk.add_entry(PictureEntry(int(time.time()), picture_name, picture, time_keeper=timer_chunk))
+                chunk_tmp = ChunkData(type=TYPE_PICTURE_ENTRY)
+                chunk_tmp.add_entry(PictureEntry(int(time.time()), picture_name, picture, time_keeper=timer_chunk))
 
                 cur_time = timer()
-                cloud_chunk = self._generate_cloud_chunk(cur_block, sym_key, chunk, timer_chunk)
+                cloud_chunk = self._generate_cloud_chunk(cur_block, sym_key, chunk_tmp, timer_chunk)
                 chunk_creation = timer() - cur_time
 
-                len_normal = len(chunk.encode())
-                len_compressed = len(compress_data(chunk.encode()))
+                len_normal = len(chunk_tmp.encode())
+                len_compressed = len(compress_data(chunk_tmp.encode()))
 
                 cur_time = timer()
                 self._store_to_cloud(cloud_chunk)
@@ -93,7 +94,7 @@ class ImageProducer(object):
                                                                 times['gcm_encryption'],
                                                                 times['ecdsa_signature'],
                                                                 chunk_creation * 1000,
-                                                                chunk_store * 100,
+                                                                chunk_store * 1000,
                                                                 len_normal,
                                                                 len_compressed))
                 cur_block += 1
@@ -104,7 +105,6 @@ class ImageProducer(object):
                 logging.error("Exception in round %d" % cur_block)
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Run raspberrypi producer server client")
     parser.add_argument('--dhtport', type=int, help='dhtport', default=14000, required=False)
@@ -112,7 +112,8 @@ if __name__ == "__main__":
     parser.add_argument('--dhtserver', type=str, help='dhtserver', default="46.101.113.112", required=False)
     parser.add_argument('--configfile', type=str, help='configfile', default='./config', required=False)
     parser.add_argument('--timefile', type=str, help='timefile', default='./time.log', required=False)
-    parser.add_argument('--interval', type=int, help='interval', default=3600, required=False)
+    parser.add_argument('--interval', type=int, help='interval', default=10, required=False)
+    parser.add_argument('--name', type=str, help='name', default="./photos/rapsberry", required=False)
     args = parser.parse_args()
 
     config = ConfigParser.RawConfigParser(allow_no_value=False)
@@ -122,7 +123,7 @@ if __name__ == "__main__":
     stream_id = config.get("raspberry", "STREAMID")
     txid = config.get("raspberry", "TXID")
 
-    producer = ImageProducer('raspberry', args.start_block, private_key, policy_nonce,
+    producer = ImageProducer(args.name, args.start_block, private_key, policy_nonce,
                              stream_id, txid, ip=args.dhtserver, port=args.dhtport)
     with open(args.timefile, 'w') as time_file:
         time_file.write("%s, %s, %s, %s, %s, %s, %s\n" % ('chunk_compression',

@@ -112,10 +112,12 @@ class TestStorageApi(unittest.TestCase):
         stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                             TXID)
 
-        chunk = self._test_get_chunk_for_blockid(owner, stream_ident, 0)
+        chunk = self._test_get_chunk_for_blockid(owner, stream_ident, 22)
         print len(chunk)
         chunk_ = CloudChunk.decode(str(chunk))
         data = get_chunk_data_from_cloud_chunk(chunk_, "a"*16)
+        print chunk_.get_key_hex()
+        print data.entries[0].metadata
         img = Image.open(StringIO(data.entries[0].picture_data))
         img.show()
 
