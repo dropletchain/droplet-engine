@@ -76,8 +76,8 @@ class ImageProducer(object):
                 cloud_chunk = self._generate_cloud_chunk(cur_block, sym_key, chunk_tmp, timer_chunk)
                 chunk_creation = timer() - cur_time
 
-                len_normal = len(chunk_tmp.encode())
-                len_compressed = len(compress_data(chunk_tmp.encode()))
+                len_normal = len(chunk_tmp.encode(use_compression=False))
+                len_compressed = len(compress_data(chunk_tmp.encode(use_compression=True)))
 
                 cloud_chunk_encoded = cloud_chunk.encode()
                 length_final = len(cloud_chunk_encoded)

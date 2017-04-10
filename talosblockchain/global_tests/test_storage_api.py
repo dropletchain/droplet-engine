@@ -108,7 +108,7 @@ class TestStorageApi(unittest.TestCase):
         self._test_get_chunk_for_blockid(owner, stream_ident, 0)
 
     def test_get_image(self):
-        block_id = 0
+        block_id = 1
         owner = PRIVATE_KEY.public_key().address()
         stream_ident = DataStreamIdentifier(owner, STREAMID, NONCE,
                                             TXID)

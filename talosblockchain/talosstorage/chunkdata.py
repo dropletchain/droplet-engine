@@ -1,6 +1,5 @@
 import struct
 import zlib
-import os
 import hashlib
 import base64
 from binascii import unhexlify, hexlify
@@ -58,6 +57,7 @@ def check_signed_data(public_key, signature, data):
     verifier.update(data)
     return verifier.verify()
 
+
 TYPE_DOUBLE_ENTRY = 0
 TYPE_PICTURE_ENTRY = 1
 
@@ -66,10 +66,10 @@ class Entry(object):
     def get_type_id(self):
         pass
 
-    def encode(self):
+    def encode(self, use_compression=False):
         pass
 
-    def decode(self):
+    def decode(self, use_compression):
         pass
 
     def get_encoded_size(self):
@@ -77,12 +77,11 @@ class Entry(object):
 
 
 class PictureEntry(Entry):
-    def __init__(self, timestamp, metadata, picture_jpg_data, time_keeper=TimeKeeper(), use_compression=True):
+    def __init__(self, timestamp, metadata, picture_jpg_data, time_keeper=TimeKeeper()):
         self.timestamp = timestamp
         self.metadata = metadata
         self.picture_data = picture_jpg_data
         self.time_keeper = time_keeper
-        self.use_compression = use_compression
         Entry.__init__(self)
 
     def get_type_id(self):
@@ -94,9 +93,8 @@ class PictureEntry(Entry):
     def get_encoded_size_compressed(self, compressed_len):
         return struct.calcsize("IQI") + len(self.metadata) + compressed_len
 
-    def encode(self):
-
-        if self.use_compression:
+    def encode(self, use_compression=True):
+        if use_compression:
             self.time_keeper.start_clock()
             compressed_picture = compress_jpg_data(self.picture_data)
             self.time_keeper.stop_clock("time_lepton_compression")
@@ -113,9 +111,9 @@ class PictureEntry(Entry):
     def decode(encoded, use_decompression=True):
         len_struct = struct.calcsize("IQI")
         len_tot, timestamp, len_meta = struct.unpack("IQI", encoded[:len_struct])
-        metadata = encoded[len_struct:(len_struct+len_meta)]
-        value = encoded[(len_struct+len_meta):]
-        if(use_decompression):
+        metadata = encoded[len_struct:(len_struct + len_meta)]
+        value = encoded[(len_struct + len_meta):]
+        if use_decompression:
             decompressed_data = decompress_jpg_data(value)
         else:
             decompressed_data = value
@@ -135,7 +133,7 @@ class DoubleEntry(Entry):
     def get_encoded_size(self):
         return struct.calcsize("IQ") + len(self.metadata) + struct.calcsize("d")
 
-    def encode(self):
+    def encode(self, use_compression=False):
         total_size = self.get_encoded_size()
         return struct.pack("IQ", total_size, self.timestamp) + self.metadata + struct.pack("d", self.value)
 
@@ -143,13 +141,14 @@ class DoubleEntry(Entry):
         return "%s %s %s" % (str(self.timestamp), self.metadata, str(self.value))
 
     @staticmethod
-    def decode(encoded):
+    def decode(encoded, use_compression=False):
         len_struct = struct.calcsize("IQ")
         len_tot, timestamp = struct.unpack("IQ", encoded[:len_struct])
         len_meta = len_tot - len_struct - struct.calcsize("d")
-        metadata = encoded[len_struct:(len_struct+len_meta)]
-        value, = struct.unpack("d", encoded[(len_struct+len_meta):])
+        metadata = encoded[len_struct:(len_struct + len_meta)]
+        value, = struct.unpack("d", encoded[(len_struct + len_meta):])
         return DoubleEntry(timestamp, metadata, value)
+
 
 DECODER_FOR_TYPE = {
     TYPE_DOUBLE_ENTRY: DoubleEntry.decode,
@@ -180,14 +179,14 @@ class ChunkData:
     def remaining_space(self):
         return self.max_size - len(self.entries)
 
-    def encode(self):
+    def encode(self, use_compression=True):
         res = ""
         for entry in self.entries:
-            res += entry.encode()
+            res += entry.encode(use_compression=use_compression)
         return struct.pack("B", self.type) + res
 
     @staticmethod
-    def decode(encoded):
+    def decode(encoded, use_compression=True):
         """
         Assumes: |len_entry (4 byte)|encoded entry|
         """
@@ -198,8 +197,8 @@ class ChunkData:
         entries = []
         entry_decoder = DECODER_FOR_TYPE[int(type_entry)]
         while cur_pos < len_encoded:
-            len_entry, = struct.unpack("I", encoded[cur_pos:(cur_pos+len_integer)])
-            entries.append(entry_decoder(encoded[cur_pos:(cur_pos+len_entry)]))
+            len_entry, = struct.unpack("I", encoded[cur_pos:(cur_pos + len_integer)])
+            entries.append(entry_decoder(encoded[cur_pos:(cur_pos + len_entry)], use_compression))
             cur_pos += len_entry
         return ChunkData(entries_in=entries, max_size=len(entries), type=int(type_entry))
 
@@ -234,8 +233,8 @@ def _encode_cloud_chunk_public_part(lookup_key, key_version, policy_tag):
 
 def _enocde_cloud_chunk_without_signature(lookup_key, key_version, policy_tag, encrypted_data, mac_tag):
     return _encode_cloud_chunk_public_part(lookup_key, key_version, policy_tag) + \
-               struct.pack("I",  len(encrypted_data)) + encrypted_data + \
-               mac_tag
+           struct.pack("I", len(encrypted_data)) + encrypted_data + \
+           mac_tag
 
 
 class CloudChunk:
@@ -247,6 +246,7 @@ class CloudChunk:
         MAC (symmetric Key Ki) 16 bytes
         Signature (Public-Key of Owner) X bytes
     """
+
     def __init__(self, lookup_key, key_version, policy_tag, encrypted_data, mac_tag, signature):
         self.key = lookup_key
         self.key_version = key_version
@@ -255,12 +255,12 @@ class CloudChunk:
         self.mac_tag = mac_tag
         self.signature = signature
 
-    def get_and_check_chunk_data(self, symmetric_key, compression_used=True, entry_decoder=DoubleEntry.decode):
+    def get_and_check_chunk_data(self, symmetric_key, compression_used=True):
         pub_part = _encode_cloud_chunk_public_part(self.key, self.key_version, self.policy_tag)
         data = decrypt_aes_gcm_data(symmetric_key, self.mac_tag, pub_part, self.encrypted_data)
         if compression_used:
             data = decompress_data(data)
-        return ChunkData.decode(data, entry_decoder=entry_decoder)
+        return ChunkData.decode(data)
 
     def check_signature(self, public_key):
         data = _enocde_cloud_chunk_without_signature(self.key, self.key_version,
@@ -268,13 +268,13 @@ class CloudChunk:
         return check_signed_data(public_key, self.signature, data)
 
     def get_encoded_len(self):
-        return struct.calcsize("I") + 2*HASH_BYTES + VERSION_BYTES + MAC_BYTES + \
+        return struct.calcsize("I") + 2 * HASH_BYTES + VERSION_BYTES + MAC_BYTES + \
                len(self.signature) + len(self.encrypted_data)
 
     def encode(self):
         return _enocde_cloud_chunk_without_signature(self.key, self.key_version,
                                                      self.policy_tag, self.encrypted_data, self.mac_tag) \
-                + self.signature
+               + self.signature
 
     def get_encoded_without_key(self):
         return self.encode()[HASH_BYTES:]
@@ -294,15 +294,15 @@ class CloudChunk:
         len_int = struct.calcsize("I")
         key = encoded[:HASH_BYTES]
         cur_pos += HASH_BYTES
-        key_version, = struct.unpack("I", encoded[cur_pos:(cur_pos+VERSION_BYTES)])
+        key_version, = struct.unpack("I", encoded[cur_pos:(cur_pos + VERSION_BYTES)])
         cur_pos += VERSION_BYTES
-        policy_tag = encoded[cur_pos:(cur_pos+HASH_BYTES)]
+        policy_tag = encoded[cur_pos:(cur_pos + HASH_BYTES)]
         cur_pos += HASH_BYTES
-        enc_len, = struct.unpack("I", encoded[cur_pos:(cur_pos+len_int)])
+        enc_len, = struct.unpack("I", encoded[cur_pos:(cur_pos + len_int)])
         cur_pos += len_int
-        encrypted_data = encoded[cur_pos:(cur_pos+enc_len)]
+        encrypted_data = encoded[cur_pos:(cur_pos + enc_len)]
         cur_pos += enc_len
-        mac_tag = encoded[cur_pos:(cur_pos+MAC_BYTES)]
+        mac_tag = encoded[cur_pos:(cur_pos + MAC_BYTES)]
         cur_pos += MAC_BYTES
         signature = encoded[cur_pos:]
         return CloudChunk(key, key_version, policy_tag, encrypted_data, mac_tag, signature)
