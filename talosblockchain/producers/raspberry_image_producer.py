@@ -31,8 +31,8 @@ def dummy_capture(filename):
         return f.write(picture)
 
 
-def store_chunk(chunk, ip, port):
-    req = requests.post("http://%s:%d/store_chunk" % (ip, port), data=chunk.encode())
+def store_chunk(chunk_encoded, ip, port):
+    req = requests.post("http://%s:%d/store_chunk" % (ip, port), data=chunk_encoded)
     return req.reason, req.status_code
 
 
@@ -84,9 +84,10 @@ class ImageProducer(object):
                 len_normal = len(chunk_tmp.encode())
                 len_compressed = len(compress_data(chunk_tmp.encode()))
 
-                length_final = len(cloud_chunk)
+                cloud_chunk_encoded = cloud_chunk.encode()
+                length_final = len(cloud_chunk_encoded)
                 cur_time = timer()
-                self._store_to_cloud(cloud_chunk)
+                self._store_to_cloud(cloud_chunk_encoded)
                 chunk_store = timer() - cur_time
 
                 times = timer_chunk.logged_times
