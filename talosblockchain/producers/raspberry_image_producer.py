@@ -31,11 +31,6 @@ def dummy_capture(filename):
         return f.write(picture)
 
 
-def store_chunk(chunk_encoded, ip, port):
-    req = requests.post("http://%s:%d/store_chunk" % (ip, port), data=chunk_encoded)
-    return req.reason, req.status_code
-
-
 class ImageProducer(object):
     def __init__(self, name, start_block, bc_privatekey,
                  policy_nonce, stream_id, txid, ip='127.0.0.1', port=14000):
@@ -56,8 +51,8 @@ class ImageProducer(object):
         return create_cloud_chunk(stream_ident, block_id, self.local_private_key, 0, sym_key, chunk,
                                   time_keeper=timer_chunk)
 
-    def _store_to_cloud(self, chunk):
-        req = requests.post("http://%s:%d/store_chunk" % (self.ip, self.port), data=chunk.encode())
+    def _store_to_cloud(self, chunk_encoded):
+        req = requests.post("http://%s:%d/store_chunk" % (self.ip, self.port), data=chunk_encoded)
         return req.reason, req.status_code
 
     def run_loop(self, image_capture, time_file, sym_key="a" * 16, interval=3600):
