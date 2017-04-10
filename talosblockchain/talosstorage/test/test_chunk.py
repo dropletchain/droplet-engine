@@ -2,16 +2,18 @@ import unittest
 import time
 from cryptography.exceptions import InvalidSignature, InvalidTag
 from cryptography.hazmat.primitives import serialization
+from pybitcoin import extract_bin_bitcoin_pubkey, get_bin_hash160, bin_hash160_to_address
 
 from global_tests.test_storage_api import generate_random_chunk
 from talosstorage.checks import check_key_matches, check_tag_matches, check_signature, \
-    get_crypto_ecdsa_pubkey_from_bitcoin_hex, BitcoinVersionedPrivateKey, get_priv_key
+    get_crypto_ecdsa_pubkey_from_bitcoin_hex, BitcoinVersionedPrivateKey, get_priv_key, get_bitcoin_address_for_pubkey, \
+    BitcoinVersionedPublicKey
 from talosstorage.chunkdata import *
 
 import talosstorage.keymanagement as km
 from timeit import default_timer as timer
 
-from talosstorage.storage import InvalidChunkError
+from talosstorage.storage import InvalidChunkError, LevelDBStorage
 from talosvc.talosclient.restapiclient import TalosVCRestClient
 
 
@@ -109,6 +111,49 @@ class MeasureCheck(unittest.TestCase):
             before = timer()
             pub_key = get_crypto_ecdsa_pubkey_from_bitcoin_hex(str(policy.owner_pk))
             print "Time check %s" % ((timer() - before) * 1000,)
+
+    def test_storage(self):
+        key = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")
+        talosStorage = LevelDBStorage("db_tmp")
+        client = TalosVCRestClient()
+        for i in range(100):
+            chunk = generate_random_chunk(i)
+            policy = client.get_policy_with_txid(chunk.get_tag_hex())
+            before = timer()
+            talosStorage.store_check_chunk(chunk, i, policy)
+            print "Time store %s" % ((timer()-before)*1000,)
+            keeper = TimeKeeper()
+            before = timer()
+            talosStorage.get_check_chunk(chunk.key, key.public_key().to_hex(), policy, time_keeper=keeper)
+            print "Time get %s" % ((timer() - before) * 1000,)
+
+            print "Time check in get %s" % keeper.logged_times['time_check_store']
+
+    def check_check_func(self):
+        key = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")
+        client = TalosVCRestClient()
+        chunk = generate_random_chunk(1)
+        policy = client.get_policy_with_txid(chunk.get_tag_hex())
+
+        def get_bitcoin_address_for_pubkey_tmp(hex_pubkey):
+            before = timer()
+            priv = extract_bin_bitcoin_pubkey(hex_pubkey)
+            hash_priv = get_bin_hash160(priv)
+            addr = bin_hash160_to_address(hash_priv, version_byte=111)
+            print "Time creation %s" % ((timer() - before) * 1000,)
+            return addr
+
+        def check_access_allowed_tmp(hex_pubkey, policy):
+            before = timer()
+            addr = get_bitcoin_address_for_pubkey_tmp(str(hex_pubkey))
+            print "Bitcoin_lib %s" % ((timer() - before) * 1000,)
+            if addr == policy.owner:
+                return True
+            if addr in policy.shares:
+                return True
+            return False
+
+        self.assertTrue(check_access_allowed_tmp(key.public_key().to_hex(), policy))
 
     def test_key_siwtch(self):
         key = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")

@@ -15,7 +15,7 @@ MAX_UDP_SIZE_PCK = 8192
 
 
 class TalosRPCProtocol(protocol.DatagramProtocol):
-    def __init__(self, waitTimeout=5, max_packet_size=MAX_UDP_SIZE_PCK, noisy=False):
+    def __init__(self, waitTimeout=10, max_packet_size=MAX_UDP_SIZE_PCK, noisy=False):
         self.max_packet_size = max_packet_size
         self.noisy = noisy
         self._waitTimeout = waitTimeout
@@ -107,7 +107,7 @@ class TalosRPCProtocol(protocol.DatagramProtocol):
 
 
 class TalosWeakSignedRPCProtocol(TalosRPCProtocol):
-    def __init__(self, ecdsa_privkey, my_node_id, waitTimeout=5, max_packet_size=MAX_UDP_SIZE_PCK, noisy=False):
+    def __init__(self, ecdsa_privkey, my_node_id, waitTimeout=10, max_packet_size=MAX_UDP_SIZE_PCK, noisy=False):
         TalosRPCProtocol.__init__(self, waitTimeout=waitTimeout, max_packet_size=max_packet_size, noisy=noisy)
         self.private_key = ecdsa_privkey
         self.public_key = ecdsa_privkey.public_key()

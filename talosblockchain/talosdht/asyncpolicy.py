@@ -31,6 +31,7 @@ class AsyncPolicyApiClient(TalosVCRestClient):
             return d
 
         def handle_error(error):
+            print error
             raise TalosVCRestClientError("Connection error")
 
         return d.addCallbacks(handle_response, errback=handle_error)

@@ -2,7 +2,8 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicNumbers
 
 from chunkdata import *
-from pybitcoin import BitcoinPrivateKey, extract_bin_ecdsa_pubkey
+from pybitcoin import BitcoinPrivateKey, extract_bin_ecdsa_pubkey, extract_bin_bitcoin_pubkey, get_bin_hash160, \
+    bin_hash160_to_address
 import os
 import base64
 
@@ -40,8 +41,9 @@ def get_crypto_ecdsa_pubkey_from_bitcoin_hex(bitcoin_hex_key):
 
 
 def get_bitcoin_address_for_pubkey(hex_pubkey):
-    pub = BitcoinVersionedPublicKey(str(hex_pubkey))
-    return pub.address()
+    priv = extract_bin_bitcoin_pubkey(hex_pubkey)
+    hash_priv = get_bin_hash160(priv)
+    return bin_hash160_to_address(hash_priv, version_byte=USED_VERSIONBYTE)
 
 
 def get_stream_identifier_from_policy(policy):

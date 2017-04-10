@@ -5,6 +5,7 @@ from kademlia.node import NodeHeap, Node
 from kademlia.utils import deferredDict
 
 from talosstorage.chunkdata import CloudChunk
+from talosstorage.timebench import TimeKeeper
 
 
 class TalosSpiderCrawl(SpiderCrawl):
@@ -56,23 +57,27 @@ class TalosSpiderCrawl(SpiderCrawl):
 
 
 class TalosChunkSpiderCrawl(TalosSpiderCrawl):
-    def __init__(self, protocol, http_client, node, chunk_key, peers, ksize, alpha):
+    def __init__(self, protocol, http_client, node, chunk_key, peers, ksize, alpha, time_keeper=TimeKeeper()):
         TalosSpiderCrawl.__init__(self, protocol, node, chunk_key, peers, ksize, alpha)
         # keep track of the single nearest node without value - per
         # section 2.3 so we can set the key there if found
         self.nearestWithoutValue = NodeHeap(self.node, 1)
         self.http_client = http_client
+        self.time_keeper = time_keeper
 
     def find(self):
         """
         Find either the closest nodes or the value requested.
         """
+        self.time_keeper.start_clock()
         return self._find_value(self.protocol.callFindValue)
 
     def _nodesFound(self, responses):
         """
         Handle the result of an iteration in _find.
         """
+        self.time_keeper.stop_clock("node_responses_found")
+        self.log.info("Time for crawling answers: %s " % (self.time_keeper.logged_times["node_responses_found"],))
         toremove = []
         foundValues = []
         for peerid, response in responses.items():

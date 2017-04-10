@@ -8,7 +8,7 @@ from threading import Semaphore
 
 from cachetools import TTLCache
 from kademlia.log import Logger
-from kademlia.routing import RoutingTable
+from kademlia.routing import RoutingTable, KBucket
 from twisted.internet import defer, reactor
 
 from kademlia.node import Node
@@ -22,9 +22,36 @@ from twisted.web.server import NOT_DONE_YET
 from talosdht.talosudprpc import TalosRPCProtocol, TalosWeakSignedRPCProtocol
 from talosstorage.checks import check_query_token_valid, InvalidQueryToken, get_and_check_query_token, CloudChunk
 from talosstorage.storage import InvalidChunkError
+from talosstorage.timebench import TimeKeeper
 from talosvc.talosclient.restapiclient import TalosVCRestClient, TalosVCRestClientError
 
 MAX_UDP_SIZE = 8000
+
+######################
+# Fixed Routing Table #
+######################
+
+
+class TalosKBucket(KBucket):
+    def isNewNode(self, node):
+        return node.id not in self.nodes and node not in self.replacementNodes
+
+    def split(self):
+        midpoint = (self.range[0] + self.range[1]) / 2
+        one = TalosKBucket(self.range[0], midpoint, self.ksize)
+        two = TalosKBucket(midpoint + 1, self.range[1], self.ksize)
+        for node in self.nodes.values():
+            bucket = one if node.long_id <= midpoint else two
+            bucket.nodes[node.id] = node
+        return (one, two)
+
+
+class TalosKademliaRoutingTable(RoutingTable):
+
+    def flush(self):
+        self.buckets = [TalosKBucket(0, 2 ** 160, self.ksize)]
+
+
 
 ######################
 # Talos RPC Prototol #
@@ -35,9 +62,10 @@ class TalosKademliaProtocol(TalosRPCProtocol):
     """
     New protocol for the talos storage, base protocol from bmuller's implementation
     """
+
     def __init__(self, sourceNode, storage, ksize, talos_vc=TalosVCRestClient()):
         TalosRPCProtocol.__init__(self)
-        self.router = RoutingTable(self, ksize, sourceNode)
+        self.router = TalosKademliaRoutingTable(self, ksize, sourceNode)
         self.storage = storage
         self.sourceNode = sourceNode
         self.log = Logger(system=self)
@@ -74,6 +102,7 @@ class TalosKademliaProtocol(TalosRPCProtocol):
                 # Hack no chunk id given -> no key checks, key is in the encoded chunk
                 self.storage.store_check_chunk(chunk, None, policy)
                 return {'value': 'ok'}
+
             return self.talos_vc.get_policy_with_txid(chunk.get_tag_hex()).addCallback(handle_policy)
         except InvalidChunkError as e:
             return {'error': e.value}
@@ -164,7 +193,6 @@ class TalosKademliaProtocol(TalosRPCProtocol):
         return result
 
 
-
 #################
 # http protocol #
 #################
@@ -173,7 +201,8 @@ class TalosKademliaProtocol(TalosRPCProtocol):
 class QueryChunk(Resource):
     allowedMethods = ('GET', 'POST')
 
-    def __init__(self, storage, talos_vc=TalosVCRestClient(), max_nonce_cache=1000, nonce_ttl=10):
+    def __init__(self, storage, talos_vc=TalosVCRestClient(), max_nonce_cache=1000, nonce_ttl=10,
+                 time_keeper=TimeKeeper()):
         Resource.__init__(self)
         self.storage = storage
         self.log = Logger(system=self)
@@ -181,6 +210,7 @@ class QueryChunk(Resource):
         self.nonce_cache = TTLCache(max_nonce_cache, nonce_ttl)
         self.refreshLoop = LoopingCall(self.nonce_cache.expire).start(3600)
         self.sem = Semaphore(1)
+        self.timekeeper = time_keeper
 
     def render_GET(self, request):
         nonce = os.urandom(16)
@@ -202,8 +232,10 @@ class QueryChunk(Resource):
     def render_POST(self, request):
         msg = json.loads(request.content.read())
         try:
+            self.timekeeper.start_clock()
             token = get_and_check_query_token(msg)
             check_query_token_valid(token)
+            self.timekeeper.stop_clock('check_token_valid')
 
             # Check nonce ok
             if not self._check_cache(token.nonce):
@@ -215,9 +247,15 @@ class QueryChunk(Resource):
                     request.write("No Policy Found")
                     request.finish()
                 # check policy for correctness
+                self.timekeeper.start_clock()
                 chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy)
+                self.timekeeper.stop_clock('get_and_check-chunk')
+                self.log.info("Token check: %s ms, DB get and check %s ms" %
+                              (self.timekeeper.logged_times['check_token_valid'],
+                               self.timekeeper.logged_times['get_and_check-chunk']))
                 request.write(chunk.encode())
                 request.finish()
+
             self.talos_vc.get_policy(token.owner, token.streamid).addCallback(handle_policy)
             return NOT_DONE_YET
         except InvalidQueryToken:
@@ -269,6 +307,7 @@ class StoreLargeChunk(Resource):
                 self.storage.store_check_chunk(chunk, None, policy)
                 request.write(json.dumps({'value': "ok"}))
                 request.finish()
+
             self.talos_vc.get_policy_with_txid(chunk.get_tag_hex()).addCallback(handle_policy)
             return NOT_DONE_YET
         except InvalidChunkError as e:
@@ -291,8 +330,8 @@ class TalosHTTPClient:
 
     def call_store_large_chunk(self, nodeToAsk, key, value):
         res = "storelargechunk/%s/%d/%s" % (hexlify(self.rpc_protocol.sourceNode.id),
-                                               self.my_tcp_port,
-                                               hexlify(key))
+                                            self.my_tcp_port,
+                                            hexlify(key))
         body = FileBodyProducer(StringIO(value))
         d = self.agent.request(
             'POST',
@@ -317,9 +356,10 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
     """
     New protocol for the talos storage, base protocol from bmuller's implementation
     """
-    def __init__(self,ecdsa_privkey, sourceNode, storage, ksize, talos_vc=TalosVCRestClient()):
+
+    def __init__(self, ecdsa_privkey, sourceNode, storage, ksize, talos_vc=TalosVCRestClient()):
         TalosWeakSignedRPCProtocol.__init__(self, ecdsa_privkey, sourceNode.id)
-        self.router = RoutingTable(self, ksize, sourceNode)
+        self.router = TalosKademliaRoutingTable(self, ksize, sourceNode)
         self.storage = storage
         self.sourceNode = sourceNode
         self.log = Logger(system=self)
@@ -356,6 +396,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
                 # Hack no chunk id given -> no key checks, key is in the encoded chunk
                 self.storage.store_check_chunk(chunk, None, policy)
                 return {'value': 'ok'}
+
             return self.talos_vc.get_policy_with_txid(chunk.get_tag_hex()).addCallback(handle_policy)
         except InvalidChunkError as e:
             return {'error': e.value}
@@ -420,6 +461,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         on the new node (per section 2.5 of the paper)
         """
         if self.router.isNewNode(node):
+            self.log.info("got new response from %s, adding to router" % node)
             ds = []
             for key, value in self.storage.iteritems():
                 keynode = Node(digest(key))
@@ -438,7 +480,6 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         we get no response, make sure it's removed from the routing table.
         """
         if result[0]:
-            self.log.info("got response from %s, adding to router" % node)
             self.welcomeIfNewNode(node)
         else:
             self.log.debug("no response from %s, removing from router" % node)

@@ -3,6 +3,7 @@ from timeit import default_timer as timer
 
 from talosdht.protocolsecurity import *
 
+
 class TestStorageApi(unittest.TestCase):
 
     def test_encoding(self):

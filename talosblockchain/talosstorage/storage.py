@@ -42,8 +42,10 @@ class TalosStorage(object):
         self.check_chunk_valid(chunk, policy, chunk_id=chunk_id)
         return self._store_chunk(chunk)
 
-    def get_check_chunk(self, chunk_key, pubkey, policy):
+    def get_check_chunk(self, chunk_key, pubkey, policy, time_keeper=TimeKeeper()):
+        time_keeper.start_clock()
         self.check_access_valid(pubkey, policy)
+        time_keeper.stop_clock("time_check_store")
         chunk = self._get_chunk(chunk_key)
         if not check_tag_matches(chunk, policy):
             raise InvalidAccess("Chunk not matches policy")
