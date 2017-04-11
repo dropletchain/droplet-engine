@@ -12,6 +12,18 @@ fi
 
 cd $LOCAL_PATH
 cd ..
+
+echo "Install lepton"
+git clone https://github.com/dropbox/lepton.git
+sudo apt-get install -y autogen autoconf
+cd lepton
+./autogen.sh
+./configure
+make -j8
+make check -j8
+sudo make install
+cd ..
+
 cd protocoin
 sudo python setup.py install
 cd ..
