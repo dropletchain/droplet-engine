@@ -86,7 +86,6 @@ do
     $cmd &
     PROCESS_ID="$PROCESS_ID $!"
 	CUR_PORT=$((CUR_PORT + 1))
-	sleep 5
 done
 
 echo $PROCESS_ID > $ROOTPATH/processes.pid
