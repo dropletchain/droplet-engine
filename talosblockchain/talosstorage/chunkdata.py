@@ -290,6 +290,7 @@ class CloudChunk:
 
     @staticmethod
     def decode(encoded):
+        encoded = bytes(encoded)
         cur_pos = 0
         len_int = struct.calcsize("I")
         key = encoded[:HASH_BYTES]

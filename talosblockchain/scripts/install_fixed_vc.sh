@@ -19,7 +19,7 @@ cd virtualchain
 sudo python setup.py install
 cd ..
 
-
+pip install pillow
 pip install flask
 pip install kademlia
 pip install requests

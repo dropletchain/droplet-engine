@@ -15,3 +15,5 @@ do
 done
 
 rm $PID_FILE
+
+cd $CUR_PATH
