@@ -4,12 +4,16 @@ import os
 from hashlib import sha1
 from base64 import b64encode
 
+from kademlia.log import Logger
+
 from protocolsecurity import *
 from twisted.internet import reactor, protocol
 from twisted.internet import defer
 from twisted.python import log
 
 from rpcudp.exceptions import MalformedMessage
+
+from talosstorage.timebench import TimeKeeper
 
 MAX_UDP_SIZE_PCK = 8192
 
@@ -20,8 +24,11 @@ class TalosRPCProtocol(protocol.DatagramProtocol):
         self.noisy = noisy
         self._waitTimeout = waitTimeout
         self._outstanding = {}
+        self.log = Logger(system=self)
 
     def datagramReceived(self, datagram, address):
+        time_keeper = TimeKeeper()
+
         if self.noisy:
             log.msg("received datagram from %s" % repr(address))
         if len(datagram) < 22:
@@ -29,7 +36,11 @@ class TalosRPCProtocol(protocol.DatagramProtocol):
             return
 
         msgID = datagram[1:21]
+        time_keeper.start_clock()
         data = umsgpack.unpackb(datagram[21:])
+        time_keeper.stop_clock("time_unpack_msg")
+
+        #self.log.debug("[BENCH] LOW RPC RECEIVE -> %s " % (time_keeper.get_summary(),))
 
         if datagram[:1] == b'\x00':
             self._acceptRequest(msgID, data, address)
@@ -85,16 +96,25 @@ class TalosRPCProtocol(protocol.DatagramProtocol):
             pass
 
         def func(address, node_id, *args):
+            time_keeper = TimeKeeper()
             msgID = sha1(os.urandom(32)).digest()
             assert len(node_id) == 20
+            time_keeper.start_clock()
             data = umsgpack.packb([str(name), node_id, args])
+            time_keeper.stop_clock("time_data_pack")
+
             if len(data) > self.max_packet_size:
                 msg = "Total length of function name and arguments cannot exceed 8K"
                 raise MalformedMessage(msg)
             txdata = b'\x00' + msgID + data
             if self.noisy:
                 log.msg("calling remote function %s on %s (msgid %s)" % (name, address, b64encode(msgID)))
+            time_keeper.start_clock()
             self.transport.write(txdata, address)
+            time_keeper.stop_clock("time_write_socket")
+
+            #self.log.debug("[BENCH] LOW RPC SEND TIMES %s -> %s " % (str(name), time_keeper.get_summary()))
+
             d = defer.Deferred()
             timeout = reactor.callLater(self._waitTimeout, self._timeout, msgID)
             self._outstanding[msgID] = (d, timeout)

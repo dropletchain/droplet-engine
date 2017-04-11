@@ -38,17 +38,30 @@ class TalosStorage(object):
         if not check_access_allowed(pubkey, policy):
             raise InvalidAccess("Pubkey not in policy")
 
-    def store_check_chunk(self, chunk, chunk_id, policy):
+    def store_check_chunk(self, chunk, chunk_id, policy, time_keeper=TimeKeeper()):
+        time_keeper.start_clock()
         self.check_chunk_valid(chunk, policy, chunk_id=chunk_id)
-        return self._store_chunk(chunk)
+        time_keeper.stop_clock('store_checking')
+
+        time_keeper.start_clock()
+        result_store = self._store_chunk(chunk)
+        time_keeper.stop_clock('store_chunk')
+        return result_store
 
     def get_check_chunk(self, chunk_key, pubkey, policy, time_keeper=TimeKeeper()):
         time_keeper.start_clock()
         self.check_access_valid(pubkey, policy)
-        time_keeper.stop_clock("time_check_store")
+        time_keeper.stop_clock("time_check_access_valid")
+
+        time_keeper.start_clock()
         chunk = self._get_chunk(chunk_key)
+        time_keeper.stop_clock("time_get_chunk")
+
+        time_keeper.start_clock()
         if not check_tag_matches(chunk, policy):
+            time_keeper.stop_clock("time_check_tag_matches")
             raise InvalidAccess("Chunk not matches policy")
+        time_keeper.stop_clock("time_check_tag_matches")
         return chunk
 
     def _store_chunk(self, chunk):

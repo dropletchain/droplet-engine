@@ -16,14 +16,14 @@ from twisted.web.resource import Resource
 from twisted.web.server import Site
 
 from talosdht.asyncpolicy import AsyncPolicyApiClient
-from talosdht.crawlers import TalosChunkSpiderCrawl
+from talosdht.crawlers import TalosChunkSpiderCrawl, TimedNodeSpiderCrawl
 from talosdht.dhtstorage import TalosLevelDBDHTStorage
 from talosdht.protocolsecurity import generate_keys_with_crypto_puzzle, pub_to_node_id, serialize_priv_key, \
     deserialize_priv_key
 from talosdht.talosprotocol import TalosKademliaProtocol, TalosHTTPClient, QueryChunk, StoreLargeChunk, \
     TalosSKademliaProtocol
 from talosstorage.chunkdata import CloudChunk
-
+from talosstorage.timebench import TimeKeeper
 
 
 class TalosDHTServerError(Exception):
@@ -176,13 +176,27 @@ class TalosDHTServer(object):
         spider = TalosChunkSpiderCrawl(self.protocol, self.httpprotocol_client, node, chunk_key, nearest, self.ksize, self.alpha)
         return spider.find()
 
-    def digest_set(self, dkey, value, policy_in=None):
+    def digest_set(self, dkey, value, policy_in=None, time_keeper=TimeKeeper()):
         """
         Set the given SHA1 digest key to the given value in the network.
         """
         node = Node(dkey)
         # this is useful for debugging messages
         hkey = binascii.hexlify(dkey)
+
+        def _anyRespondSuccess(responses, time_keeper, id, name):
+            """
+            Given the result of a DeferredList of calls to peers, ensure that at least
+            one of them was contacted and responded with a Truthy result.
+            """
+            time_keeper.stop_clock_unique(name, id)
+            self.log.debug("[BENCH] STORE TIME -> %s " % time_keeper.get_summary())
+
+            for deferSuccess, result in responses:
+                peerReached, peerResponse = result
+                if deferSuccess and peerReached and peerResponse:
+                    return True
+            return False
 
         def store(nodes):
             self.log.info("setting '%s' on %s" % (hkey, map(str, nodes)))
@@ -193,35 +207,32 @@ class TalosDHTServer(object):
                     return {'error': 'key missmatch'}
 
                 def handle_policy(policy):
+                    time_keeper.stop_clock("time_fetch_policy")
                     # Hack no chunk id given -> no key checks, key is in the encoded chunk
-                    self.storage.store_check_chunk(chunk, None, policy)
+                    id = time_keeper.start_clock_unique()
+                    self.storage.store_check_chunk(chunk, None, policy, time_keeper=time_keeper)
+                    time_keeper.stop_clock_unique("time_store_check_chunk", id)
+
+                    id = time_keeper.start_clock_unique()
                     ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
-                    return defer.DeferredList(ds).addCallback(self._anyRespondSuccess)
+                    return defer.DeferredList(ds).addCallback(_anyRespondSuccess, time_keeper, id,
+                                                              'time_store_to_nodes')
 
                 if not policy_in is None:
                     return handle_policy(policy_in)
+                time_keeper.start_clock()
                 return self.talos_vc.get_policy_with_txid(chunk.get_tag_hex()).addCallback(handle_policy)
 
+            id = time_keeper.start_clock_unique()
             ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
-            return defer.DeferredList(ds).addCallback(self._anyRespondSuccess)
+            return defer.DeferredList(ds).addCallback(_anyRespondSuccess, time_keeper, id, 'time_store_to_nodes')
 
         nearest = self.protocol.router.findNeighbors(node)
         if len(nearest) == 0:
             self.log.warning("There are no known neighbors to set key %s" % hkey)
             return defer.succeed(False)
-        spider = NodeSpiderCrawl(self.protocol, node, nearest, self.ksize, self.alpha)
+        spider = TimedNodeSpiderCrawl(self.protocol, node, nearest, self.ksize, self.alpha, time_keeper=time_keeper)
         return spider.find().addCallback(store)
-
-    def _anyRespondSuccess(self, responses):
-        """
-        Given the result of a DeferredList of calls to peers, ensure that at least
-        one of them was contacted and responded with a Truthy result.
-        """
-        for deferSuccess, result in responses:
-            peerReached, peerResponse = result
-            if deferSuccess and peerReached and peerResponse:
-                return True
-        return False
 
     def saveState(self, fname):
         """

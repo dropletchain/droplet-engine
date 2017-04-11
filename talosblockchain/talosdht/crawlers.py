@@ -64,20 +64,21 @@ class TalosChunkSpiderCrawl(TalosSpiderCrawl):
         self.nearestWithoutValue = NodeHeap(self.node, 1)
         self.http_client = http_client
         self.time_keeper = time_keeper
+        self.is_first_round = True
 
     def find(self):
         """
         Find either the closest nodes or the value requested.
         """
-        self.time_keeper.start_clock()
+        if self.is_first_round:
+            self.time_keeper.start_clock()
+            self.is_first_round = False
         return self._find_value(self.protocol.callFindValue)
 
     def _nodesFound(self, responses):
         """
         Handle the result of an iteration in _find.
         """
-        self.time_keeper.stop_clock("node_responses_found")
-        self.log.info("Time for crawling answers: %s " % (self.time_keeper.logged_times["node_responses_found"],))
         toremove = []
         foundValues = []
         for peerid, response in responses.items():
@@ -108,6 +109,9 @@ class TalosChunkSpiderCrawl(TalosSpiderCrawl):
         make sure we tell the nearest node that *didn't* have
         the value to store it.
         """
+        self.time_keeper.stop_clock("time_find_value")
+        self.log.debug("[BENCH] FIND VALUE CRAWL -> %s" % self.time_keeper.get_summary())
+
         valueCounts = Counter(values)
         if len(valueCounts) != 1:
             args = (self.node.long_id, str(values))
@@ -116,9 +120,46 @@ class TalosChunkSpiderCrawl(TalosSpiderCrawl):
 
         peerToSaveTo = self.nearestWithoutValue.popleft()
         if peerToSaveTo is not None:
-            d = self.protocol.callStore(peerToSaveTo, self.node.id, value)
-            return d.addCallback(lambda _: value)
+            self.protocol.callStore(peerToSaveTo, self.node.id, value)
+            return value
         return value
+
+
+class TimedNodeSpiderCrawl(SpiderCrawl):
+
+    def __init__(self, protocol, node, peers, ksize, alpha, time_keeper=TimeKeeper()):
+        SpiderCrawl.__init__(self, protocol, node, peers, ksize, alpha)
+        self.time_keeper = time_keeper
+        self.is_first = True
+
+
+    def find(self):
+        """
+        Find the closest nodes.
+        """
+        if self.is_first:
+            self.time_keeper.start_clock()
+            self.is_first = False
+        return self._find(self.protocol.callFindNode)
+
+    def _nodesFound(self, responses):
+        """
+        Handle the result of an iteration in _find.
+        """
+        toremove = []
+        for peerid, response in responses.items():
+            response = RPCFindResponse(response)
+            if not response.happened():
+                toremove.append(peerid)
+            else:
+                self.nearest.push(response.getNodeList())
+        self.nearest.remove(toremove)
+
+        if self.nearest.allBeenContacted():
+            self.time_keeper.stop_clock("time_crawl_nearest")
+            self.is_first = True
+            return list(self.nearest)
+        return self.find()
 
 
 class TalosRPCFindValueResponse(object):
