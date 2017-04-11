@@ -110,7 +110,6 @@ class TalosChunkSpiderCrawl(TalosSpiderCrawl):
         the value to store it.
         """
         self.time_keeper.stop_clock("time_find_value")
-        self.log.debug("[BENCH] FIND VALUE CRAWL -> %s" % self.time_keeper.get_summary())
 
         valueCounts = Counter(values)
         if len(valueCounts) != 1:

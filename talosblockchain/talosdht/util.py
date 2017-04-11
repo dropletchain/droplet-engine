@@ -1,0 +1,15 @@
+BENCH_TAG="[BENCH]"
+
+TYPE_ADD_CHUNK = "[ADD_CHUNK]"
+TYPE_QUERY_CHUNK = "[QUERY_CHUNK]"
+TYPE_STORE_CHUNK_LOCAL = "[STORE_CHUNK]"
+TYPE_STORE_CHUNK_REMOTE ="[CALL_STORE_CHUNK]"
+
+ENTRY_TOTAL_ADD_CHUNK = "time_total_add_chunk"
+ENTRY_TOTAL_QUERY_CHUNK = "time_total_query_chunk"
+ENTRY_FETCH_POLICY = "time_fetch_policy"
+ENTRY_STORE_CHECK = "time_store_check_chunk"
+ENTRY_STROE_TO_ALL_NODES = "time_store_to_nodes"
+ENTRY_TIME_WELCOME_NODE = "time_welcome_node"
+ENTRY_TIME_DECODE_CHUNK = "time_decode_chunk"
+ENTRY_STORE_ONE_NODE = "time_call_store"

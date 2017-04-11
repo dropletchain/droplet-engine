@@ -22,6 +22,7 @@ from talosdht.protocolsecurity import generate_keys_with_crypto_puzzle, pub_to_n
     deserialize_priv_key
 from talosdht.talosprotocol import TalosKademliaProtocol, TalosHTTPClient, QueryChunk, StoreLargeChunk, \
     TalosSKademliaProtocol
+from talosdht.util import *
 from talosstorage.chunkdata import CloudChunk
 from talosstorage.timebench import TimeKeeper
 
@@ -156,12 +157,12 @@ class TalosDHTServer(object):
             ds.append(self.protocol.stun(neighbor))
         return defer.gatherResults(ds).addCallback(handle)
 
-    def store_chunk(self, chunk, policy=None):
+    def store_chunk(self, chunk, policy=None, time_keeper=TimeKeeper()):
         dkey = digest(chunk.key)
         self.log.debug("Storing chunk with key %s" % (binascii.hexlify(dkey),))
-        return self.digest_set(dkey, chunk.encode(), policy_in=policy)
+        return self.digest_set(dkey, chunk.encode(), policy_in=policy, time_keeper=time_keeper)
 
-    def get_addr_chunk(self, chunk_key, policy_in=None):
+    def get_addr_chunk(self, chunk_key, policy_in=None, time_keeper=TimeKeeper()):
         # if this node has it, return it
         if self.storage.has_value(chunk_key):
             addr = self.protocol.get_address()
@@ -173,7 +174,8 @@ class TalosDHTServer(object):
         if len(nearest) == 0:
             self.log.warning("There are no known neighbors to get key %s" % binascii.hexlify(dkey))
             return defer.succeed(None)
-        spider = TalosChunkSpiderCrawl(self.protocol, self.httpprotocol_client, node, chunk_key, nearest, self.ksize, self.alpha)
+        spider = TalosChunkSpiderCrawl(self.protocol, self.httpprotocol_client, node, chunk_key, nearest, self.ksize,
+                                       self.alpha, time_keeper=time_keeper)
         return spider.find()
 
     def digest_set(self, dkey, value, policy_in=None, time_keeper=TimeKeeper()):
@@ -190,7 +192,6 @@ class TalosDHTServer(object):
             one of them was contacted and responded with a Truthy result.
             """
             time_keeper.stop_clock_unique(name, id)
-            self.log.debug("[BENCH] STORE TIME -> %s " % time_keeper.get_summary())
 
             for deferSuccess, result in responses:
                 peerReached, peerResponse = result
@@ -207,16 +208,16 @@ class TalosDHTServer(object):
                     return {'error': 'key missmatch'}
 
                 def handle_policy(policy):
-                    time_keeper.stop_clock("time_fetch_policy")
+                    time_keeper.stop_clock(ENTRY_FETCH_POLICY)
                     # Hack no chunk id given -> no key checks, key is in the encoded chunk
                     id = time_keeper.start_clock_unique()
                     self.storage.store_check_chunk(chunk, None, policy, time_keeper=time_keeper)
-                    time_keeper.stop_clock_unique("time_store_check_chunk", id)
+                    time_keeper.stop_clock_unique(ENTRY_STORE_CHECK, id)
 
                     id = time_keeper.start_clock_unique()
                     ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
                     return defer.DeferredList(ds).addCallback(_anyRespondSuccess, time_keeper, id,
-                                                              'time_store_to_nodes')
+                                                              ENTRY_STROE_TO_ALL_NODES)
 
                 if not policy_in is None:
                     return handle_policy(policy_in)
@@ -225,7 +226,7 @@ class TalosDHTServer(object):
 
             id = time_keeper.start_clock_unique()
             ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
-            return defer.DeferredList(ds).addCallback(_anyRespondSuccess, time_keeper, id, 'time_store_to_nodes')
+            return defer.DeferredList(ds).addCallback(_anyRespondSuccess, time_keeper, id, ENTRY_STROE_TO_ALL_NODES)
 
         nearest = self.protocol.router.findNeighbors(node)
         if len(nearest) == 0:

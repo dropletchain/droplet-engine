@@ -24,6 +24,7 @@ from talosstorage.checks import check_query_token_valid, InvalidQueryToken, get_
 from talosstorage.storage import InvalidChunkError
 from talosstorage.timebench import TimeKeeper
 from talosvc.talosclient.restapiclient import TalosVCRestClient, TalosVCRestClientError
+from talosdht.util import *
 
 MAX_UDP_SIZE = 8000
 
@@ -94,27 +95,27 @@ class TalosKademliaProtocol(TalosRPCProtocol):
         time_keeper = TimeKeeper()
         time_keeper.start_clock()
         self.welcomeIfNewNode(source)
-        time_keeper.stop_clock("time_welcome_node")
+        time_keeper.stop_clock(ENTRY_TIME_WELCOME_NODE)
 
         self.log.debug("got a store request from %s, storing value" % str(sender))
         try:
 
             time_keeper.start_clock()
             chunk = CloudChunk.decode(value)
-            time_keeper.stop_clock("time_decode_chunk")
+            time_keeper.stop_clock(ENTRY_TIME_DECODE_CHUNK)
 
             if not digest(chunk.key) == key:
                 return {'error': 'key missmatch'}
 
             def handle_policy(policy):
-                time_keeper.stop_clock("time_fetch_policy")
+                time_keeper.stop_clock(ENTRY_FETCH_POLICY)
 
                 # Hack no chunk id given -> no key checks, key is in the encoded chunk
                 id = time_keeper.start_clock_unique()
                 self.storage.store_check_chunk(chunk, None, policy, time_keeper=time_keeper)
-                time_keeper.stop_clock_unique("time_store_check_chunk", id)
+                time_keeper.stop_clock_unique(ENTRY_STORE_CHECK, id)
 
-                self.log.debug("[BENCH] STORE NODE %s ->%s" % (str(sender), time_keeper.get_summary()))
+                self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_STORE_CHUNK_LOCAL, time_keeper.get_summary()))
                 return {'value': 'ok'}
 
             time_keeper.start_clock()
@@ -167,7 +168,7 @@ class TalosKademliaProtocol(TalosRPCProtocol):
             d = self.store(address, self.sourceNode.id, key, value)
         else:
             d = self.http_client.call_store_large_chunk(nodeToAsk, key, value)
-        return d.addCallback(self.handleTimedCallResponse, nodeToAsk, time_keeper, id, "time_call_store", "STORE")
+        return d.addCallback(self.handleTimedCallResponse, nodeToAsk, time_keeper, id, ENTRY_STORE_ONE_NODE)
 
     def welcomeIfNewNode(self, node):
         """
@@ -185,14 +186,16 @@ class TalosKademliaProtocol(TalosRPCProtocol):
         """
         if self.router.isNewNode(node):
             ds = []
-            for key, value in self.storage.iteritems():
-                keynode = Node(digest(key))
-                neighbors = self.router.findNeighbors(keynode)
-                if len(neighbors) > 0:
-                    newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
-                    thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
-                if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
-                    ds.append(self.callStore(node, digest(key), value))
+            """
+               for key, value in self.storage.iteritems():
+                   keynode = Node(digest(key))
+                   neighbors = self.router.findNeighbors(keynode)
+                   if len(neighbors) > 0:
+                       newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
+                       thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
+                   #if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
+                       #ds.append(self.callStore(node, digest(key), value))
+            """
             self.router.addContact(node)
             return defer.gatherResults(ds)
 
@@ -209,13 +212,13 @@ class TalosKademliaProtocol(TalosRPCProtocol):
             self.router.removeContact(node)
         return result
 
-    def handleTimedCallResponse(self, result, node, time_keeper, id, name, func_name):
+    def handleTimedCallResponse(self, result, node, time_keeper, id, name):
         """
         If we get a response, add the node to the routing table.  If
         we get no response, make sure it's removed from the routing table.
         """
         time_keeper.stop_clock_unique(name, id)
-        self.log.debug("[BENCH] CALL RPC %s-> %s " % (func_name, time_keeper.get_summary()))
+        self.log.debug("%s %s %s " % (BENCH_TAG, TYPE_STORE_CHUNK_REMOTE, time_keeper.get_summary()))
 
         if result[0]:
             self.log.info("got response from %s, adding to router" % node)
@@ -434,27 +437,27 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         time_keeper = TimeKeeper()
         time_keeper.start_clock()
         self.welcomeIfNewNode(source)
-        time_keeper.stop_clock("time_welcome_node")
+        time_keeper.stop_clock(ENTRY_TIME_WELCOME_NODE)
 
         self.log.debug("got a store request from %s, storing value" % str(sender))
         try:
 
             time_keeper.start_clock()
             chunk = CloudChunk.decode(value)
-            time_keeper.stop_clock("time_decode_chunk")
+            time_keeper.stop_clock(ENTRY_TIME_DECODE_CHUNK)
 
             if not digest(chunk.key) == key:
                 return {'error': 'key missmatch'}
 
             def handle_policy(policy):
-                time_keeper.stop_clock("time_fetch_policy")
+                time_keeper.stop_clock(ENTRY_FETCH_POLICY)
 
                 # Hack no chunk id given -> no key checks, key is in the encoded chunk
                 id = time_keeper.start_clock_unique()
                 self.storage.store_check_chunk(chunk, None, policy, time_keeper=time_keeper)
-                time_keeper.stop_clock_unique("time_store_check_chunk", id)
+                time_keeper.stop_clock_unique(ENTRY_STORE_CHECK, id)
 
-                self.log.debug("[BENCH] STORE NODE %s ->%s" % (str(sender), time_keeper.get_summary()))
+                self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_STORE_CHUNK_LOCAL, time_keeper.get_summary()))
                 return {'value': 'ok'}
 
             time_keeper.start_clock()
@@ -507,7 +510,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
             d = self.store(address, self.sourceNode.id, key, value)
         else:
             d = self.http_client.call_store_large_chunk(nodeToAsk, key, value)
-        return d.addCallback(self.handleTimedCallResponse, nodeToAsk, time_keeper, id, "time_call_store")
+        return d.addCallback(self.handleTimedCallResponse, nodeToAsk, time_keeper, id, ENTRY_STORE_ONE_NODE)
 
     def welcomeIfNewNode(self, node):
         """
@@ -525,16 +528,15 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         """
         if self.router.isNewNode(node):
             ds = []
-            # I REMOVED THAT, DOESNT WORK PROPERLY -> Should be handled
             """
-            for key, value in self.storage.iteritems():
-                keynode = Node(digest(key))
-                neighbors = self.router.findNeighbors(keynode)
-                if len(neighbors) > 0:
-                    newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
-                    thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
-                #if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
-                    #ds.append(self.callStore(node, digest(key), value))
+               for key, value in self.storage.iteritems():
+                   keynode = Node(digest(key))
+                   neighbors = self.router.findNeighbors(keynode)
+                   if len(neighbors) > 0:
+                       newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
+                       thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
+                   #if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
+                       #ds.append(self.callStore(node, digest(key), value))
             """
             self.router.addContact(node)
             return defer.gatherResults(ds)
@@ -558,7 +560,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         we get no response, make sure it's removed from the routing table.
         """
         time_keeper.stop_clock_unique(name, id)
-        self.log.debug("[BENCH] CALL RPC -> %s " % time_keeper.get_summary())
+        self.log.debug("%s %s %s " % (BENCH_TAG, TYPE_STORE_CHUNK_REMOTE, time_keeper.get_summary()))
 
         if result[0]:
             self.log.info("got response from %s, adding to router" % node)

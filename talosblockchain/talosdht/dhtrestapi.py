@@ -1,22 +1,32 @@
 import json
 import binascii
 
+from kademlia.log import Logger
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
 
 from talosstorage.chunkdata import CloudChunk
 from talosstorage.storage import InvalidChunkError
+from talosstorage.timebench import TimeKeeper
 from talosvc.talosclient.restapiclient import TalosVCRestClientError
+from talosdht.util import *
 
 
 class AddChunk(Resource):
     allowedMethods = ('POST',)
+
     def __init__(self, dhtstorage):
         Resource.__init__(self)
         self.dhtstorage = dhtstorage
+        self.log = Logger(system=self)
 
     def render_POST(self, request):
+        time_keeper = TimeKeeper()
+        time_id = time_keeper.start_clock_unique()
+
         def respond(result):
+            time_keeper.stop_clock_unique(ENTRY_TOTAL_ADD_CHUNK, time_id)
+            self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_ADD_CHUNK, time_keeper.get_summary()))
             if not result is None:
                 request.setResponseCode(200)
                 request.write("OK")
@@ -26,8 +36,9 @@ class AddChunk(Resource):
             request.finish()
         encoded_chunk = request.content.read()
         try:
+
             chunk = CloudChunk.decode(encoded_chunk)
-            self.dhtstorage.store_chunk(chunk).addCallback(respond)
+            self.dhtstorage.store_chunk(chunk, time_keeper=time_keeper).addCallback(respond)
             return NOT_DONE_YET
         except InvalidChunkError:
             request.setResponseCode(400)
@@ -49,12 +60,18 @@ class GetChunkLoaction(Resource):
     def __init__(self, dhtstorage):
         Resource.__init__(self)
         self.dhtstorage = dhtstorage
+        self.log = Logger(system=self)
 
     def getChild(self, path, request):
         return self
 
     def render_GET(self, request):
+        time_keeper = TimeKeeper()
+        time_id = time_keeper.start_clock_unique()
         def respond(result):
+            time_keeper.stop_clock_unique(ENTRY_TOTAL_QUERY_CHUNK, time_id)
+            self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_QUERY_CHUNK, time_keeper.get_summary()))
+
             if result is None:
                 request.setResponseCode(400)
                 request.write("No Result found")
@@ -68,7 +85,7 @@ class GetChunkLoaction(Resource):
             return json.dumps({'error': "Illegal URL"})
         try:
             chunk_key = binascii.unhexlify(request.prepath[1])
-            self.dhtstorage.get_addr_chunk(chunk_key).addCallback(respond)
+            self.dhtstorage.get_addr_chunk(chunk_key, time_keeper=time_keeper).addCallback(respond)
             return NOT_DONE_YET
         except TalosVCRestClientError:
             request.setResponseCode(400)

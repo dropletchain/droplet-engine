@@ -26,7 +26,7 @@ class TimeKeeper(object):
         del self.start_time_log[id]
 
     def get_summary(self):
-        summary = "Times: "
+        summary = "[TIMES]"
         for key, value in self.logged_times.iteritems():
-            summary += " %s: %s ms " % (key, value)
-        return summary
+            summary += " %s: %s ms, " % (key, value)
+        return summary[:-2]
