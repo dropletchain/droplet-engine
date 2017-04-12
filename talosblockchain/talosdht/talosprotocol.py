@@ -9,7 +9,7 @@ from threading import Semaphore
 from cachetools import TTLCache
 from kademlia.log import Logger
 from kademlia.routing import RoutingTable, KBucket
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor, threads
 
 from kademlia.node import Node
 from kademlia.utils import digest
@@ -34,8 +34,14 @@ MAX_UDP_SIZE = 8000
 
 
 class TalosKBucket(KBucket):
+    def _check_node_replacement(self, node_in):
+        for node in self.replacementNodes:
+            if node.id == node_in.id:
+                return True
+        return False
+
     def isNewNode(self, node):
-        return node.id not in self.nodes and node not in self.replacementNodes
+        return node.id not in self.nodes and not self._check_node_replacement(node)
 
     def split(self):
         midpoint = (self.range[0] + self.range[1]) / 2
@@ -44,6 +50,11 @@ class TalosKBucket(KBucket):
         for node in self.nodes.values():
             bucket = one if node.long_id <= midpoint else two
             bucket.nodes[node.id] = node
+
+        for node in self.replacementNodes:
+            bucket = one if node.long_id <= midpoint else two
+            bucket.replacementNodes.push(node)
+
         return (one, two)
 
 
@@ -185,18 +196,21 @@ class TalosKademliaProtocol(TalosRPCProtocol):
         is closer than the closest in that list, then store the key/value
         on the new node (per section 2.5 of the paper)
         """
-        if self.router.isNewNode(node):
+        def perform_stores():
             ds = []
-            """
-               for key, value in self.storage.iteritems():
-                   keynode = Node(digest(key))
-                   neighbors = self.router.findNeighbors(keynode)
-                   if len(neighbors) > 0:
-                       newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
-                       thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
-                   #if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
-                       #ds.append(self.callStore(node, digest(key), value))
-            """
+            for key, value in self.storage.iteritems():
+                keynode = Node(digest(key))
+                neighbors = self.router.findNeighbors(keynode)
+                if len(neighbors) > 0:
+                    newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
+                    thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
+                if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
+                    ds.append(self.callStore(node, digest(key), value))
+
+        if self.router.isNewNode(node):
+            self.log.info("Welcoming new node %s" % node)
+            ds = []
+            threads.deferToThread(perform_stores)
             self.router.addContact(node)
             return defer.gatherResults(ds)
 
@@ -533,18 +547,21 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         is closer than the closest in that list, then store the key/value
         on the new node (per section 2.5 of the paper)
         """
-        if self.router.isNewNode(node):
+        def perform_stores():
             ds = []
-            """
-               for key, value in self.storage.iteritems():
-                   keynode = Node(digest(key))
-                   neighbors = self.router.findNeighbors(keynode)
-                   if len(neighbors) > 0:
-                       newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
-                       thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
-                   #if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
-                       #ds.append(self.callStore(node, digest(key), value))
-            """
+            for key, value in self.storage.iteritems():
+                keynode = Node(digest(key))
+                neighbors = self.router.findNeighbors(keynode)
+                if len(neighbors) > 0:
+                    newNodeClose = node.distanceTo(keynode) < neighbors[-1].distanceTo(keynode)
+                    thisNodeClosest = self.sourceNode.distanceTo(keynode) < neighbors[0].distanceTo(keynode)
+                if len(neighbors) == 0 or (newNodeClose and thisNodeClosest):
+                    ds.append(self.callStore(node, digest(key), value))
+
+        if self.router.isNewNode(node):
+            self.log.info("Welcoming new node %s" % node)
+            ds = []
+            threads.deferToThread(perform_stores)
             self.router.addContact(node)
             return defer.gatherResults(ds)
 

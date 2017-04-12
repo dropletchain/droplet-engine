@@ -126,7 +126,7 @@ def connect_db(db_filename):
 conn = create_db("./tmp.db")
 entries = extract_entries(extract_bench_lines("./logs/mainlog.log"))
 fill_db_with_data(conn, entries, "main")
-for i in range(1, 100):
+for i in range(1, 10):
     entries = extract_entries(extract_bench_lines("./logs/node%d.log" % i))
     fill_db_with_data(conn, entries, "node%d" % i)
 

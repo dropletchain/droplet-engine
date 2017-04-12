@@ -118,9 +118,14 @@ class TalosChunkSpiderCrawl(TalosSpiderCrawl):
         value = valueCounts.most_common(1)[0][0]
 
         peerToSaveTo = self.nearestWithoutValue.popleft()
+        # Should be rethinked with our approach
+        if peerToSaveTo is not None:
+            self.log.warning("Got closer node %s" % peerToSaveTo)
+        """
         if peerToSaveTo is not None:
             self.protocol.callStore(peerToSaveTo, self.node.id, value)
             return value
+        """
         return value
 
 
