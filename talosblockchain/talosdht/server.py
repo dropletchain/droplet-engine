@@ -160,7 +160,8 @@ class TalosDHTServer(object):
     def store_chunk(self, chunk, policy=None, time_keeper=TimeKeeper()):
         dkey = digest(chunk.key)
         self.log.debug("Storing chunk with key %s" % (binascii.hexlify(dkey),))
-        return self.digest_set(dkey, chunk.encode(), policy_in=policy, time_keeper=time_keeper)
+        result = self.digest_set(dkey, chunk.encode(), policy_in=policy, time_keeper=time_keeper)
+        return result
 
     def get_addr_chunk(self, chunk_key, policy_in=None, time_keeper=TimeKeeper()):
         # if this node has it, return it
@@ -217,7 +218,7 @@ class TalosDHTServer(object):
                     id = time_keeper.start_clock_unique()
                     ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
                     return defer.DeferredList(ds).addCallback(_anyRespondSuccess, time_keeper, id,
-                                                              ENTRY_STROE_TO_ALL_NODES)
+                                                              ENTRY_STORE_TO_ALL_NODES)
 
                 if not policy_in is None:
                     return handle_policy(policy_in)
@@ -226,7 +227,7 @@ class TalosDHTServer(object):
 
             id = time_keeper.start_clock_unique()
             ds = [self.protocol.callStore(n, dkey, value) for n in nodes]
-            return defer.DeferredList(ds).addCallback(_anyRespondSuccess, time_keeper, id, ENTRY_STROE_TO_ALL_NODES)
+            return defer.DeferredList(ds).addCallback(_anyRespondSuccess, time_keeper, id, ENTRY_STORE_TO_ALL_NODES)
 
         nearest = self.protocol.router.findNeighbors(node)
         if len(nearest) == 0:
@@ -277,7 +278,6 @@ class TalosDHTServer(object):
             loop = LoopingCall(self.saveState, fname).start(freq)
             return loop
         return task.deferLater(reactor, frequency, run_looping_call, frequency)
-
 
 
 class TalosSecureDHTServer(TalosDHTServer):

@@ -93,6 +93,8 @@ class TalosKademliaProtocol(TalosRPCProtocol):
     def rpc_store(self, sender, nodeid, key, value):
         source = Node(nodeid, sender[0], sender[1])
         time_keeper = TimeKeeper()
+        total_time_id = time_keeper.start_clock_unique()
+
         time_keeper.start_clock()
         self.welcomeIfNewNode(source)
         time_keeper.stop_clock(ENTRY_TIME_WELCOME_NODE)
@@ -100,9 +102,7 @@ class TalosKademliaProtocol(TalosRPCProtocol):
         self.log.debug("got a store request from %s, storing value" % str(sender))
         try:
 
-            time_keeper.start_clock()
             chunk = CloudChunk.decode(value)
-            time_keeper.stop_clock(ENTRY_TIME_DECODE_CHUNK)
 
             if not digest(chunk.key) == key:
                 return {'error': 'key missmatch'}
@@ -115,6 +115,7 @@ class TalosKademliaProtocol(TalosRPCProtocol):
                 self.storage.store_check_chunk(chunk, None, policy, time_keeper=time_keeper)
                 time_keeper.stop_clock_unique(ENTRY_STORE_CHECK, id)
 
+                time_keeper.stop_clock_unique(ENTRY_TOTAL_STORE_LOCAL, total_time_id)
                 self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_STORE_CHUNK_LOCAL, time_keeper.get_summary()))
                 return {'value': 'ok'}
 
@@ -266,18 +267,19 @@ class QueryChunk(Resource):
     def render_POST(self, request):
         msg = json.loads(request.content.read())
         timekeeper = TimeKeeper()
+        total_time_id = timekeeper.start_clock_unique()
         try:
             timekeeper.start_clock()
             token = get_and_check_query_token(msg)
             check_query_token_valid(token)
-            timekeeper.stop_clock('check_token_valid')
+            timekeeper.stop_clock(ENTRY_CHECK_TOKEN_VALID)
 
             # Check nonce ok
             if not self._check_cache(token.nonce):
                 raise InvalidQueryToken("Nonce not valid")
 
             def handle_policy(policy):
-                timekeeper.stop_clock('time_fetch_policy')
+                timekeeper.stop_clock(ENTRY_FETCH_POLICY)
                 if policy is None:
                     request.setResponseCode(400)
                     request.write("No Policy Found")
@@ -285,9 +287,10 @@ class QueryChunk(Resource):
                 # check policy for correctness
                 id = timekeeper.start_clock_unique()
                 chunk = self.storage.get_check_chunk(token.chunk_key, token.pubkey, policy, time_keeper=timekeeper)
-                timekeeper.stop_clock_unique('time_get_and_check-chunk', id)
-                self.log.debug("[BENCH] QUERY CHUNK ->%s" % timekeeper.get_summary())
+                timekeeper.stop_clock_unique(ENTRY_GET_AND_CHECK, id)
+                timekeeper.stop_clock_unique(ENTRY_TOTAL_LOCAL_QUERY, total_time_id)
 
+                self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_QUERY_CHUNK_LOCAL, timekeeper.get_summary()))
                 request.write(chunk.encode())
                 request.finish()
             timekeeper.start_clock()
@@ -324,6 +327,8 @@ class StoreLargeChunk(Resource):
             return json.dumps({'error': "Illegal URL"})
         try:
             time_keeper = TimeKeeper()
+            total_time_id = time_keeper.start_clock_unique()
+
             nodeid = unhexlify(request.prepath[1])
             source_ip = request.client.host
             source_port = int(request.prepath[2])
@@ -346,13 +351,14 @@ class StoreLargeChunk(Resource):
                 return json.dumps({'error': "key missmatch"})
 
             def handle_policy(policy):
-                time_keeper.stop_clock("time_fetch_policy")
+                time_keeper.stop_clock(ENTRY_FETCH_POLICY)
 
                 id = time_keeper.start_clock_unique()
                 self.storage.store_check_chunk(chunk, None, policy)
-                time_keeper.stop_clock_unique("time_store_check_chunk", id)
+                time_keeper.stop_clock_unique(ENTRY_STORE_CHECK, id)
 
-                self.log.debug("[BENCH] STORE LARGE NODE %s ->%s" % (str(source), time_keeper.get_summary()))
+                time_keeper.stop_clock_unique(ENTRY_TOTAL_STORE_LOCAL, total_time_id)
+                self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_STORE_CHUNK_LOCAL, time_keeper.get_summary()))
                 request.write(json.dumps({'value': "ok"}))
                 request.finish()
 
@@ -435,6 +441,8 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
     def rpc_store(self, sender, nodeid, key, value):
         source = Node(nodeid, sender[0], sender[1])
         time_keeper = TimeKeeper()
+        total_time_id = time_keeper.start_clock_unique()
+
         time_keeper.start_clock()
         self.welcomeIfNewNode(source)
         time_keeper.stop_clock(ENTRY_TIME_WELCOME_NODE)
@@ -442,9 +450,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         self.log.debug("got a store request from %s, storing value" % str(sender))
         try:
 
-            time_keeper.start_clock()
             chunk = CloudChunk.decode(value)
-            time_keeper.stop_clock(ENTRY_TIME_DECODE_CHUNK)
 
             if not digest(chunk.key) == key:
                 return {'error': 'key missmatch'}
@@ -457,6 +463,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
                 self.storage.store_check_chunk(chunk, None, policy, time_keeper=time_keeper)
                 time_keeper.stop_clock_unique(ENTRY_STORE_CHECK, id)
 
+                time_keeper.stop_clock_unique(ENTRY_TOTAL_STORE_LOCAL, total_time_id)
                 self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_STORE_CHUNK_LOCAL, time_keeper.get_summary()))
                 return {'value': 'ok'}
 

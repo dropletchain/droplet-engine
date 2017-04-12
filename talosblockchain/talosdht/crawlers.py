@@ -4,7 +4,7 @@ from kademlia.crawling import SpiderCrawl, RPCFindResponse
 from kademlia.node import NodeHeap, Node
 from kademlia.utils import deferredDict
 
-from talosstorage.chunkdata import CloudChunk
+from talosdht.util import *
 from talosstorage.timebench import TimeKeeper
 
 
@@ -109,7 +109,7 @@ class TalosChunkSpiderCrawl(TalosSpiderCrawl):
         make sure we tell the nearest node that *didn't* have
         the value to store it.
         """
-        self.time_keeper.stop_clock("time_find_value")
+        self.time_keeper.stop_clock(ENTRY_TIME_FIND_VALUE)
 
         valueCounts = Counter(values)
         if len(valueCounts) != 1:
@@ -155,7 +155,7 @@ class TimedNodeSpiderCrawl(SpiderCrawl):
         self.nearest.remove(toremove)
 
         if self.nearest.allBeenContacted():
-            self.time_keeper.stop_clock("time_crawl_nearest")
+            self.time_keeper.stop_clock(ENTRY_CRAWL_NEAREST)
             self.is_first = True
             return list(self.nearest)
         return self.find()

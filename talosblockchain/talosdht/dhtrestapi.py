@@ -68,9 +68,10 @@ class GetChunkLoaction(Resource):
     def render_GET(self, request):
         time_keeper = TimeKeeper()
         time_id = time_keeper.start_clock_unique()
+
         def respond(result):
             time_keeper.stop_clock_unique(ENTRY_TOTAL_QUERY_CHUNK, time_id)
-            self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_QUERY_CHUNK, time_keeper.get_summary()))
+            self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_QUERY_CHUNK_ADDR, time_keeper.get_summary()))
 
             if result is None:
                 request.setResponseCode(400)
