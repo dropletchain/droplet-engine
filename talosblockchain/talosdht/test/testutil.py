@@ -7,10 +7,10 @@ import time
 from talosstorage.checks import BitcoinVersionedPrivateKey, generate_query_token, get_priv_key
 from talosstorage.chunkdata import ChunkData, DoubleEntry, DataStreamIdentifier, create_cloud_chunk
 
-PRIVATE_KEY = BitcoinVersionedPrivateKey("cRR1K6arfF5TtVxDZzAaf3EmXkhymqrteUPbfDvLHdJr753kPM1m")
-NONCE = base64.b64decode("YnoT+AJ20SgZFG67exkf1w==")
-STREAMID=1
-TXID="8fd55b2955757337475c727f60de322b3b03fb8c32dc6ca51723eb0748a1d414"
+PRIVATE_KEY = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")
+NONCE = base64.b64decode("OU2HliHRUUZJokNvn84a+A==")
+STREAMID = 1
+TXID = "8cf71b7ed09acf896b40fc087e56d3d4dbd8cc346a869bb8a81624153c0c2b8c"
 
 
 def generate_random_chunk(block_id, key=os.urandom(32), size=1000, min_val=0, max_val=30):

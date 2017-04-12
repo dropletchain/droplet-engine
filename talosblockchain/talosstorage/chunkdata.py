@@ -237,6 +237,15 @@ def _enocde_cloud_chunk_without_signature(lookup_key, key_version, policy_tag, e
            mac_tag
 
 
+class CloudChunkDecodingError(Exception):
+    def __init__(self, encoded_chunk, msg):
+        self.encoded_chunk = encoded_chunk
+        self.msg = msg
+
+    def __str__(self):
+        return "%s Data: %s " % (repr(self.msg), base64.b64encode(self.encoded_chunk))
+
+
 class CloudChunk:
     """
         Key = H(Owner-addr  Stream-id  nonce  blockid) 32 bytes
@@ -290,24 +299,26 @@ class CloudChunk:
 
     @staticmethod
     def decode(encoded):
-        assert len(encoded) > HASH_BYTES + VERSION_BYTES + HASH_BYTES + MAC_BYTES
-        encoded = bytes(encoded)
-        cur_pos = 0
-        len_int = struct.calcsize("I")
-        key = encoded[:HASH_BYTES]
-        cur_pos += HASH_BYTES
-        key_version, = struct.unpack("I", encoded[cur_pos:(cur_pos + VERSION_BYTES)])
-        cur_pos += VERSION_BYTES
-        policy_tag = encoded[cur_pos:(cur_pos + HASH_BYTES)]
-        cur_pos += HASH_BYTES
-        enc_len, = struct.unpack("I", encoded[cur_pos:(cur_pos + len_int)])
-        cur_pos += len_int
-        encrypted_data = encoded[cur_pos:(cur_pos + enc_len)]
-        cur_pos += enc_len
-        mac_tag = encoded[cur_pos:(cur_pos + MAC_BYTES)]
-        cur_pos += MAC_BYTES
-        signature = encoded[cur_pos:]
-        return CloudChunk(key, key_version, policy_tag, encrypted_data, mac_tag, signature)
+        try:
+            encoded = bytes(encoded)
+            cur_pos = 0
+            len_int = struct.calcsize("I")
+            key = encoded[:HASH_BYTES]
+            cur_pos += HASH_BYTES
+            key_version, = struct.unpack("I", encoded[cur_pos:(cur_pos + VERSION_BYTES)])
+            cur_pos += VERSION_BYTES
+            policy_tag = encoded[cur_pos:(cur_pos + HASH_BYTES)]
+            cur_pos += HASH_BYTES
+            enc_len, = struct.unpack("I", encoded[cur_pos:(cur_pos + len_int)])
+            cur_pos += len_int
+            encrypted_data = encoded[cur_pos:(cur_pos + enc_len)]
+            cur_pos += enc_len
+            mac_tag = encoded[cur_pos:(cur_pos + MAC_BYTES)]
+            cur_pos += MAC_BYTES
+            signature = encoded[cur_pos:]
+            return CloudChunk(key, key_version, policy_tag, encrypted_data, mac_tag, signature)
+        except Exception as r:
+            raise CloudChunkDecodingError(encoded, r.message)
 
     @staticmethod
     def decode_base64_str(encoded):

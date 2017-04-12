@@ -127,7 +127,9 @@ class MeasureCheck(unittest.TestCase):
             talosStorage.get_check_chunk(chunk.key, key.public_key().to_hex(), policy, time_keeper=keeper)
             print "Time get %s" % ((timer() - before) * 1000,)
 
-            print "Time check in get %s" % keeper.logged_times['time_check_store']
+        for (key, value) in talosStorage.db.RangeIter():
+            print base64.b64encode(key)
+            print base64.b64encode(value)
 
     def check_check_func(self):
         key = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")
