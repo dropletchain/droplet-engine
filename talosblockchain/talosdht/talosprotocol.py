@@ -53,9 +53,9 @@ class TalosKBucket(KBucket):
 
         for node in self.replacementNodes:
             bucket = one if node.long_id <= midpoint else two
-            bucket.replacementNodes.push(node)
+            bucket.replacementNodes.append(node)
 
-        return (one, two)
+        return one, two
 
 
 class TalosKademliaRoutingTable(RoutingTable):
