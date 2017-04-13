@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -lt 3 ]; then
-    echo "usage ./cmd.sh <pulbic ip> <num_extra_nodes> <use_secure_dht_0_or_1> [<bootstrap node>]"
+if [ $# -lt 5 ]; then
+    echo "usage ./cmd.sh <pulbic ip> <num_extra_nodes> <use_secure_dht_0_or_1> <kvalue> <avalue> [<bootstrap node>]"
     exit 1
 fi
 
@@ -15,7 +15,8 @@ echo $PYTHON_CMD
 NUM_EXTRA_NODES=$2
 CUR_PORT=14002
 MAIN_SERVER_PORT=14001
-KSIZE=10
+KSIZE=$4
+ALPHA=$5
 
 ROOTPATH="./dhtstorage"
 DB_PATH="$ROOTPATH/dhtdbs"
@@ -23,7 +24,7 @@ STATE_PATH="$ROOTPATH/dhtstates"
 LOG_PATH="$ROOTPATH/logs"
 
 PUBLIC_IP=$1
-BOOTSTRAP_NODES="$4"
+BOOTSTRAP_NODES="$6"
 
 DHT_SECURE=$3
 
@@ -48,7 +49,7 @@ fi
 
 echo "Start main node"
 STATE_PATH_FILE=$STATE_PATH/mainstate.state
-cmd="$PYTHON_CMD dhtserver.py --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --ksize $KSIZE --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH_FILE --logfile $LOG_PATH/mainlog.log"
+cmd="$PYTHON_CMD dhtserver.py --restserver $PUBLIC_IP --dhtserver $PUBLIC_IP --ksize $KSIZE --alpha $ALPHA --dhtport $MAIN_SERVER_PORT --dhtdbpath $DB_PATH/mainnode --store_state_file $STATE_PATH_FILE --logfile $LOG_PATH/mainlog.log"
 
 if [ -d "$STATE_PATH_FILE" ]; then
     cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
@@ -73,7 +74,7 @@ sleep 5
 for ((c=1; c<=NUM_EXTRA_NODES; c++))
 do
     STATE_PATH_FILE=$STATE_PATH/nodestate$c.state
-    cmd="$PYTHON_CMD dhtserveronly.py --dhtserver $PUBLIC_IP --ksize $KSIZE --bootstrap $PUBLIC_IP:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH_FILE --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log"
+    cmd="$PYTHON_CMD dhtserveronly.py --dhtserver $PUBLIC_IP --ksize $KSIZE --alpha $ALPHA --bootstrap $PUBLIC_IP:$MAIN_SERVER_PORT --dhtdbpath $DB_PATH/node$c --store_state_file $STATE_PATH_FILE --dhtport $CUR_PORT --logfile $LOG_PATH/node$c.log"
     if [ -d "$STATE_PATH_FILE" ]; then
         cmd="$cmd --dht_cache_file $STATE_PATH_FILE"
     fi
@@ -86,6 +87,7 @@ do
     $cmd &
     PROCESS_ID="$PROCESS_ID $!"
 	CUR_PORT=$((CUR_PORT + 1))
+	sleep 0.05
 done
 
 echo $PROCESS_ID > $ROOTPATH/processes.pid

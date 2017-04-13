@@ -6,9 +6,6 @@ from twisted.internet import defer, threads
 from talosstorage.chunkdata import CloudChunk
 from talosstorage.storage import LevelDBStorage
 from kademlia.storage import IStorage
-import sqlite3
-import os
-import base64
 from zope.interface import implements
 
 
@@ -20,7 +17,6 @@ def get_time_and_chunk(encoded):
     size_time = struct.calcsize("I")
     time_cur, = struct.unpack("I", encoded[:size_time])
     return time_cur, encoded[size_time:]
-
 
 
 class TalosLevelDBDHTStorage(LevelDBStorage):

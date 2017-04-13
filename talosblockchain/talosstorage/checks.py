@@ -156,8 +156,6 @@ def get_priv_key(bvpk_private_key):
     return ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
 
 
-
-
 def generate_query_token(owner, streamid, nonce, chunk_key, bvpk_private_key):
     private_key = get_priv_key(bvpk_private_key)
     data = owner + str(streamid) + str(nonce) + chunk_key

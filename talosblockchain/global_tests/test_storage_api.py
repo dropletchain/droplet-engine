@@ -36,6 +36,7 @@ IP = "127.0.0.1"
 #PORT = 14000
 PORT = 15000
 
+
 def store_chunk(chunkid, chunk, ip=IP, port=PORT):
     req = requests.post("http://%s:%d/store_chunk" % (ip, port), data=chunk.encode())
     return req.reason, req.status_code
@@ -109,7 +110,7 @@ class TestStorageApi(unittest.TestCase):
         self._test_get_chunk_for_blockid(owner, stream_ident, 0)
 
     def test_get_image(self):
-        block_id = 0
+        block_id = 1
         owner = PRIVATE_KEY.public_key().address()
         stream_ident = DataStreamIdentifier(owner, 3, NONCE,
                                             TXID)
@@ -137,7 +138,7 @@ class TestStorageApi(unittest.TestCase):
         avg_get = 0
         for i in range(0, num_iter):
             key = os.urandom(32)
-            chunk = generate_random_chunk(i, key=key, size=10000)
+            chunk = generate_random_chunk(i, key=key, size=1000)
             cur_time = timer()
             _, code = store_chunk(i, chunk)
             store_time = timer() - cur_time

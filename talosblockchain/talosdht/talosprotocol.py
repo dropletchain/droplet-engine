@@ -352,13 +352,11 @@ class StoreLargeChunk(Resource):
 
             time_keeper.start_clock()
             self.rpc_protocol.welcomeIfNewNode(source)
-            time_keeper.stop_clock("time_welcome_node")
+            time_keeper.stop_clock(ENTRY_TIME_WELCOME_NODE)
 
             encoded_chunk = request.content.read()
 
-            time_keeper.start_clock()
             chunk = CloudChunk.decode(encoded_chunk)
-            time_keeper.stop_clock("time_decode_chunk")
 
             if not digest(chunk.key) == kad_key:
                 request.setResponseCode(400)
@@ -368,7 +366,7 @@ class StoreLargeChunk(Resource):
                 time_keeper.stop_clock(ENTRY_FETCH_POLICY)
 
                 id = time_keeper.start_clock_unique()
-                self.storage.store_check_chunk(chunk, None, policy)
+                self.storage.store_check_chunk(chunk, None, policy, time_keeper=time_keeper)
                 time_keeper.stop_clock_unique(ENTRY_STORE_CHECK, id)
 
                 time_keeper.stop_clock_unique(ENTRY_TOTAL_STORE_LOCAL, total_time_id)

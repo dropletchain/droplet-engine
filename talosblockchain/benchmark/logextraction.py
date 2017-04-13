@@ -1,3 +1,4 @@
+import argparse
 import os
 import re
 
@@ -53,6 +54,7 @@ types_to_entries = {
     TYPE_STORE_CHUNK_REMOTE: [ENTRY_STORE_ONE_NODE]
 }
 
+
 def extract_bench_lines(path_to_file):
     with open(path_to_file,'r') as to_read:
         return [line for line in to_read if BENCH_TAG in line]
@@ -79,7 +81,7 @@ def extract_entries(list_of_lines):
 def db_create_script():
     script = ""
     for type in types:
-        script += "CREATE TABLE %s (node_id TEXT NOT NULL," % type
+        script += "CREATE TABLE IF NOT EXISTS %s (node_id TEXT NOT NULL," % type
         for column in types_to_entries[type]:
             script += "%s REAL, " % column
         script = "%s);\n" % script[:-2]
@@ -107,8 +109,6 @@ def fill_db_with_data(conn, data, nodeid):
 
 
 def create_db(db_filename):
-    if os.path.exists(db_filename):
-        raise Exception("Database '%s' already exists" % db_filename)
     con = sqlite3.connect(db_filename, timeout=2 ** 30)
     script = db_create_script()
     lines = [l + ";" for l in script.split(";")]
@@ -123,11 +123,23 @@ def connect_db(db_filename):
     con = sqlite3.connect(db_filename, timeout=2 ** 30)
     return con
 
-conn = create_db("./tmp.db")
-entries = extract_entries(extract_bench_lines("./logs/mainlog.log"))
-fill_db_with_data(conn, entries, "main")
-for i in range(1, 10):
-    entries = extract_entries(extract_bench_lines("./logs/node%d.log" % i))
-    fill_db_with_data(conn, entries, "node%d" % i)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("Run dht log extractor")
+    parser.add_argument('--logpath', type=str, help='logpath', default="./logs", required=False)
+    parser.add_argument('--dbname', type=str, help='dbname', default="./dhtlog.db", required=False)
+    args = parser.parse_args()
+
+    conn = create_db(args.dbname)
+    try:
+        for filename in os.listdir(args.logpath):
+            if filename.endswith(".log"):
+                [name, _] = filename.split(".")
+                entries = extract_entries(extract_bench_lines(os.path.join(args.logpath, filename)))
+                fill_db_with_data(conn, entries, name)
+            else:
+                continue
+    finally:
+        conn.close()
+
 
 
