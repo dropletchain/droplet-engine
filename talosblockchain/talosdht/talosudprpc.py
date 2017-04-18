@@ -127,13 +127,14 @@ class TalosRPCProtocol(protocol.DatagramProtocol):
 
 
 class TalosWeakSignedRPCProtocol(TalosRPCProtocol):
-    def __init__(self, ecdsa_privkey, my_node_id, waitTimeout=10, max_packet_size=MAX_UDP_SIZE_PCK, noisy=False):
+    def __init__(self, ecdsa_privkey, my_node_id, waitTimeout=10, max_packet_size=MAX_UDP_SIZE_PCK,
+                 noisy=False, cbits=10):
         TalosRPCProtocol.__init__(self, waitTimeout=waitTimeout, max_packet_size=max_packet_size, noisy=noisy)
         self.private_key = ecdsa_privkey
         self.public_key = ecdsa_privkey.public_key()
         self.ser_pub = serialize_pub_key(self.public_key)
         self.my_node_id = my_node_id
-        self.cbits = 10
+        self.cbits = cbits
 
     def _acceptResponse(self, msgID, data, address):
         if not isinstance(data, list) or len(data) != 4:

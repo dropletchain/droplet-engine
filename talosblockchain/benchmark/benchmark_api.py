@@ -47,15 +47,15 @@ def run_benchmark_store_get(num_rounds, out_logger, private_key=BitcoinVersioned
     for round_bench in range(num_rounds):
         try:
             time_keeper = TimeKeeper()
-            chunk = generate_random_chunk(private_key, round, identifier, key=key, size=chunk_size)
+            chunk = generate_random_chunk(private_key, round_bench, identifier, key=key, size=chunk_size)
             dht_api_client.store_chunk(chunk, time_keeper=time_keeper)
 
-            chunk = dht_api_client.fetch_chunk(round, private_key, identifier, time_keeper=time_keeper)
+            chunk = dht_api_client.fetch_chunk(round_bench, private_key, identifier, time_keeper=time_keeper)
 
             if chunk is None:
                 print "Round %d error" % round_bench
             else:
-                print "Round %d ok" % round_bench
+                print "Round %d ok Chunk size: %d" % (round_bench, len(chunk.encode()))
 
             out_logger.log_times_keeper(time_keeper)
         except DHTRestClientException as e:
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_rounds', type=int, help='num_rounds', default=100, required=False)
     parser.add_argument('--chunk_size', type=int, help='chunk_size', default=10000, required=False)
     parser.add_argument('--log_db', type=str, help='log_db', default=None, required=False)
-    parser.add_argument('--name', type=str, help='name', default="benchmark_store_get", required=False)
+    parser.add_argument('--name', type=str, help='name', default="CLIENT_STORE_GET", required=False)
     args = parser.parse_args()
 
     LOGGING_FIELDS = [TIME_STORE_CHUNK, TIME_FETCH_ADDRESS, TIME_FETCH_NONCE, TIME_FETCH_CHUNK]
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     if args.log_db is None:
         logger = FileBenchmarkLogger("%s_%d.log" % (args.name, args.num_rounds), LOGGING_FIELDS)
     else:
-        logger = SQLLiteBenchmarkLogger(args.log_db, LOGGING_FIELDS, "%s_%d" % (args.name, args.num_rounds))
+        logger = SQLLiteBenchmarkLogger(args.log_db, LOGGING_FIELDS, "%s" % (args.name,))
 
     try:
         private_key = BitcoinVersionedPrivateKey(args.private_key)

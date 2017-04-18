@@ -8,10 +8,9 @@ PROJECT_PATH="talosblockchain/"
 KVALUE=10
 ALPHA=3
 SECURE=1
-ITERATIONS=100
-LATENCY="10"
+ITERATIONS=1050
 
-BENCHMARK_NAME="local_dht_benchmark_${ITERATIONS}_${KVALUE}_${ALPHA}"
+BENCHMARK_NAME="local_dht_benchmark_k${KVALUE}_a${ALPHA}"
 
 cd $LOCAL_PATH
 cd ../../$PROJECT_PATH
@@ -22,57 +21,63 @@ else
     cmd=python
 fi
 
-echo "Assumes bitcoin node runs"
+echo "Assumes bitcoin + virtualchain node runs"
 #echo "Run virtualchain"
 #./scripts/run_rest_vc.sh
-
-if [ "$(uname)" == "Darwin" ]; then
-	echo "latency not supportet with netem"
-else
-	if [[ ! -z  $LATENCY ]]; then
-		 sudo tc qdisc add dev lo root netem delay ${LATENCY}ms
-	fi
-fi
 
 
 sleep 2
 
-
 mkdir $BENCHMARK_NAME
 echo "Experiment starts"
-for NUM_NODES in {16,32,64}
+for LATENCY in {0,5,10,15}
 do
-	echo "Run $NUM_NODES dht nodes"
-	NUM_HELPER_NODES=$((NUM_NODES-1))
-	./scripts/run_dht_nodes.sh 127.0.0.1 $NUM_HELPER_NODES $SECURE $KVALUE $ALPHA
+	if [ "$(uname)" == "Darwin" ]; then
+		echo "latency not supportet with netem"
+	else
+		if [[ ! -z  $LATENCY ]]; then
+			echo "Add latency ${LATENCY}ms"
+			sudo tc qdisc add dev lo root netem delay ${LATENCY}ms
+		fi
+	fi
 
-	echo "DHT nodes run wait bootstrap..."
-	sleep 10
-	ROUND_NAME=${BENCHMARK_NAME}_${NUM_NODES}
+	SLEEP_TIME=10
+	for NUM_NODES in {16,32,64,128,256,512}
+	do
+		echo "Run $NUM_NODES dht nodes"
+		NUM_HELPER_NODES=$((NUM_NODES-1))
+		./scripts/run_dht_nodes.sh 127.0.0.1 $NUM_HELPER_NODES $SECURE $KVALUE $ALPHA
 
-	echo "Start benchmark"
-	$cmd ./benchmark/benchmark_api.py --log_db "$BENCHMARK_NAME/$ROUND_NAME.db" --num_rounds $ITERATIONS
+		echo "DHT nodes run wait bootstrap ${SLEEP_TIME}s..."
+		sleep $SLEEP_TIME
+		ROUND_NAME=${BENCHMARK_NAME}_n${NUM_NODES}_l${LATENCY}
+		echo "Start benchmark"
+		$cmd ./benchmark/benchmark_api.py --log_db "$BENCHMARK_NAME/$ROUND_NAME.db" --num_rounds $ITERATIONS
 
-	echo "Extract data from logs"
-	$cmd ./benchmark/logextraction.py --logpath ./dhtstorage/logs --dbname "$BENCHMARK_NAME/$ROUND_NAME.db"
+		echo "Extract data from logs"
+		$cmd ./benchmark/logextraction.py --logpath ./dhtstorage/logs --dbname "$BENCHMARK_NAME/$ROUND_NAME.db"
 
-	echo "Terminate Nodes"
-	./scripts/terminate_dht_nodes.sh
+		echo "Terminate Nodes"
+		./scripts/terminate_dht_nodes.sh
 
-	echo "Remove DHT Files"
-	rm -r ./dhtstorage
+		echo "Remove DHT Files"
+		rm -r ./dhtstorage
+
+		#SLEEP_TIME=$((SLEEP_TIME*2))
+	done
+
+	if [ "$(uname)" == "Darwin" ]; then
+		echo "latency not supportet with netem"
+	else
+		if [[ ! -z  $LATENCY ]]; then
+			echo "Remove latency ${LATENCY}ms"
+			sudo tc qdisc del dev lo root netem
+		fi  
+	fi
 done
 
 echo "Benchmark done move results"
 mv $BENCHMARK_NAME $LOCAL_PATH/../data
-
-if [ "$(uname)" == "Darwin" ]; then
-	echo "latency not supportet with netem"
-else
-	if [[ ! -z  $LATENCY ]]; then
-		sudo tc qdisc del dev lo root netem
-	fi  
-fi
 
 cd $CUR_PATH
 

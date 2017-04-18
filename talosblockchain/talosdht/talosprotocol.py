@@ -424,8 +424,8 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
     New protocol for the talos storage, base protocol from bmuller's implementation
     """
 
-    def __init__(self, ecdsa_privkey, sourceNode, storage, ksize, talos_vc=TalosVCRestClient()):
-        TalosWeakSignedRPCProtocol.__init__(self, ecdsa_privkey, sourceNode.id)
+    def __init__(self, ecdsa_privkey, sourceNode, storage, ksize, talos_vc=TalosVCRestClient(), cbits=10):
+        TalosWeakSignedRPCProtocol.__init__(self, ecdsa_privkey, sourceNode.id, cbits=cbits)
         self.router = TalosKademliaRoutingTable(self, ksize, sourceNode)
         self.storage = storage
         self.sourceNode = sourceNode

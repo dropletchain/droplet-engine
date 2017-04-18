@@ -283,7 +283,7 @@ class TalosDHTServer(object):
 class TalosSecureDHTServer(TalosDHTServer):
 
     def __init__(self, ksize=20, alpha=3, priv_key=None, storage=None,
-                 talos_vc=None, rebub_delay=3600, c1bits=10):
+                 talos_vc=None, rebub_delay=3600, c1bits=1):
         """
         Create a server instance.  This will start listening on the given port.
         Args:
@@ -313,7 +313,7 @@ class TalosSecureDHTServer(TalosDHTServer):
 
         self.talos_vc = talos_vc or AsyncPolicyApiClient()
         self.protocol = TalosSKademliaProtocol(self.priv_key, self.node,
-                                               self.storage, ksize, talos_vc=self.talos_vc)
+                                               self.storage, ksize, talos_vc=self.talos_vc, cbits=c1bits)
         self.httpprotocol_client = None
 
     def saveState(self, fname):
