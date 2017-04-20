@@ -1,9 +1,11 @@
-from config import *
-import virtualchain
 import sys
-from talosvc.policydb import TalosPolicyDB
-from threading import Thread
 import time
+from threading import Thread
+
+import virtualchain
+
+from config import *
+from talosvc.policydb import TalosPolicyDB
 
 """
 Implementation of the blockstack virtualchain library hooks.
@@ -239,4 +241,3 @@ class Synchronizer(Thread):
             self.logger.info("Sync Virtualchain")
             sync_blockchain(self.config)
             time.sleep(self.sleep_interval)
-

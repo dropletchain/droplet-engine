@@ -12,6 +12,7 @@ class TalosSpiderCrawl(SpiderCrawl):
     """
     Crawl the network and look for given 160-bit keys.
     """
+
     def __init__(self, protocol, node, chunk_key, peers, ksize, alpha):
         """
         Create a new C{SpiderCrawl}er.
@@ -130,12 +131,10 @@ class TalosChunkSpiderCrawl(TalosSpiderCrawl):
 
 
 class TimedNodeSpiderCrawl(SpiderCrawl):
-
     def __init__(self, protocol, node, peers, ksize, alpha, time_keeper=TimeKeeper()):
         SpiderCrawl.__init__(self, protocol, node, peers, ksize, alpha)
         self.time_keeper = time_keeper
         self.is_first = True
-
 
     def find(self):
         """

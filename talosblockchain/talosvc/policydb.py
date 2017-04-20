@@ -1,5 +1,7 @@
-import virtualchain
 import sqlite3
+
+import virtualchain
+
 from config import *
 from policy import create_policy_from_db_tuple, Policy
 
@@ -171,7 +173,7 @@ def fetch_owners(conn, limit, offset):
 def fetch_policy_with_txid(conn, txid):
     c = conn.cursor()
     try:
-        c.execute(SQL_FETCH_POLICY_WITH_TXID, (txid, ))
+        c.execute(SQL_FETCH_POLICY_WITH_TXID, (txid,))
         policy_data = c.fetchone()
         if policy_data is None:
             return None
@@ -189,6 +191,7 @@ def fetch_policy_with_txid(conn, txid):
     finally:
         c.close()
 
+
 #################
 # State Machine #
 #################
@@ -199,6 +202,7 @@ class PolicyState:
     Class which implements the handlers and checkers
     for each operation found in the blockchain
     """
+
     def __init__(self, policy):
         self.policy = policy
         self.ops = []
@@ -214,7 +218,8 @@ class PolicyState:
     @staticmethod
     def handle_CREATE_POLICY(policy_state, op):
         args = (op[OPCODE_FIELD_STREAM_ID], op[OPCODE_FIELD_OWNER], op[OPCODE_FIELD_OWNER_PK],
-                op[OPCODE_FIELD_TXTID], op[OPCODE_FIELD_TIMESTAMP_START], op[OPCODE_FIELD_INTERVAL], op[OPCODE_FIELD_NONCE])
+                op[OPCODE_FIELD_TXTID], op[OPCODE_FIELD_TIMESTAMP_START], op[OPCODE_FIELD_INTERVAL],
+                op[OPCODE_FIELD_NONCE])
         policy_state.ops.append((commit_create_policy, args))
         policy_state.policy = Policy(op[OPCODE_FIELD_OWNER], op[OPCODE_FIELD_OWNER_PK], op[OPCODE_FIELD_STREAM_ID],
                                      op[OPCODE_FIELD_NONCE], op[OPCODE_FIELD_TXTID])

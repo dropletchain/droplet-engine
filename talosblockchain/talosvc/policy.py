@@ -1,5 +1,4 @@
 import json
-import base64
 from collections import OrderedDict
 
 from talosvc.config import *
@@ -9,6 +8,7 @@ class Policy:
     """
     Represents a Policy in the system, which has to be enforced on the datastreams.
     """
+
     def __init__(self, owner, owner_pk, stream_id, nonce, txid):
         """
         :param owner: owner bitcoin address
@@ -103,4 +103,4 @@ def create_policy_from_db_tuple(policy_tuple):
     """
     tuple form: (stream_id, owner, owner_pubkey, nonce, txid)
     """
-    return Policy(policy_tuple[1], policy_tuple[2],  policy_tuple[0], policy_tuple[3], policy_tuple[4])
+    return Policy(policy_tuple[1], policy_tuple[2], policy_tuple[0], policy_tuple[3], policy_tuple[4])

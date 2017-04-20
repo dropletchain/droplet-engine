@@ -2,7 +2,6 @@ import json
 
 from cachetools import TTLCache
 from twisted.internet import reactor, defer
-from twisted.internet.task import LoopingCall
 from twisted.web.client import Agent, readBody, HTTPConnectionPool
 from twisted.web.http_headers import Headers
 
@@ -15,6 +14,7 @@ class AsyncPolicyApiClient(TalosVCRestClient):
     Implements the asynchronous version of the policy api client of the virtualchain
     using twisted.
     """
+
     def __init__(self, ip='127.0.0.1', port=5000, max_cache_size=1000, ttl_policy=300):
         TalosVCRestClient.__init__(self, ip, port)
         self.pool = HTTPConnectionPool(reactor)
@@ -71,6 +71,7 @@ class AsyncPolicyApiClient(TalosVCRestClient):
             policy = create_policy_from_json_str(body)
             self._put_policy_cache(owner, streamid, policy)
             return defer.succeed(policy)
+
         return self._perform_request(url).addCallback(handle_body)
 
     def get_policies_for_owner(self, owner):
@@ -81,6 +82,7 @@ class AsyncPolicyApiClient(TalosVCRestClient):
                 raise TalosVCRestClientError("Received reuqest without body")
             json_msg = json.loads(body)
             return defer.succeed([int(i) for i in json_msg['stream-ids']])
+
         return self._perform_request(url).addCallback(handle_body)
 
     def get_owners(self, limit=10, offset=0):
@@ -91,6 +93,7 @@ class AsyncPolicyApiClient(TalosVCRestClient):
                 raise TalosVCRestClientError("Received reuqest without body")
             json_msg = json.loads(body)
             return defer.succeed([str(x) for x in json_msg['owners']])
+
         return self._perform_request(url).addCallback(handle_body)
 
     def get_policy_with_txid(self, txid):
@@ -106,5 +109,5 @@ class AsyncPolicyApiClient(TalosVCRestClient):
             policy = create_policy_from_json_str(body)
             self._put_policy_txid_cache(txid, policy)
             return defer.succeed(policy)
-        return self._perform_request(url).addCallback(handle_body)
 
+        return self._perform_request(url).addCallback(handle_body)

@@ -1,4 +1,3 @@
-
 MAGIC_BYTES = 'ab'
 
 # Opcodes
@@ -7,9 +6,9 @@ CHANGE = ':'
 DELETE = '-'
 
 OPCODES = [
-   ADD,
-   CHANGE,
-   DELETE
+    ADD,
+    CHANGE,
+    DELETE
 ]
 
 OPCODE_NAMES = {

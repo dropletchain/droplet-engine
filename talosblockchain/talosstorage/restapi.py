@@ -1,11 +1,9 @@
-import base64
-
 from flask import Flask
 from flask import request, g
-from talosstorage.storage import InvalidChunkError, InvalidAccess, InvalidQueryToken
-from talosstorage.checks import JSON_CHUNK_IDENT, check_query_token_valid, get_and_check_query_token
-from talosstorage.chunkdata import CloudChunk
 
+from talosstorage.checks import check_query_token_valid, get_and_check_query_token
+from talosstorage.chunkdata import CloudChunk
+from talosstorage.storage import InvalidChunkError, InvalidAccess, InvalidQueryToken
 from talosvc.talosclient.restapiclient import TalosVCRestClient
 
 app = Flask("Talos-Storage-LevelDB")
@@ -53,6 +51,8 @@ Post:
 "pubkey" : "hex public key"
 }
 """
+
+
 @app.route('/get_chunk', methods=['POST'])
 def get_chunk():
     msg = request.get_json(force=True)
@@ -75,6 +75,8 @@ def get_chunk():
 Post:
 bin_block
 """
+
+
 @app.route('/store_chunk/<int:chunkid>', methods=['POST'])
 def store_chunk(chunkid):
     encoded_chunk = request.get_data()
@@ -86,4 +88,3 @@ def store_chunk(chunkid):
         return "OK", 200
     except InvalidChunkError:
         return "ERROR Invalid chunk", 400
-

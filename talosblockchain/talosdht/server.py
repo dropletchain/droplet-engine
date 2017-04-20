@@ -1,17 +1,16 @@
 """
 Package for interacting on the network at a high level.
 """
-import random
 import binascii
 import pickle
+import random
 
-from twisted.internet.task import LoopingCall
-from twisted.internet import defer, reactor, task
-
-from kademlia.log import Logger
-from kademlia.utils import deferredDict, digest
-from kademlia.node import Node
 from kademlia.crawling import NodeSpiderCrawl
+from kademlia.log import Logger
+from kademlia.node import Node
+from kademlia.utils import deferredDict, digest
+from twisted.internet import defer, reactor, task
+from twisted.internet.task import LoopingCall
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 
@@ -62,6 +61,7 @@ class TalosDHTServer(object):
 
         def start_looping_call(num_seconds):
             self.refreshLoop = LoopingCall(self.refreshTable).start(num_seconds)
+
         self.delay = rebub_delay
         task.deferLater(reactor, rebub_delay, start_looping_call, rebub_delay)
         self.talos_vc = talos_vc or AsyncPolicyApiClient()
@@ -115,7 +115,7 @@ class TalosDHTServer(object):
         back up, the list of nodes can be used to bootstrap.
         """
         neighbors = self.protocol.router.findNeighbors(self.node)
-        return [ tuple(n)[-2:] for n in neighbors ]
+        return [tuple(n)[-2:] for n in neighbors]
 
     def bootstrap(self, addrs):
         """
@@ -147,8 +147,9 @@ class TalosDHTServer(object):
         Returns:
             A `list` of IP's.  If no one can be contacted, then the `list` will be empty.
         """
+
         def handle(results):
-            ips = [ result[1][0] for result in results if result[0] ]
+            ips = [result[1][0] for result in results if result[0]]
             self.log.debug("other nodes think our ip is %s" % str(ips))
             return ips
 
@@ -242,10 +243,10 @@ class TalosDHTServer(object):
         to a cache file with the given fname.
         """
         self.log.info("Save state to file %s" % fname)
-        data = { 'ksize': self.ksize,
-                 'alpha': self.alpha,
-                 'id': self.node.id,
-                 'neighbors': self.bootstrappableNeighbors() }
+        data = {'ksize': self.ksize,
+                'alpha': self.alpha,
+                'id': self.node.id,
+                'neighbors': self.bootstrappableNeighbors()}
         if len(data['neighbors']) == 0:
             self.log.warning("No known neighbors, so not writing to cache.")
             return
@@ -274,14 +275,15 @@ class TalosDHTServer(object):
             frequencey: Frequency in seconds that the state should be saved.
                         By default, 10 minutes.
         """
+
         def run_looping_call(freq):
             loop = LoopingCall(self.saveState, fname).start(freq)
             return loop
+
         return task.deferLater(reactor, frequency, run_looping_call, frequency)
 
 
 class TalosSecureDHTServer(TalosDHTServer):
-
     def __init__(self, ksize=20, alpha=3, priv_key=None, storage=None,
                  talos_vc=None, rebub_delay=3600, c1bits=1):
         """
@@ -308,6 +310,7 @@ class TalosSecureDHTServer(TalosDHTServer):
 
         def start_looping_call(num_seconds):
             self.refreshLoop = LoopingCall(self.refreshTable).start(num_seconds)
+
         self.delay = rebub_delay
         task.deferLater(reactor, rebub_delay, start_looping_call, rebub_delay)
 
@@ -322,11 +325,11 @@ class TalosSecureDHTServer(TalosDHTServer):
         to a cache file with the given fname.
         """
         self.log.info("Save state to file %s" % fname)
-        data = { 'ksize': self.ksize,
-                 'alpha': self.alpha,
-                 'priv_key': serialize_priv_key(self.priv_key),
-                 'c1bits': self.c1bits,
-                 'neighbors': self.bootstrappableNeighbors()}
+        data = {'ksize': self.ksize,
+                'alpha': self.alpha,
+                'priv_key': serialize_priv_key(self.priv_key),
+                'c1bits': self.c1bits,
+                'neighbors': self.bootstrappableNeighbors()}
         if len(data['neighbors']) == 0:
             self.log.warning("No known neighbors, so not writing to cache.")
             return

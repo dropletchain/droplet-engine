@@ -1,7 +1,7 @@
-import time
 import binascii
 import hashlib
 import os
+import time
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
@@ -30,7 +30,7 @@ def check_cbits(node_id, cbits):
     if type(node_id) != long:
         data_long = long(binascii.hexlify(node_id), 16)
     total_bits = len(node_id) * 8
-    return (data_long >> (total_bits-cbits)) == 0
+    return (data_long >> (total_bits - cbits)) == 0
 
 
 def generate_keys_with_crypto_puzzle(c_bits):
@@ -46,7 +46,7 @@ def generate_token_with_puzzle(node_id, c2_bits):
     while True:
         node_id_b = bytearray(node_id)
         token = bytearray(os.urandom(len(node_id)))
-        xor_token = bytes([x ^ y for (x,y) in zip(token, node_id_b)])
+        xor_token = bytes([x ^ y for (x, y) in zip(token, node_id_b)])
         if check_cbits(pub_to_id(xor_token), c2_bits):
             return bytes(token)
 

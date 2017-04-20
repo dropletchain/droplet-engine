@@ -1,8 +1,8 @@
 import json
+from threading import Timer
 
 from flask import Flask
 from flask import request, g
-from threading import Timer
 
 from talosvc.config import get_working_db, get_default_talos_config
 from talosvc.policydb import TalosPolicyDB
@@ -41,9 +41,11 @@ def sync_state():
         if RUNNING:
             Timer(SYNC_INTERVAL, sync_state, ()).start()
 
+
 @app.before_first_request
 def initialize():
     Timer(SYNC_INTERVAL, sync_state, ()).start()
+
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -104,7 +106,7 @@ def get_owners():
         if res is None:
             return "NO RESULT FOUND", 400
         else:
-            return json.dumps({'owners':[x[0] for x in res]})
+            return json.dumps({'owners': [x[0] for x in res]})
     except RuntimeError:
         return "ERROR", 400
 
@@ -127,6 +129,6 @@ def get_streamids_for_owner():
         if res is None:
             return "NO RESULT FOUND", 400
         else:
-            return json.dumps({'stream-ids':[x[0] for x in res]})
+            return json.dumps({'stream-ids': [x[0] for x in res]})
     except RuntimeError:
         return "ERROR", 400

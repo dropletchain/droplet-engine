@@ -1,15 +1,15 @@
+import base64
+import hashlib
 import struct
 import zlib
-import hashlib
-import base64
 from binascii import unhexlify, hexlify
-from pylepton.lepton import *
 
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
+from pylepton.lepton import *
 from talosstorage.timebench import TimeKeeper
 
 

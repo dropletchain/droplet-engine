@@ -9,7 +9,7 @@ TIME_TAG = "[TIMES]"
 
 TYPE_ADD_CHUNK = "[ADD_CHUNK]"
 TYPE_QUERY_CHUNK_ADDR = "[QUERY_CHUNK_ADDR]"
-TYPE_QUERY_CHUNK_LOCAL= "[QUERY_CHUNK_LOCAL]"
+TYPE_QUERY_CHUNK_LOCAL = "[QUERY_CHUNK_LOCAL]"
 TYPE_STORE_CHUNK_LOCAL = "[STORE_CHUNK]"
 TYPE_STORE_CHUNK_REMOTE = "[CALL_STORE_CHUNK]"
 
@@ -56,7 +56,7 @@ types_to_entries = {
 
 
 def extract_bench_lines(path_to_file):
-    with open(path_to_file,'r') as to_read:
+    with open(path_to_file, 'r') as to_read:
         return [line for line in to_read if BENCH_TAG in line]
 
 
@@ -123,6 +123,7 @@ def connect_db(db_filename):
     con = sqlite3.connect(db_filename, timeout=2 ** 30)
     return con
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Run dht log extractor")
     parser.add_argument('--logpath', type=str, help='logpath', default="./logs", required=False)
@@ -140,6 +141,3 @@ if __name__ == "__main__":
                 continue
     finally:
         conn.close()
-
-
-

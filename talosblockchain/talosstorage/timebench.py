@@ -21,7 +21,7 @@ class TimeKeeper(object):
         self.start_time_log[id] = timer()
         return id
 
-    def stop_clock_unique(self,log_name, id):
+    def stop_clock_unique(self, log_name, id):
         self.logged_times[log_name] = (timer() - self.start_time_log[id]) * 1000
         del self.start_time_log[id]
 

@@ -1,15 +1,15 @@
-import json
 import binascii
+import json
 
 from kademlia.log import Logger
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
 
+from talosdht.util import *
 from talosstorage.chunkdata import CloudChunk
 from talosstorage.storage import InvalidChunkError
 from talosstorage.timebench import TimeKeeper
 from talosvc.talosclient.restapiclient import TalosVCRestClientError
-from talosdht.util import *
 
 
 class AddChunk(Resource):
@@ -34,6 +34,7 @@ class AddChunk(Resource):
                 request.setResponseCode(400)
                 request.write("ERROR")
             request.finish()
+
         encoded_chunk = request.content.read()
         try:
 
@@ -54,6 +55,8 @@ class AddChunk(Resource):
 """
 <resource>/<hex chunk key>
 """
+
+
 class GetChunkLoaction(Resource):
     allowedMethods = ('GET',)
 
@@ -95,6 +98,7 @@ class GetChunkLoaction(Resource):
             request.setResponseCode(400)
             return "ERROR"
 
+
 """
 class GetChunkLoaction(Resource):
     allowedMethods = ('GET',)
@@ -126,4 +130,3 @@ class GetChunkLoaction(Resource):
             request.setResponseCode(400)
             return "ERROR"
 """
-

@@ -1,18 +1,16 @@
 import json
 import os
 import random
-from binascii import hexlify, unhexlify
-
 from StringIO import StringIO
+from binascii import hexlify, unhexlify
 from threading import Semaphore
 
 from cachetools import TTLCache
 from kademlia.log import Logger
-from kademlia.routing import RoutingTable, KBucket
-from twisted.internet import defer, reactor, threads
-
 from kademlia.node import Node
+from kademlia.routing import RoutingTable, KBucket
 from kademlia.utils import digest
+from twisted.internet import defer, reactor, threads
 from twisted.internet.task import LoopingCall
 from twisted.web.client import Agent, FileBodyProducer, readBody, HTTPConnectionPool
 from twisted.web.http_headers import Headers
@@ -20,13 +18,14 @@ from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
 
 from talosdht.talosudprpc import TalosRPCProtocol, TalosWeakSignedRPCProtocol
+from talosdht.util import *
 from talosstorage.checks import check_query_token_valid, InvalidQueryToken, get_and_check_query_token, CloudChunk
 from talosstorage.storage import InvalidChunkError
 from talosstorage.timebench import TimeKeeper
 from talosvc.talosclient.restapiclient import TalosVCRestClient, TalosVCRestClientError
-from talosdht.util import *
 
 MAX_UDP_SIZE = 8000
+
 
 ######################
 # Fixed Routing Table #
@@ -59,10 +58,8 @@ class TalosKBucket(KBucket):
 
 
 class TalosKademliaRoutingTable(RoutingTable):
-
     def flush(self):
         self.buckets = [TalosKBucket(0, 2 ** 160, self.ksize)]
-
 
 
 ######################
@@ -196,6 +193,7 @@ class TalosKademliaProtocol(TalosRPCProtocol):
         is closer than the closest in that list, then store the key/value
         on the new node (per section 2.5 of the paper)
         """
+
         def perform_stores():
             ds = []
             for key, value in self.storage.iteritems():
@@ -307,6 +305,7 @@ class QueryChunk(Resource):
                 self.log.debug("%s %s %s" % (BENCH_TAG, TYPE_QUERY_CHUNK_LOCAL, timekeeper.get_summary()))
                 request.write(chunk.encode())
                 request.finish()
+
             timekeeper.start_clock()
             self.talos_vc.get_policy(token.owner, token.streamid).addCallback(handle_policy)
             return NOT_DONE_YET
@@ -545,6 +544,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         is closer than the closest in that list, then store the key/value
         on the new node (per section 2.5 of the paper)
         """
+
         def perform_stores():
             ds = []
             for key, value in self.storage.iteritems():

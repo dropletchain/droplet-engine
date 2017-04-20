@@ -2,14 +2,14 @@ import argparse
 import base64
 import os
 import random
-import time
 import sys
+import time
+
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 
 from benchmarklogger import SQLLiteBenchmarkLogger, FileBenchmarkLogger
 from talosdht.client.dhtrestclient import DHTRestClient, DHTRestClientException, TIME_STORE_CHUNK, TIME_FETCH_ADDRESS, \
     TIME_FETCH_NONCE, TIME_FETCH_CHUNK
-
 
 from talosstorage.checks import get_priv_key
 from talosstorage.chunkdata import ChunkData, DoubleEntry, create_cloud_chunk, DataStreamIdentifier
@@ -37,7 +37,8 @@ def generate_random_chunk(private_key, block_id, stream_identifier, tag="test", 
     return create_cloud_chunk(stream_identifier, block_id, get_priv_key(private_key), 0, key, chunk)
 
 
-def run_benchmark_store_get(num_rounds, out_logger, private_key=BitcoinVersionedPrivateKey(PRIVATE_KEY), policy_nonce=base64.b64decode(NONCE), stream_id=STREAMID,
+def run_benchmark_store_get(num_rounds, out_logger, private_key=BitcoinVersionedPrivateKey(PRIVATE_KEY),
+                            policy_nonce=base64.b64decode(NONCE), stream_id=STREAMID,
                             txid=TXID, ip=IP, port=PORT, chunk_size=100000):
     key = os.urandom(32)
     identifier = DataStreamIdentifier(private_key.public_key().address(), stream_id, policy_nonce, txid)
@@ -61,6 +62,7 @@ def run_benchmark_store_get(num_rounds, out_logger, private_key=BitcoinVersioned
         except DHTRestClientException as e:
             print "Round %d error: %s" % (round_bench, e)
     print "DONE"
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Run benchmark")

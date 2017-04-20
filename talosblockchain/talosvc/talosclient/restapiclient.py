@@ -12,7 +12,6 @@ class TalosVCRestClientError(Exception):
 
 
 class TalosVCRestClient(object):
-
     def __init__(self, ip='127.0.0.1', port=5000):
         self.ip = ip
         self.port = port

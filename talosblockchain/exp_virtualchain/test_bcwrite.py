@@ -1,15 +1,16 @@
 from pybitcoin import BitcoinPrivateKey, BitcoindClient, broadcast_transaction
 from pybitcoin import make_op_return_tx
 
-
-
 version_byte_private = 111
 
 """
 Test Network requires a diffrent  version byte!!!!!!!!
 """
+
+
 class BitcoinTestnetPrivateKey(BitcoinPrivateKey):
     _pubkeyhash_version_byte = version_byte_private
+
 
 private_key_hex = 'cSi82vbDR5NQUJ2eB55C4oz1LxEsA6NePmXM7zNGNSXYbSt6Aop1'
 msg = "Lubu is great2"

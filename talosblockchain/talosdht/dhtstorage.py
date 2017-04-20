@@ -1,12 +1,12 @@
-import time
 import struct
+import time
 
-from twisted.internet import defer, threads
+from kademlia.storage import IStorage
+from twisted.internet import threads
+from zope.interface import implements
 
 from talosstorage.chunkdata import CloudChunk
 from talosstorage.storage import LevelDBStorage
-from kademlia.storage import IStorage
-from zope.interface import implements
 
 
 def add_time_chunk(encoded_chunk):
@@ -66,7 +66,6 @@ class TalosLevelDBDHTStorage(LevelDBStorage):
 
         def store_update():
             self.db.Put(chunk_key, add_time_chunk(bin_chunk))
+
         threads.deferToThread(store_update)
         return CloudChunk.decode(bin_chunk)
-
-

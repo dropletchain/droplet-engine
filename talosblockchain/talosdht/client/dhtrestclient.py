@@ -1,4 +1,5 @@
 import binascii
+
 import requests
 
 from talosstorage.checks import generate_query_token
@@ -45,7 +46,6 @@ def generate_token(block_id, private_key, stream_ident, nonce):
 
 
 class DHTRestClientException(Exception):
-
     def __init__(self, description, code, reason, txt):
         self.code = code
         self.reason = reason

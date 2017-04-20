@@ -1,5 +1,6 @@
 from pybitcoin import broadcast_transaction
 from pybitcoin import make_op_return_tx
+
 from talosvc.config import *
 
 
@@ -8,6 +9,7 @@ class BitcoinPolicyCreator:
     Class for interacting with the Bitcoin blockchain
     Write, change and delete policies.
     """
+
     def __init__(self, bitcoind_client, private_key, fee=DEFAULT_FEE):
         self.bitcoind_client = bitcoind_client
         self.fee = fee
@@ -20,7 +22,7 @@ class BitcoinPolicyCreator:
         tx = make_op_return_tx(cmd, self.private_key, self.bitcoind_client, fee=self.fee, format='bin')
         broadcast_transaction(tx, self.bitcoind_client)
 
-    def create_policy(self, type, stream_id,timestamp_start, interval, nonce):
+    def create_policy(self, type, stream_id, timestamp_start, interval, nonce):
         cmd = get_policy_cmd_create_str(type, stream_id, timestamp_start, interval, nonce)
         self._send_op_return_txt(cmd)
 

@@ -33,7 +33,7 @@ class KeyRegressionGenerator:
         return self.num_keys() - (local_seed_version * self.n + local_key_version)
 
     def _get_seed_and_key_for_version(self, key_version):
-        local_key_version = (self.num_keys()-1 - key_version) % self.n
+        local_key_version = (self.num_keys() - 1 - key_version) % self.n
         local_seed_version = (self.num_keys() - 1 - key_version) / self.n
         return local_seed_version, local_key_version
 
@@ -41,18 +41,17 @@ class KeyRegressionGenerator:
         ls, lk = self._get_seed_and_key_for_version(key_version)
         local_seed = self.seeds[ls]
         cur_hash = local_seed
-        for i in range(lk+1):
+        for i in range(lk + 1):
             cur_hash = self.hf_hashes(cur_hash)
-            #print "%d, %s" % (i, hexlify(cur_hash))
+            # print "%d, %s" % (i, hexlify(cur_hash))
 
         seed = None
-        if ls+1 < len(self.seeds):
-            seed = self.seeds[ls+1]
+        if ls + 1 < len(self.seeds):
+            seed = self.seeds[ls + 1]
         return cur_hash, seed
 
 
 class KeyRegressionPastGenerator:
-
     def __init__(self, seed, key, key_version, n=100, seed_hf=hash_sha384_32, key_hf=hash_sha256):
         self.n = n
         self.seed_hf = seed_hf
@@ -68,9 +67,9 @@ class KeyRegressionPastGenerator:
         cur_hash = self.hashes[self.ini_version - cur_version]
         while cur_version > to_version:
             cur_version -= 1
-            if cur_version % self.n == (self.n -1):
+            if cur_version % self.n == (self.n - 1):
                 cur_hash = self.key_hf(self.cur_seed)
-                #print "%d, %s" % (cur_version, hexlify(cur_hash))
+                # print "%d, %s" % (cur_version, hexlify(cur_hash))
                 self.cur_seed = self.seed_hf(self.cur_seed)
             else:
                 cur_hash = self.key_hf(cur_hash)
@@ -97,16 +96,15 @@ def decode_key(encoded_key):
     key = encoded_key
     len_struct = struct.calcsize("II")
     key_version, n = struct.unpack("II", key[:len_struct])
-    key_final = key[len_struct:(len_struct+32)]
+    key_final = key[len_struct:(len_struct + 32)]
     len_struct += 32
     seed = None
     if len(key) > len_struct:
-        seed = key[len_struct:(len_struct+32)]
+        seed = key[len_struct:(len_struct + 32)]
     return key_version, n, key_final, seed
 
 
 class KeyShareStorage:
-
     def __init__(self, to_share_key, pubkeys=[]):
         self.to_share_key = to_share_key
         self.pubkeys = pubkeys
@@ -130,4 +128,3 @@ class KeyShareStorage:
             bc_key = BitcoinVersionedPublicKey(key)
             data += bc_key.hash160()
             # use ec-el gamal?
-

@@ -1,15 +1,14 @@
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicNumbers
+import base64
+import os
 
-from chunkdata import *
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicNumbers
 from pybitcoin import BitcoinPrivateKey, extract_bin_ecdsa_pubkey, extract_bin_bitcoin_pubkey, get_bin_hash160, \
     bin_hash160_to_address
-import os
-import base64
-
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 from pybitcoin import BitcoinPublicKey
+
+from chunkdata import *
 
 """
 This file implements the checks of the blocks
@@ -116,11 +115,10 @@ class QueryToken(object):
             JSON_OWNER: self.owner,
             JSON_STREAM_ID: self.streamid,
             JSON_NONCE: base64.b64encode(self.nonce),
-            JSON_CHUNK_IDENT:  base64.b64encode(self.chunk_key),
+            JSON_CHUNK_IDENT: base64.b64encode(self.chunk_key),
             JSON_SIGNATURE: base64.b64encode(self.signature),
             JSON_PUB_KEY: self.pubkey
         }
-
 
     @staticmethod
     def from_json(json_msg):

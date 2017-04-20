@@ -1,5 +1,6 @@
 from util import *
 
+
 # example plugin to a virtual chain that defines its behavior.
 
 def get_virtual_chain_name():
@@ -113,6 +114,7 @@ def db_commit(block_id, opcode, op, txid, vtxindex, db_state=None):
     print "reference implementation of db_commit"
     print op
     return op
+
 
 def db_save(block_id, consensus_hash, y, filename, db_state=None):
     """

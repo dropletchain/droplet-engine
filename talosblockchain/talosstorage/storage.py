@@ -1,4 +1,3 @@
-from cryptography.exceptions import InvalidSignature
 import leveldb
 
 from checks import *

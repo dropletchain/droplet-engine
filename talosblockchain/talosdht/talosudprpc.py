@@ -1,18 +1,14 @@
-import umsgpack
-import os
-
-from hashlib import sha1
 from base64 import b64encode
+from hashlib import sha1
 
+import umsgpack
 from kademlia.log import Logger
-
-from protocolsecurity import *
-from twisted.internet import reactor, protocol
+from rpcudp.exceptions import MalformedMessage
 from twisted.internet import defer
+from twisted.internet import reactor, protocol
 from twisted.python import log
 
-from rpcudp.exceptions import MalformedMessage
-
+from protocolsecurity import *
 from talosstorage.timebench import TimeKeeper
 
 MAX_UDP_SIZE_PCK = 8192
@@ -40,7 +36,7 @@ class TalosRPCProtocol(protocol.DatagramProtocol):
         data = umsgpack.unpackb(datagram[21:])
         time_keeper.stop_clock("time_unpack_msg")
 
-        #self.log.debug("[BENCH] LOW RPC RECEIVE -> %s " % (time_keeper.get_summary(),))
+        # self.log.debug("[BENCH] LOW RPC RECEIVE -> %s " % (time_keeper.get_summary(),))
 
         if datagram[:1] == b'\x00':
             self._acceptRequest(msgID, data, address)
@@ -113,12 +109,13 @@ class TalosRPCProtocol(protocol.DatagramProtocol):
             self.transport.write(txdata, address)
             time_keeper.stop_clock("time_write_socket")
 
-            #self.log.debug("[BENCH] LOW RPC SEND TIMES %s -> %s " % (str(name), time_keeper.get_summary()))
+            # self.log.debug("[BENCH] LOW RPC SEND TIMES %s -> %s " % (str(name), time_keeper.get_summary()))
 
             d = defer.Deferred()
             timeout = reactor.callLater(self._waitTimeout, self._timeout, msgID)
             self._outstanding[msgID] = (d, timeout)
             return d
+
         return func
 
     def get_address(self):
@@ -238,5 +235,5 @@ class TalosWeakSignedRPCProtocol(TalosRPCProtocol):
             timeout = reactor.callLater(self._waitTimeout, self._timeout, msgID)
             self._outstanding[msgID] = (d, timeout)
             return d
-        return func
 
+        return func
