@@ -31,14 +31,14 @@ cd virtualchain
 sudo python setup.py install
 cd ..
 
-pip install pillow
-pip install flask
-pip install kademlia
-pip install requests
-pip install cryptography
-pip install cachetools
-pip install leveldb
-pip install --upgrade pyopenssl
-pip install service_identity
+sudo pip install pillow
+sudo pip install flask
+sudo pip install kademlia
+sudo pip install requests
+sudo pip install cryptography
+sudo pip install cachetools
+sudo pip install leveldb
+sudo pip install --upgrade pyopenssl
+sudo pip install service_identity
 
 cd $CUR_PATH
