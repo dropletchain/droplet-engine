@@ -104,6 +104,33 @@ def decode_key(encoded_key):
     return key_version, n, key_final, seed
 
 
+class IntervalKeyRegression(object):
+    def __init__(self, seed1=os.urandom(32), seed2=os.urandom(32), n=1000,
+                 hash_func1=hash_sha256, hash_func2=hash_sha384_32):
+        self.seed1 = seed1
+        self.seed2 = seed2
+        self.num_keys = n
+        self.range_right = [hash_func1(self.seed1)]
+        self.range_left = [hash_func1(self.seed2)]
+        self.hash_1 = hash_func1
+        self.hash_2 = hash_func2
+
+    def _compute_hash(self, i, l_hashes):
+        idx = len(l_hashes) - 1
+        if i <= idx:
+            return l_hashes[idx]
+        while idx < i:
+            l_hashes.append(self.hash_1(l_hashes[idx]))
+            idx = idx + 1
+        return l_hashes[i]
+
+    def get_key_with_version(self, version):
+        r_hash = self._compute_hash(version, self.range_right)
+        idx_left = self.num_keys - 1 - version
+        l_hash =self._compute_hash(idx_left, self.range_left)
+        return self.hash_2(r_hash + l_hash)
+
+
 class KeyShareStorage:
     def __init__(self, to_share_key, pubkeys=[]):
         self.to_share_key = to_share_key

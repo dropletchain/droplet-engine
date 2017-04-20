@@ -11,12 +11,14 @@ from pybitcoin import BitcoinPublicKey
 from chunkdata import *
 
 """
-This file implements the checks of the blocks
-Given a Block and a corresponding virtualchain policy perform various checks.
+This file implements the checks of the chunks
+Given a chunk and the corresponding virtualchain policy perform various checks.
 """
+
 
 USED_VERSIONBYTE = 111
 
+# Bitcoin keys have different version bytes depending if the testnet or the real network is used
 if 'TALOS_MAINNET' in os.environ and os.environ['TALOS_MAINNET'] == "1":
     USED_VERSIONBYTE = 0
 else:
@@ -34,6 +36,11 @@ class BitcoinVersionedPrivateKey(BitcoinPrivateKey):
 
 
 def get_crypto_ecdsa_pubkey_from_bitcoin_hex(bitcoin_hex_key):
+    """
+    Given a py
+    :param bitcoin_hex_key: 
+    :return: 
+    """
     bin_ecdsa_public_key = extract_bin_ecdsa_pubkey(bitcoin_hex_key)
     numbers = EllipticCurvePublicNumbers.from_encoded_point(ec.SECP256K1(), b'\x04' + bin_ecdsa_public_key)
     return numbers.public_key(backend=default_backend())

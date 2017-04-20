@@ -12,16 +12,38 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from pylepton.lepton import *
 from talosstorage.timebench import TimeKeeper
 
+"""
+Implementaion of the chunks, each stream is partitioned into chunks.
+"""
+
 
 def compress_data(data, level=6):
+    """
+    Compresses the data wit zlib
+    :param data: the data
+    :param level: compresssion level
+    :return: 
+    """
     return zlib.compress(data, level)
 
 
 def decompress_data(data):
+    """
+    Decompresses the data with zlib
+    :param data: 
+    :return: 
+    """
     return zlib.decompress(data)
 
 
 def encrypt_aes_gcm_data(key, plain_data, data):
+    """
+    Encrypts the data with aes in gcm mode (conf + auth)
+    :param key: the 32 byte encryption key
+    :param plain_data: the which should be authenticated but not encrypted
+    :param data: the data to encrypt
+    :return: ciphertext
+    """
     iv = os.urandom(12)
     encryptor = Cipher(
         algorithms.AES(key),
@@ -34,6 +56,14 @@ def encrypt_aes_gcm_data(key, plain_data, data):
 
 
 def decrypt_aes_gcm_data(key, tag, plain_data, data):
+    """
+    Decrypts a ciphertext and checks the tag with aes gcm.
+    :param key: the 32 byte decryption key
+    :param tag: the authentication tag
+    :param plain_data: the plaint data to be authenticated
+    :param data: the ciphertext
+    :return: plaintext (throws InvalidTag exception if auth fails)
+    """
     iv = data[0:12]
     ciphertext = data[12:]
 
@@ -47,12 +77,25 @@ def decrypt_aes_gcm_data(key, tag, plain_data, data):
 
 
 def hash_sign_data(private_key, data):
+    """
+    Given the private key signs the data with ECDSA-SHA256
+    :param private_key: the private key (crypthography framework object)
+    :param data: the data to be signed
+    :return: the signature
+    """
     signer = private_key.signer(ec.ECDSA(hashes.SHA256()))
     signer.update(data)
     return signer.finalize()
 
 
 def check_signed_data(public_key, signature, data):
+    """
+    Checks if the given signature matches the data with ECDSA-SHA256
+    :param public_key: the public key (crypthography framework object)
+    :param signature: the signature
+    :param data: the data
+    :return: True if ok else throws InvalidSignature exception 
+    """
     verifier = public_key.verifier(signature, ec.ECDSA(hashes.SHA256()))
     verifier.update(data)
     return verifier.verify()
@@ -63,6 +106,10 @@ TYPE_PICTURE_ENTRY = 1
 
 
 class Entry(object):
+    """
+    Represents a key value entry in a chunk
+    """
+
     def get_type_id(self):
         pass
 
@@ -77,7 +124,17 @@ class Entry(object):
 
 
 class PictureEntry(Entry):
+    """
+    Represents an Entry containing an image 
+    """
     def __init__(self, timestamp, metadata, picture_jpg_data, time_keeper=TimeKeeper()):
+        """
+        Create a picture entry
+        :param timestamp: (int) unix timestamp
+        :param metadata: string metadata
+        :param picture_jpg_data: the picture as bytes
+        :param time_keeper: for benchmarking
+        """
         self.timestamp = timestamp
         self.metadata = metadata
         self.picture_data = picture_jpg_data
@@ -121,7 +178,17 @@ class PictureEntry(Entry):
 
 
 class DoubleEntry(Entry):
+    """
+    Represents a entry with a double value.
+    E.x. a sensor value
+    """
     def __init__(self, timestamp, metadata, value):
+        """
+        Create a double entry
+        :param timestamp: (int) unix timestamp
+        :param metadata: string metadata
+        :param value: the value as double
+        """
         self.timestamp = timestamp
         self.metadata = metadata
         self.value = value
@@ -157,12 +224,27 @@ DECODER_FOR_TYPE = {
 
 
 class ChunkData:
+    """
+    Represents a plaintext chunk. 
+    Contains a certain number of entries.
+    """
     def __init__(self, entries_in=None, max_size=1000, type=TYPE_DOUBLE_ENTRY):
+        """
+        Create a new chunk
+        :param entries_in: a list of entries if None create a empry one
+        :param max_size: the maximum number of entries
+        :param type: the type of entries 
+        """
         self.entries = entries_in or []
         self.max_size = max_size
         self.type = type
 
     def add_entry(self, entry):
+        """
+        Add an entry to the chunk
+        :param entry: the entry
+        :return: True if success else False i.e. chunk full
+        """
         assert entry.get_type_id() == self.type
         if len(self.entries) >= self.max_size:
             return False
@@ -204,7 +286,17 @@ class ChunkData:
 
 
 class DataStreamIdentifier:
+    """
+    A helper object for identifying a stream with the policy
+    """
     def __init__(self, owner, streamid, nonce, txid_create_policy):
+        """
+        Create a stream identfier
+        :param owner: the owner as (bitcoin address) hex string
+        :param streamid: the integer streamid
+        :param nonce: the nonce from the polciy as bin
+        :param txid_create_policy: the transaction id of the policy as hex string
+        """
         self.owner = owner
         self.streamid = streamid
         self.nonce = nonce
@@ -225,7 +317,6 @@ class DataStreamIdentifier:
 HASH_BYTES = 32
 VERSION_BYTES = 4
 MAC_BYTES = 16
-
 
 def _encode_cloud_chunk_public_part(lookup_key, key_version, policy_tag):
     return lookup_key + struct.pack("I", key_version) + policy_tag
@@ -248,6 +339,9 @@ class CloudChunkDecodingError(Exception):
 
 class CloudChunk:
     """
+        Represents an encrypted and packed chunk.
+        
+        Format:
         Key = H(Owner-addr  Stream-id  nonce  blockid) 32 bytes
         Symmetric Key-Version (to know which key version to use ) 4 bytes
         Policy-TAG = Create_txt_id
@@ -265,6 +359,12 @@ class CloudChunk:
         self.signature = signature
 
     def get_and_check_chunk_data(self, symmetric_key, compression_used=True):
+        """
+        Given the symetric key, decrypt + check the data with aes gcm and decompress it 
+        :param symmetric_key: the 32 byte key
+        :param compression_used: indicates if decompression should be applied
+        :return: a ChunkData object, else expcetion thrown 
+        """
         pub_part = _encode_cloud_chunk_public_part(self.key, self.key_version, self.policy_tag)
         data = decrypt_aes_gcm_data(symmetric_key, self.mac_tag, pub_part, self.encrypted_data)
         if compression_used:
@@ -272,6 +372,11 @@ class CloudChunk:
         return ChunkData.decode(data)
 
     def check_signature(self, public_key):
+        """
+        Checks if the chunk has a valid signature given the public key
+        :param public_key: public key (cryptography lib key format)
+        :return: True if ok else throw InvalidSignature exception
+        """
         data = _enocde_cloud_chunk_without_signature(self.key, self.key_version,
                                                      self.policy_tag, self.encrypted_data, self.mac_tag)
         return check_signed_data(public_key, self.signature, data)
@@ -327,20 +432,41 @@ class CloudChunk:
 
 def create_cloud_chunk(data_stream_identifier, block_id, private_key, key_version,
                        symmetric_key, chunk_data, use_compression=True, time_keeper=TimeKeeper()):
+    """
+    Creates a CloudChunk object given a plain ChunkData object. Performs encryption and signing given the keys
+    and the stream identifier
+    :param data_stream_identifier: a stream identifier object
+    :param block_id: the id of the chunk
+    :param private_key: the private key (cryptography lib key format)
+    :param key_version: the version of the symmetric key
+    :param symmetric_key: the 32 byte symmetric key
+    :param chunk_data: the ChunkData object
+    :param use_compression: indicates if compression sould be apllied default:True
+    :param time_keeper: benchmark util object
+    :return: a CloudChunk object
+    """
+
+    # encode the chunk data
     data = chunk_data.encode()
+
+    # compress it
     if use_compression:
         time_keeper.start_clock()
         data = compress_data(data)
         time_keeper.stop_clock('chunk_compression')
+    # get the key for the chunk given the block id
     block_key = data_stream_identifier.get_key_for_blockid(block_id)
+    # get the tag for binding the chunk to a policy
     tag = data_stream_identifier.get_tag()
 
     time_keeper.start_clock()
+    # encrypt it with aes gcm
     encrypted_data, mac_tag = encrypt_aes_gcm_data(symmetric_key,
                                                    _encode_cloud_chunk_public_part(block_key, key_version, tag), data)
     time_keeper.stop_clock('gcm_encryption')
 
     time_keeper.start_clock()
+    # sign it with ECDSA-SHA256
     signature = hash_sign_data(private_key,
                                _enocde_cloud_chunk_without_signature(block_key, key_version,
                                                                      tag, encrypted_data, mac_tag))
@@ -349,8 +475,21 @@ def create_cloud_chunk(data_stream_identifier, block_id, private_key, key_versio
 
 
 def get_chunk_data_from_cloud_chunk(cloud_chunk, symmetric_key, is_compressed=True):
+    """
+    Given an encrypted CloudChunk object, decrypts it and returns a chunk data object
+    :param cloud_chunk: the CloudChunk object
+    :param symmetric_key: the 32 byte key for decryption
+    :param is_compressed: indicates if compression should be used
+    :return: a ChunkData object (the entries) InvalidTag exception if tag not matches
+    """
+    # encode public part of the chunk for aes gcm verification
     pub_part = _encode_cloud_chunk_public_part(cloud_chunk.key, cloud_chunk.key_version, cloud_chunk.policy_tag)
+
+    # decrypt with aes gcm
     data = decrypt_aes_gcm_data(symmetric_key, cloud_chunk.mac_tag, pub_part, cloud_chunk.encrypted_data)
+
+    # decompress data
     if is_compressed:
         data = decompress_data(data)
+    # decode data
     return ChunkData.decode(data)
