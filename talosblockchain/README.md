@@ -17,12 +17,12 @@ and linked to the policy and ensures that the policies are enforced.
 
 ## Implementation 
 We partitioned the project in the following way:
-| Layer | Location | Description |
-| ------ | ----------- | ----------- |
-| blockchain    |  Bitcoin blockcahin  | Traditional bitcoin node |
-| virtualchain | talosvc | Implements the virtualchain and client code for creating policies  |
-| routing | talosdht | Implements a S/Kademlia DHT  |
-| storage | talosstorage | Implements stream to chunk part, compression, crypto and the checks |
+| Layer | Location |
+| ------ | ----------- | 
+| blockchain    |  Bitcoin blockchain, Traditional bitcoin node |
+| virtualchain | talosvc, Implements the virtualchain and client code for creating policies  |
+| routing | talosdht, Implements a S/Kademlia DHT  |
+| storage | talosstorage, Implements stream to chunk part, compression, crypto and the checks |
 
 ## Run
 
