@@ -22,7 +22,7 @@ def get_time_and_chunk(encoded):
 class TalosLevelDBDHTStorage(LevelDBStorage):
     implements(IStorage)
 
-    def __init__(self, db_dir, time_db_name="dhttimedb"):
+    def __init__(self, db_dir):
         LevelDBStorage.__init__(self, db_dir)
 
     def iteritemsOlderThan(self, secondsOld):
