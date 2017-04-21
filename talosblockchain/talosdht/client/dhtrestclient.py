@@ -1,4 +1,5 @@
 import binascii
+import threading
 
 import requests
 
@@ -45,6 +46,32 @@ def generate_token(block_id, private_key, stream_ident, nonce):
                                 stream_ident.get_key_for_blockid(block_id), private_key)
 
 
+class FetchThread(threading.Thread):
+    def __init__(self, my_id, result_store, connection,
+                 blockids, private_key, stream_identifier, time_keeper=TimeKeeper()):
+        self.time_keeper = time_keeper
+        self.stream_identifier = stream_identifier
+        self.blockids = blockids
+        self.connection = connection
+        self.result_store = result_store
+        self.my_id = my_id
+        self.private_key = private_key
+
+    def run(self):
+        for block_id in self.blockids:
+            try:
+                chunk = self.connection.fetch_chunk(block_id, self.private_key,
+                                                    self.stream_identifier, time_keeper=self.time_keeper)
+                self.result_store[self.my_id].append(chunk)
+            except DHTRestClientException as e:
+                print e
+                self.result_store[self.my_id].append(None)
+                continue
+            except Exception:
+                self.result_store[self.my_id].append(None)
+                continue
+
+
 class DHTRestClientException(Exception):
     def __init__(self, description, code, reason, txt):
         self.code = code
@@ -54,6 +81,18 @@ class DHTRestClientException(Exception):
 
     def __str__(self):
         return "%s Code: %d Reason: %s Response: %s" % (self.description, self.code, repr(self.reason), repr(self.txt))
+
+
+def splitting(l, n):
+    mod = len(l) % n
+    size = len(l) / n
+    offset = 0
+    for i in xrange(0, len(l) - mod, size):
+        if i / size < mod:
+            yield l[i + offset:i + offset + size + 1]
+            offset += 1
+        else:
+            yield l[i + offset:i + size + offset]
 
 
 class DHTRestClient(object):
@@ -99,3 +138,17 @@ class DHTRestClient(object):
             raise DHTRestClientException("Fetch chunk error", code, reason, chunk)
 
         return CloudChunk.decode(chunk)
+
+    def fetch_chunks_list(self, block_ids,  private_key, stream_identifier, num_threads=None, time_keeper=TimeKeeper()):
+        num_threads = num_threads or len(block_ids)
+        results = [[]] * num_threads
+        threads = [FetchThread(idx, results, self, block_id,  private_key, stream_identifier,
+                               time_keeper=time_keeper) for idx, block_id in enumerate(splitting(block_ids, num_threads))]
+        map(lambda x: x.start(), threads)
+        map(lambda x: x.join(), threads)
+        return [item for sublist in results for item in sublist]
+
+    def fetch_chunks_range(self, from_block_id, to_block_id, private_key, stream_identifier, time_keeper=TimeKeeper()):
+        return self.fetch_chunk(range(from_block_id, to_block_id),
+                                private_key, stream_identifier, time_keeper=time_keeper)
+

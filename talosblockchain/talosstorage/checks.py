@@ -37,8 +37,8 @@ class BitcoinVersionedPrivateKey(BitcoinPrivateKey):
 
 def get_crypto_ecdsa_pubkey_from_bitcoin_hex(bitcoin_hex_key):
     """
-    Given a py
-    :param bitcoin_hex_key: 
+    Given a bitcoin hex key returns the corresponding cryptography ECDSA key object
+    :param bitcoin_hex_key: the h
     :return: 
     """
     bin_ecdsa_public_key = extract_bin_ecdsa_pubkey(bitcoin_hex_key)
