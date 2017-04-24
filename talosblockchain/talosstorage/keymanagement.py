@@ -127,7 +127,7 @@ class IntervalKeyRegression(object):
     def get_key_with_version(self, version):
         r_hash = self._compute_hash(version, self.range_right)
         idx_left = self.num_keys - 1 - version
-        l_hash =self._compute_hash(idx_left, self.range_left)
+        l_hash = self._compute_hash(idx_left, self.range_left)
         return self.hash_2(r_hash + l_hash)
 
 
