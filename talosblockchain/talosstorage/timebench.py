@@ -30,3 +30,6 @@ class TimeKeeper(object):
         for key, value in self.logged_times.iteritems():
             summary += " %s: %s ms, " % (key, value)
         return summary[:-2]
+
+    def store_value(self, logname, value):
+        self.logged_times[logname] = value

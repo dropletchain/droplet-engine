@@ -358,17 +358,22 @@ class CloudChunk:
         self.mac_tag = mac_tag
         self.signature = signature
 
-    def get_and_check_chunk_data(self, symmetric_key, compression_used=True):
+    def get_and_check_chunk_data(self, symmetric_key, compression_used=True, time_keeper=TimeKeeper()):
         """
         Given the symetric key, decrypt + check the data with aes gcm and decompress it 
+        :param time_keeper: benchmark 
         :param symmetric_key: the 32 byte key
         :param compression_used: indicates if decompression should be applied
         :return: a ChunkData object, else expcetion thrown 
         """
         pub_part = _encode_cloud_chunk_public_part(self.key, self.key_version, self.policy_tag)
+        time_keeper.start_clock()
         data = decrypt_aes_gcm_data(symmetric_key, self.mac_tag, pub_part, self.encrypted_data)
+        time_keeper.stop_clock("aes_gcm_decrypt")
         if compression_used:
+            time_keeper.start_clock()
             data = decompress_data(data)
+            time_keeper.stop_clock("zlib_decompression")
         return ChunkData.decode(data)
 
     def check_signature(self, public_key):
