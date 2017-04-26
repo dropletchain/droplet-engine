@@ -51,7 +51,9 @@ class TalosVCRestClient(object):
 
         req = requests.get("http://%s:%d/policy?owner=%s&stream-id=%d" % (self.ip, self.port, owner, int(streamid)))
         self._check_code(req.status_code, req.reason)
-        return create_policy_from_json_str(req.text)
+        policy = create_policy_from_json_str(req.text)
+        self._put_policy_cache(owner, streamid, policy)
+        return policy
 
     def get_policies_for_owner(self, owner):
         req = requests.get("http://%s:%d/streamids?owner=%s" % (self.ip, self.port, owner))
@@ -71,4 +73,6 @@ class TalosVCRestClient(object):
 
         req = requests.get("http://%s:%d/policy?txid=%s" % (self.ip, self.port, txid))
         self._check_code(req.status_code, req.reason)
-        return create_policy_from_json_str(req.text)
+        policy = create_policy_from_json_str(req.text)
+        self._put_policy_txid_cache(txid, policy)
+        return policy
