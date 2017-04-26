@@ -27,7 +27,7 @@ class TalosVCRestClient(object):
 
     def _put_policy_cache(self, owner, streamid, policy):
         self.policy_cache["%s%s" % (str(owner), str(streamid))] = policy
-        self._put_policy_txid_cache(policy.txid, policy)
+        self.policy_cache[policy.txid] = policy
 
     def _get_policy_txid_cache(self, txid):
         try:
@@ -37,7 +37,7 @@ class TalosVCRestClient(object):
 
     def _put_policy_txid_cache(self, txid, policy):
         self.policy_cache[txid] = policy
-        self._put_policy_cache(policy.owner, policy.stream_id, policy)
+        self.policy_cache["%s%s" % (str(policy.owner), str(policy.stream_id))] = policy
 
     def _check_code(self, code, reason):
         if not code == 200:
