@@ -28,7 +28,8 @@ def extract_eth_plug_data(data_dir, chunk_size, set_id, plug_id):
     if os.path.isdir(dir_set):
         files_plug = os.path.join(dir_set, to_string_id(plug_id))
         if os.path.isdir(files_plug):
-            for day_file in os.listdir(files_plug):
+
+            for day_file in sorted(os.listdir(files_plug)):
                 print day_file
                 match = pattern_data.match(day_file)
                 if match:
@@ -46,11 +47,12 @@ def extract_eth_plug_data(data_dir, chunk_size, set_id, plug_id):
 
 
 if __name__ == "__main__":
+    default_chunk_sizes = [1 << i for i in range(1, 19)]
     parser = argparse.ArgumentParser("Run benchmark")
     parser.add_argument('--chunk_sizes', nargs='+', type=int, default=[86401], required=False)
     parser.add_argument('--log_db', type=str, help='log_db', default=None, required=False)
     parser.add_argument('--name', type=str, help='name', default="COMPRESSION_ETH_PLUG", required=False)
-    parser.add_argument('--data_path', type=str, help="data_path", default="/Users/lukas/Documents/MSThesis/blockchain/raw-data/ECOData", required=False)
+    parser.add_argument('--data_path', type=str, help="data_path", default="/home/lubums/msthesis/blockchain/raw-data/ECOData/ECOData", required=False)
     args = parser.parse_args()
 
     LOGGING_FIELDS = ["num_chunk_entries", "size_before", "size_compressed"]
