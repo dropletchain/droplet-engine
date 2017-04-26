@@ -32,6 +32,7 @@ sudo python setup.py install
 cd ..
 
 sudo pip install pillow
+sudo pip install boto3
 sudo pip install flask
 sudo pip install kademlia
 sudo pip install requests
