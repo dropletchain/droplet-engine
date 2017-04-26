@@ -42,7 +42,7 @@ do
 	fi
 
 	SLEEP_TIME=10
-	for NUM_NODES in {16,32,64,128,256,512}
+	for NUM_NODES in {16,32,64,128,256,512,1024}
 	do
 		echo "Run $NUM_NODES dht nodes"
 		NUM_HELPER_NODES=$((NUM_NODES-1))
