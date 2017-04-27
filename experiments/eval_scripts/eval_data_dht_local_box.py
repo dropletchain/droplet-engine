@@ -121,7 +121,7 @@ for latency in latencies:
     ax2.set_xticklabels(map(lambda x: str(int(x)), nodes.tolist()))
     ax2.set_xlabel("Number of nodes")
 
-    f.suptitle("RTT-%d latency DHT operations" % latency, fontsize=24, y=1.02)
+    f.suptitle("RTT-%d median latency DHT operations" % latency, fontsize=24, y=1.02)
 
     F = plt.gcf()
     F.set_size_inches(fig_size)
@@ -156,7 +156,7 @@ for latency in latencies:
 
     ax1.legend((rects1[0], rects2[0]), ('Put', 'Get'), loc="upper left")
 
-    f.suptitle("RTT-%d latency DHT operations" % latency, fontsize=24, y=1.02)
+    f.suptitle("RTT-%d average latency DHT operations" % latency, fontsize=24, y=1.02)
     plt.axis('tight')
 
     F = plt.gcf()
