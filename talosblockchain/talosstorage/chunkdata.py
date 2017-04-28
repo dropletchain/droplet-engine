@@ -102,6 +102,8 @@ def check_signed_data(public_key, signature, data):
 
 
 TYPE_DOUBLE_ENTRY = 0
+TYPE_MULTI_DOUBLE_ENTRY = 2
+TYPE_MULTI_INT_ENTRY = 3
 TYPE_PICTURE_ENTRY = 1
 
 
@@ -217,9 +219,80 @@ class DoubleEntry(Entry):
         return DoubleEntry(timestamp, metadata, value)
 
 
+class MultiDoubleEntry(Entry):
+    def __init__(self, timestamp, metadata, values):
+        self.timestamp = timestamp
+        self.metadata = metadata
+        self.values = values
+        Entry.__init__(self)
+
+    def get_type_id(self):
+        return TYPE_MULTI_DOUBLE_ENTRY
+
+    def get_encoded_size(self):
+        return struct.calcsize("IQI") + len(self.metadata) + (struct.calcsize("d")*len(self.values))
+
+    def encode(self, use_compression=False):
+        total_size = self.get_encoded_size()
+        temp = struct.pack("IQI", total_size, self.timestamp, len(self.metadata)) + self.metadata
+        for value in self.values:
+            temp += struct.pack("d", value)
+        return temp
+
+    def __str__(self):
+        return "%s %s %s" % (str(self.timestamp), self.metadata, str(self.values))
+
+    @staticmethod
+    def decode(encoded, use_compression=False):
+        len_struct = struct.calcsize("IQI")
+        len_tot, timestamp, len_meta = struct.unpack("IQI", encoded[:len_struct])
+        size_double = struct.calcsize("d")
+        num_double = (len_tot - len_struct - len_meta) / size_double
+        metadata = encoded[len_struct:(len_struct + len_meta)]
+        tmp = len_struct + len_meta
+        values = [struct.unpack("d", encoded[(tmp + i * size_double):(tmp + (i + 1) * size_double)]) for i in range(num_double)]
+        return MultiDoubleEntry(timestamp, metadata, values)
+
+
+class MultiIntegerEntry(Entry):
+    def __init__(self, timestamp, metadata, values):
+        self.timestamp = timestamp
+        self.metadata = metadata
+        self.values = values
+        Entry.__init__(self)
+
+    def get_type_id(self):
+        return TYPE_MULTI_INT_ENTRY
+
+    def get_encoded_size(self):
+        return struct.calcsize("IQI") + len(self.metadata) + (struct.calcsize("H")*len(self.values))
+
+    def encode(self, use_compression=False):
+        total_size = self.get_encoded_size()
+        temp = struct.pack("IQI", total_size, self.timestamp, len(self.metadata)) + self.metadata
+        for value in self.values:
+            temp += struct.pack("I", value)
+        return temp
+
+    def __str__(self):
+        return "%s %s %s" % (str(self.timestamp), self.metadata, str(self.values))
+
+    @staticmethod
+    def decode(encoded, use_compression=False):
+        len_struct = struct.calcsize("IQI")
+        len_tot, timestamp, len_meta = struct.unpack("IQI", encoded[:len_struct])
+        size_double = struct.calcsize("I")
+        num_double = (len_tot - len_struct - len_meta) / size_double
+        metadata = encoded[len_struct:(len_struct + len_meta)]
+        tmp = len_struct + len_meta
+        values = [struct.unpack("I", encoded[(tmp + i * size_double):(tmp + (i + 1) * size_double)]) for i in range(num_double)]
+        return MultiDoubleEntry(timestamp, metadata, values)
+
 DECODER_FOR_TYPE = {
     TYPE_DOUBLE_ENTRY: DoubleEntry.decode,
-    TYPE_PICTURE_ENTRY: PictureEntry.decode
+    TYPE_PICTURE_ENTRY: PictureEntry.decode,
+    TYPE_MULTI_DOUBLE_ENTRY: MultiDoubleEntry.decode,
+    TYPE_MULTI_INT_ENTRY: MultiIntegerEntry.decode
 }
 
 
@@ -228,16 +301,16 @@ class ChunkData:
     Represents a plaintext chunk. 
     Contains a certain number of entries.
     """
-    def __init__(self, entries_in=None, max_size=1000, type=TYPE_DOUBLE_ENTRY):
+    def __init__(self, entries_in=None, max_size=1000, entry_type=TYPE_DOUBLE_ENTRY):
         """
         Create a new chunk
         :param entries_in: a list of entries if None create a empry one
         :param max_size: the maximum number of entries
-        :param type: the type of entries 
+        :param entry_type: the type of entries 
         """
         self.entries = entries_in or []
         self.max_size = max_size
-        self.type = type
+        self.type = entry_type
 
     def add_entry(self, entry):
         """
@@ -282,7 +355,7 @@ class ChunkData:
             len_entry, = struct.unpack("I", encoded[cur_pos:(cur_pos + len_integer)])
             entries.append(entry_decoder(encoded[cur_pos:(cur_pos + len_entry)], use_compression))
             cur_pos += len_entry
-        return ChunkData(entries_in=entries, max_size=len(entries), type=int(type_entry))
+        return ChunkData(entries_in=entries, max_size=len(entries), entry_type=int(type_entry))
 
 
 class DataStreamIdentifier:

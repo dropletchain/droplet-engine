@@ -70,7 +70,7 @@ class ImageProducer(object):
                 with open(picture_name, 'r') as f:
                     picture = f.read()
 
-                chunk_tmp = ChunkData(type=TYPE_PICTURE_ENTRY)
+                chunk_tmp = ChunkData(entry_type=TYPE_PICTURE_ENTRY)
                 chunk_tmp.add_entry(PictureEntry(int(time.time()), picture_name, picture, time_keeper=timer_chunk))
 
                 cur_time = timer()

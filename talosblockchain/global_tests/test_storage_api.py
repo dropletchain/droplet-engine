@@ -127,7 +127,7 @@ class TestStorageApi(unittest.TestCase):
 
     def test_tmp(self):
         for i in range(100):
-            chunk_tmp = ChunkData(type=TYPE_PICTURE_ENTRY)
+            chunk_tmp = ChunkData(entry_type=TYPE_PICTURE_ENTRY)
             chunk_tmp.add_entry(PictureEntry(int(time.time()), "bla%d" % i, "sdfasdfasdf%d" % i))
             print chunk_tmp.entries[0].metadata
             print hash(chunk_tmp.entries[0].picture_data)

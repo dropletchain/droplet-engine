@@ -66,7 +66,7 @@ class TestChunk(unittest.TestCase):
     def test_picture_entry(self):
         with open("./pylepton/haas.jpg", 'r') as f:
             pic = f.read()
-        chunk = ChunkData(type=TYPE_PICTURE_ENTRY)
+        chunk = ChunkData(entry_type=TYPE_PICTURE_ENTRY)
         for i in range(5):
             entry = PictureEntry(int(time.time()), "haas.jpg", pic)
             chunk.add_entry(entry)
