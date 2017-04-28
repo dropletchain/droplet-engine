@@ -3,6 +3,9 @@ import os
 import re
 import time
 import datetime
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 
 from benchmarklogger import FileBenchmarkLogger, SQLLiteBenchmarkLogger
 from talosstorage.chunkdata import ChunkData, DoubleEntry, compress_data, MultiDoubleEntry, TYPE_MULTI_DOUBLE_ENTRY, \
