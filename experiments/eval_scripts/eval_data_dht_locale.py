@@ -212,31 +212,31 @@ axarr[0, 0].set_title('%d-nodes client times' % 16)
 axarr[0, 0].set_ylabel("time in milliseconds [ms]")
 axarr[0, 0].legend([a, b, c, d], ['median store', 'median get','95th percentile store', '95th percentile get'], bbox_to_anchor=(0., 1.08, 1., .102), loc=3, ncol=4)
 
-result = data[(data['num_nodes'] == 64)]
+result = data[(data['num_nodes'] == 256)]
 axarr[0, 1].plot(x, result['median_store'], '-o', color='g')
 axarr[0, 1].plot(x, result['median_get'], '-o', color='b')
 axarr[0, 1].plot(x, result['err_store'], '-*',color='r')
 axarr[0, 1].plot(x, result['err_get'], '-*', color='m')
 axarr[0, 1].grid(color='gray', linestyle='dashed')
-axarr[0, 1].set_title('%d-nodes client times' % 64)
+axarr[0, 1].set_title('%d-nodes client times' % 256)
 
-result = data[(data['num_nodes'] == 256)]
+result = data[(data['num_nodes'] == 512)]
 axarr[1, 0].plot(x, result['median_store'], '-o', color='g')
 axarr[1, 0].plot(x, result['median_get'], '-o', color='b')
 axarr[1, 0].plot(x, result['err_store'], '-*',color='r')
 axarr[1, 0].plot(x, result['err_get'], '-*', color='m')
 axarr[1, 0].grid(color='gray', linestyle='dashed')
-axarr[1, 0].set_title('%d-nodes client times' % 256)
+axarr[1, 0].set_title('%d-nodes client times' % 512)
 axarr[1, 0].set_ylabel("time in milliseconds [ms]")
 axarr[1, 0].set_xlabel("RTT-latency [ms]")
 
-result = data[(data['num_nodes'] == 512)]
+result = data[(data['num_nodes'] == 1024)]
 axarr[1, 1].plot(x, result['median_store'], '-o', color='g')
 axarr[1, 1].plot(x, result['median_get'], '-o', color='b')
 axarr[1, 1].plot(x, result['err_store'], '-*',color='r')
 axarr[1, 1].plot(x, result['err_get'], '-*', color='m')
 axarr[1, 1].grid(color='gray', linestyle='dashed')
-axarr[1, 1].set_title('%d-nodes client times' % 512)
+axarr[1, 1].set_title('%d-nodes client times' % 1024)
 axarr[1, 1].set_xlabel("RTT-latency [ms]")
 
 

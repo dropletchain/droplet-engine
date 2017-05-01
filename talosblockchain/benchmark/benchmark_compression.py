@@ -51,7 +51,7 @@ def extract_eth_plug_data(data_dir, chunk_size, set_id, plug_id):
 
 
 def extract_eth_smartmeter_data(data_dir, chunk_size):
-    cur_chunk = ChunkData(max_size=chunk_size, entry_type=TYPE_MULTI_INT_ENTRY)
+    cur_chunk = ChunkData(max_size=chunk_size, entry_type=TYPE_MULTI_DOUBLE_ENTRY)
     for day_file in sorted(os.listdir(data_dir)):
         print day_file
         match = pattern_data.match(day_file)
@@ -59,11 +59,11 @@ def extract_eth_smartmeter_data(data_dir, chunk_size):
             timestamp = date_to_unixstamp(match.group(1))
             with open(os.path.join(data_dir, day_file), 'r') as data_feed:
                 for line in data_feed:
-                    values = map(lambda x: int(float(x) * 10), line.split(","))
-                    data_item = MultiIntegerEntry(timestamp, "sm-h1", values)
+                    values = map(lambda x: float(x), line.split(","))
+                    data_item = MultiDoubleEntry(timestamp, "sm-h1", values)
                     if not cur_chunk.add_entry(data_item):
                         yield cur_chunk
-                        cur_chunk = ChunkData(max_size=chunk_size, entry_type=TYPE_MULTI_INT_ENTRY)
+                        cur_chunk = ChunkData(max_size=chunk_size, entry_type=TYPE_MULTI_DOUBLE_ENTRY)
                         cur_chunk.add_entry(data_item)
                     timestamp += 1
     if len(cur_chunk.entries) > 0:
@@ -73,10 +73,10 @@ def extract_eth_smartmeter_data(data_dir, chunk_size):
 if __name__ == "__main__":
     default_chunk_sizes = [1 << i for i in range(1, 19)]
     parser = argparse.ArgumentParser("Run benchmark")
-    parser.add_argument('--chunk_sizes', nargs='+', type=int, default=[86401], required=False)
+    parser.add_argument('--chunk_sizes', nargs='+', type=int, default=[2], required=False)
     parser.add_argument('--log_db', type=str, help='log_db', default=None, required=False)
     parser.add_argument('--name', type=str, help='name', default="COMPRESSION_ETH_PLUG", required=False)
-    parser.add_argument('--data_path', type=str, help="data_path", default="/Users/lukas/Documents/MSThesis/blockchain/raw-data/ECOSmart", required=False)
+    parser.add_argument('--data_path', type=str, help="data_path", default="/home/lubums/msthesis/blockchain/raw-data/ECOSmart", required=False)
     parser.add_argument('--do_smartmeter', type=bool, help='do_smartmeter', default=True, required=False)
     args = parser.parse_args()
 
@@ -92,19 +92,22 @@ if __name__ == "__main__":
             time_keeper = TimeKeeper()
             size_plain = 0
             size_compressed = 0
+            print "Chunk size: %d" % chunk_size
             if args.do_smartmeter:
                 for chunk in extract_eth_smartmeter_data(args.data_path, chunk_size):
                     encoded = chunk.encode()
                     data_compressed = compress_data(encoded)
-                    print "Before: %d After: %d" % (len(encoded), len(data_compressed))
+                    #print "Before: %d After: %d" % (len(encoded), len(data_compressed))
                     size_plain += len(encoded)
                     size_compressed += len(data_compressed)
+            else:
                 for chunk in extract_eth_plug_data(args.data_path, chunk_size, 1, 1):
                     encoded = chunk.encode()
                     data_compressed = compress_data(encoded)
                     print "Before: %d After: %d" % (len(encoded), len(data_compressed))
                     size_plain += len(encoded)
                     size_compressed += len(data_compressed)
+            print "Chunk size: %d DONE" % chunk_size
             time_keeper.store_value("num_chunk_entries", chunk_size)
             time_keeper.store_value("size_before", size_plain)
             time_keeper.store_value("size_compressed", size_compressed)
