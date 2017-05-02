@@ -150,7 +150,7 @@ rects3 = ax1.bar(ind, addr_mean_s, width, color=colours[2], zorder=3) #, yerr=ad
 rects4 = ax1.bar(ind + width, addr_mean_g, width, color=colours[3], hatch=hatch_style, zorder=3) #, yerr=addr_std_g, error_kw=dict(ecolor='0.25', lw=2, capsize=5, capthick=2))
 
 
-ax1.set_ylabel("Time in milliseconds [ms]")
+ax1.set_ylabel("Time [ms]")
 ax1.set_xticks(ind + width)
 ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())))
 ax1.set_xlabel("Number of nodes")
