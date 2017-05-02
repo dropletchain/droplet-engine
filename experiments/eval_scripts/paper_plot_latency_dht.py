@@ -111,7 +111,7 @@ params = {'backend': 'ps',
     'font.family': 'times new roman'}
 
 
-pdf_pages = PdfPages('../plots/plot_compression-rate.pdf')
+pdf_pages = PdfPages('../plots/paper_dht_latency.pdf')
 fig_size = [fig_width, fig_height / 1.2]
 
 plt.rcParams.update(params)
