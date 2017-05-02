@@ -79,12 +79,12 @@ plt.semilogx(data_fitbit[:, 0], data_fitbit[:, 2], '-o', label='FitBit dataset',
 
 plt.semilogx(1, 1)
 plt.xlabel('Number of Chunk Entries')
-plt.xlim(xmin=2, xmax=300000)
+plt.xlim(xmin=2, xmax=160000)
 
 plt.ylabel('Compression Ratio')
 plt.ylim(ymin=0, ymax=12)
 
-plt.legend(bbox_to_anchor=(0., 1.08, 1., .102), loc=3, ncol=4)
+plt.legend(bbox_to_anchor=(0., 1.00, 1., .102), loc=3, ncol=4)
 
 plt.grid(True, linestyle=':', color='0.8', zorder=0)
 F = plt.gcf()
