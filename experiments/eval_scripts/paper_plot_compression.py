@@ -1,16 +1,6 @@
 #!/usr/bin/env python
-import os, sys, re
-import numpy as np
-from collections import defaultdict
-from collections import Counter
 import matplotlib.pyplot as plt
-import math
 from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.patches import Polygon
-import matplotlib.patches as mpatches # legend
-import json # to store the parsed values
-from matplotlib import gridspec
-import warnings
 
 
 import os
@@ -73,12 +63,11 @@ plt.rcParams.update(params)
 plt.axes([0.12, 0.32, 0.85, 0.63], frameon=True)
 plt.rc('pdf', fonttype=42)  # IMPORTANT to get rid of Type 3
 
-colors = ['0.1', '0.7', '0.6']
-linestyles = ['-', '--', '-.']
+colors = ['0.1', '0.3', '0.6']
+linestyles = ['-', '--', '-']
 
 data_ava = result[AVA]
-plt.semilogx(data_ava[:, 0], data_ava[:, 2], '-ofirst plot :)'
-                                             '', label='Ava dataset', color=colors[0], linestyle=linestyles[0], linewidth=2)
+plt.semilogx(data_ava[:, 0], data_ava[:, 2], '-o', label='Ava dataset', color=colors[0], linestyle=linestyles[0], linewidth=2)
 
 data_smart = result[SMART_METER]
 plt.semilogx(data_smart[:, 0], data_smart[:, 1], '-o', label='SmartMeter dataset', color=colors[1], linestyle=linestyles[1],
