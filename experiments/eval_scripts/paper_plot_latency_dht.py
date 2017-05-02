@@ -138,14 +138,16 @@ _, addr_data_g = get_data_for_latency(latency, data_get_addr)
 addr_mean_g, addr_std_g = compute_avg_std(addr_data_g)
 
 ind = np.arange(1, len(nodes_g.tolist())+1)
-width = 0.35
+width = 0.25
 
-colours = ['0.1', '0.3', '0.4', '0.75']
+colours = ['0.3', '0.3', '0.7', '0.7']
+hatch_style='\\\\\\\\'
 
-rects1 = ax1.bar(ind, mean_s, width, color=colours[0], yerr=std_g, error_kw=dict(ecolor='0.75', lw=2, capsize=5, capthick=2))
-rects2 = ax1.bar(ind + width, mean_g, width, color=colours[1], yerr=std_s, error_kw=dict(ecolor='0.25', lw=2, capsize=5, capthick=2))
-rects3 = ax1.bar(ind, addr_mean_s, width, color=colours[2], yerr=addr_std_s, error_kw=dict(ecolor='0.75', lw=2, capsize=5, capthick=2))
-rects4 = ax1.bar(ind + width, addr_mean_g, width, color=colours[3], yerr=addr_std_g, error_kw=dict(ecolor='0.25', lw=2, capsize=5, capthick=2))
+ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
+rects1 = ax1.bar(ind, mean_s, width, color=colours[0], yerr=std_g, error_kw=dict(ecolor='0.6', lw=1, capsize=4, capthick=1), zorder=3)
+rects2 = ax1.bar(ind + width, mean_g, width, hatch=hatch_style, color=colours[1], yerr=std_s, error_kw=dict(ecolor='0.6', lw=1, capsize=5, capthick=1), zorder=3)
+rects3 = ax1.bar(ind, addr_mean_s, width, color=colours[2], zorder=3) #, yerr=addr_std_s, error_kw=dict(ecolor='0.75', lw=2, capsize=5, capthick=2))
+rects4 = ax1.bar(ind + width, addr_mean_g, width, color=colours[3], hatch=hatch_style, zorder=3) #, yerr=addr_std_g, error_kw=dict(ecolor='0.25', lw=2, capsize=5, capthick=2))
 
 
 ax1.set_ylabel("Time in milliseconds [ms]")
@@ -153,9 +155,15 @@ ax1.set_xticks(ind + width)
 ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())))
 ax1.set_xlabel("Number of nodes")
 
-ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Put', 'Get', 'Routing Put', 'Routing Get'), loc="upper left", ncol=2)
+#ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), loc="upper left", ncol=2)
+ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), bbox_to_anchor=(-0.02, 1.00, 1., .102), loc=3, ncol=4, columnspacing=1)
 
-f.suptitle("RTT-%d average latency DHT operations" % latency, fontsize=24, y=1.02)
+#handletextpad=0.5, labelspacing=0.2, borderaxespad=0.2, borderpad=0.3)
+
+#f.suptitle("RTT-%d average latency DHT operations" % latency, fontsize=24, y=1.02)
+ax1.set_ylim([0, 205])
+ax1.yaxis.set_ticks(np.arange(0, 201, 20.0))
+
 
 F = plt.gcf()
 F.set_size_inches(fig_size)
