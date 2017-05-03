@@ -109,6 +109,7 @@ def plot_dht_s3_get_tp():
     data_bars = np.asarray(avg_tp.tolist() + avg_tp_s3_plain.tolist() + avg_tp_s3_enc.tolist())
     data__err = np.asarray(std_tp.tolist() + std_tp_s3_plain.tolist() + std_tp_s3_enc.tolist())
     rects1 = ax1.bar(ind, data_bars, width, color='0.3', yerr=data__err, error_kw=dict(ecolor='0.6', lw=1, capsize=5, capthick=1))
+    print data_bars
     
 
     ax1.set_ylabel("Throughput [get/s]")
