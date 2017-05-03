@@ -107,18 +107,19 @@ def plot_dht_s3_get_tp():
 
     data_bars = np.asarray(avg_tp.tolist() + avg_tp_s3_plain.tolist() + avg_tp_s3_enc.tolist())
     data__err = np.asarray(std_tp.tolist() + std_tp_s3_plain.tolist() + std_tp_s3_enc.tolist())
-    rects1 = ax1.bar(ind, data_bars, width, color='0.25', yerr=data__err, error_kw=dict(ecolor='0.6', lw=2, capsize=5, capthick=2))
+    rects1 = ax1.bar(ind, data_bars, width, color='0.3', yerr=data__err, error_kw=dict(ecolor='0.6', lw=1, capsize=5, capthick=1))
+    
 
-
-    ax1.set_ylabel("Throughput [Get/s]")
+    ax1.set_ylabel("Throughput [get/s]")
     xticks = ind + width / 2
     ax1.set_xticks(xticks)
-    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes.tolist())) + ["plain", "check"])
+    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes.tolist())) + ["plain", "Blockadit"])
     # HACK xD
     ax1.set_xlabel("DHT Number of nodes                                  S3")
 
-
-    f.suptitle("Parallel get throughput 20ms RTT", fontsize=24, y=1.02)
+    ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
+    ax1.set_ylim([0, 275])
+    #f.suptitle("Parallel get throughput 20ms RTT", fontsize=24, y=1.02)
     #plt.axis('tight')
 
     F = plt.gcf()
