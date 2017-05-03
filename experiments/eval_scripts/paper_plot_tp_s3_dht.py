@@ -48,7 +48,6 @@ def plot_dht_s3_get_tp():
 
     s3_plain_data, s3_enc_data = fetch_s3_data_from_db(data_path_s3, 0, 100)
 
-
     def compute_troughput(data, num_fetch):
         data_fetch = num_fetch / (data[:, 1:] / 1000)
         _, len_data = data_fetch.shape
@@ -58,7 +57,7 @@ def plot_dht_s3_get_tp():
 
     def compute_tp_s3(data, num_fetch):
         data_tp = num_fetch / (data/1000)
-        avg_tp =  np.average(data_tp, axis=0)
+        avg_tp = np.average(data_tp, axis=0)
         std_tp = num_fetch / np.std(data_tp, axis=0)
         return avg_tp, std_tp
 
