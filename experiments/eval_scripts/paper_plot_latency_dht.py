@@ -107,7 +107,6 @@ def plot_dht_latency():
         'figure.figsize': fig_size,
         'font.family': 'times new roman'}
 
-
     pdf_pages = PdfPages('../plots/paper_dht_latency.pdf')
     fig_size = [fig_width, fig_height / 1.2]
 
