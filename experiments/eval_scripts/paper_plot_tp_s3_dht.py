@@ -104,7 +104,8 @@ ind = np.arange(len(nodes.tolist()) + 2)
 width = 0.5
 
 data_bars = np.asarray(avg_tp.tolist() + avg_tp_s3_plain.tolist() + avg_tp_s3_enc.tolist())
-rects1 = ax1.bar(ind, data_bars, width, color='0.25')
+data__err = np.asarray(std_tp.tolist() + std_tp_s3_plain.tolist() + std_tp_s3_enc.tolist())
+rects1 = ax1.bar(ind, data_bars, width, color='0.25', yerr=data__err, error_kw=dict(ecolor='0.6', lw=2, capsize=5, capthick=2))
 
 
 ax1.set_ylabel("Throughput [Get/s]")
