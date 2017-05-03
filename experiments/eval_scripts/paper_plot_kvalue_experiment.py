@@ -19,7 +19,7 @@ def extract_client_data_from_db(db_path, start_data, end_data):
         return data[:, 0], data[:, 1]
 
 
-def plot_dht_kexperiemnt(num_nodes):
+def plot_dht_kexperiemnt(number_of_nodes):
     path = "../data/local_dht_benchmark_kvalue_l10_a3"
     kvalues = [3, 10, 20, 30, 40]
 
@@ -30,7 +30,7 @@ def plot_dht_kexperiemnt(num_nodes):
             matching = db_pattern.match(filename)
             if matching:
                 num_nodes = int(matching.group(3))
-                if num_nodes == num_nodes:
+                if num_nodes == number_of_nodes:
                     kvalue = int(matching.group(4))
                     store_data, get_data = extract_client_data_from_db(os.path.join(path, filename), 25, 1025)
                     data_store.append([kvalue] + store_data.tolist())
