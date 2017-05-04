@@ -20,6 +20,18 @@ FETCH_ADDRESS_GET = "SELECT time_find_value " \
                    "FROM QUERY_CHUNK_ADDR " \
                    "WHERE _rowid_>=? AND _rowid_<?;"
 
+data_path_s3 = "../data/local_s3_benchmark/local_s3_benchmark.db"
+
+FETCH_S3_DATA_PLAIN = "SELECT time_s3_store_chunk, time_s3_get_chunk FROM CLIENT_S3_SYNC_PLAIN WHERE _rowid_>=? AND _rowid_<?;"
+FETCH_S3_DATA_TALOS = "SELECT time_s3_store_chunk, time_s3_get_chunk FROM CLIENT_S3_SYNC_TALOS WHERE _rowid_>=? AND _rowid_<?;"
+
+
+def fetch_s3_data_from_db(db_path, from_row, to_row):
+    with sqlite3.connect(db_path) as conn:
+        plain_data = np.asarray(conn.execute(FETCH_S3_DATA_PLAIN, (from_row, to_row)).fetchall())
+        talos_data = np.asarray(conn.execute(FETCH_S3_DATA_TALOS, (from_row, to_row)).fetchall())
+        return plain_data, talos_data
+
 
 def extract_client_data_from_db(db_path, start_data, end_data):
     with sqlite3.connect(db_path) as conn:
@@ -77,6 +89,13 @@ def plot_dht_latency():
     print data_get_addr.shape
     print data_store_addr.shape
 
+    s3_plain_data, s3_enc_data = fetch_s3_data_from_db(data_path_s3, 0, 100)
+
+    def compute_latency(data):
+        avg_latency = np.average(data, axis=0)
+        std_latency = np.std(data, axis=0)
+        return avg_latency, std_latency
+
 
     def get_data_for_latency(latency, data):
         temp = data[data[:, 1] == latency]
@@ -133,6 +152,16 @@ def plot_dht_latency():
     _, addr_data_g = get_data_for_latency(latency, data_get_addr)
     addr_mean_g, addr_std_g = compute_avg_std(addr_data_g)
 
+    avg_plain_l, std_plain_l = compute_latency(s3_plain_data)
+    avg_enc_l, std_enc_l = compute_latency(s3_enc_data)
+
+    mean_s = np.append(mean_s, (avg_plain_l[0], avg_enc_l[0]))
+    std_s = np.append(std_s, (std_plain_l[0], std_enc_l[0]))
+
+    mean_g = np.append(mean_g, (avg_plain_l[1], avg_enc_l[1]))
+    std_g = np.append(std_g, (std_plain_l[1], std_enc_l[1]))
+
+    ind_long = np.arange(1, len(nodes_g.tolist()) + 3)
     ind = np.arange(1, len(nodes_g.tolist())+1)
     width = 0.25
 
@@ -140,16 +169,17 @@ def plot_dht_latency():
     hatch_style='\\\\\\\\'
 
     ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
-    rects1 = ax1.bar(ind, mean_s, width, color=colours[0], yerr=std_g, error_kw=dict(ecolor='0.6', lw=1, capsize=4, capthick=1), zorder=3)
-    rects2 = ax1.bar(ind + width, mean_g, width, hatch=hatch_style, color=colours[1], yerr=std_s, error_kw=dict(ecolor='0.6', lw=1, capsize=5, capthick=1), zorder=3)
+    rects1 = ax1.bar(ind_long, mean_s, width, color=colours[0], yerr=std_s, error_kw=dict(ecolor='0.6', lw=1, capsize=4, capthick=1), zorder=3)
+    rects2 = ax1.bar(ind_long + width, mean_g, width, hatch=hatch_style, color=colours[1], yerr=std_g, error_kw=dict(ecolor='0.6', lw=1, capsize=5, capthick=1), zorder=3)
+
     rects3 = ax1.bar(ind, addr_mean_s, width, color=colours[2], zorder=3) #, yerr=addr_std_s, error_kw=dict(ecolor='0.75', lw=2, capsize=5, capthick=2))
     rects4 = ax1.bar(ind + width, addr_mean_g, width, color=colours[3], hatch=hatch_style, zorder=3) #, yerr=addr_std_g, error_kw=dict(ecolor='0.25', lw=2, capsize=5, capthick=2))
 
 
     ax1.set_ylabel("Time [ms]")
-    ax1.set_xticks(ind + width)
-    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())))
-    ax1.set_xlabel("Number of nodes")
+    ax1.set_xticks(ind_long + width)
+    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())) + ["plain", "Blockadit"])
+    ax1.set_xlabel("DHT Number of nodes                                  S3")
 
     #ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), loc="upper left", ncol=2)
     ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), bbox_to_anchor=(-0.02, 1.00, 1., .102), loc=3, ncol=4, columnspacing=1)

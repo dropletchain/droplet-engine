@@ -134,8 +134,7 @@ def store_chunk(storage, vc_client, chunk, time_keeper=TimeKeeper()):
     time_keeper.stop_clock_unique("time_s3_store_chunk", global_id)
 
 
-def fetch_chunk(storage, vc_client, token, time_keeper=TimeKeeper()):
-    global_id = time_keeper.start_clock_unique()
+def  fetch_chunk(storage, vc_client, token, global_id=None, time_keeper=TimeKeeper()):
     time_keeper.start_clock()
     check_query_token_valid(token)
     time_keeper.stop_clock(ENTRY_CHECK_TOKEN_VALID)
@@ -147,7 +146,8 @@ def fetch_chunk(storage, vc_client, token, time_keeper=TimeKeeper()):
     id = time_keeper.start_clock_unique()
     chunk = storage.get_check_chunk(token.chunk_key, token.pubkey, policy, time_keeper=time_keeper)
     time_keeper.stop_clock_unique(ENTRY_GET_AND_CHECK, id)
-    time_keeper.stop_clock_unique("time_s3_get_chunk", global_id)
+    if not global_id is None:
+        time_keeper.stop_clock_unique("time_s3_get_chunk", global_id)
     return chunk
 
 
@@ -166,8 +166,9 @@ def run_benchmark_s3_talos(num_rounds, out_logger, bucket_name, private_key=Bitc
             chunk = generate_random_chunk(private_key, round_bench, identifier, key=key, size=chunk_size, time_keeper=time_keeper)
             store_chunk(storage, vc_client, chunk, time_keeper=time_keeper)
 
-            token = generate_query_token(owner, stream_id, os.urandom(16), chunk.key, private_key)
-            chunk = fetch_chunk(storage, vc_client, token, time_keeper=time_keeper)
+            global_id = time_keeper.start_clock_unique()
+            token = generate_query_token(owner, stream_id, str(bytearray(16)), chunk.key, private_key)
+            chunk = fetch_chunk(storage, vc_client, token, global_id=global_id, time_keeper=time_keeper)
 
             if chunk is None:
                 print "Round %d error" % round_bench
@@ -272,7 +273,7 @@ class FetchTalosThread(threading.Thread):
         for block_id in self.blockids:
             try:
                 key = self.stream_identifier.get_key_for_blockid(block_id)
-                token = generate_query_token(self.stream_identifier.owner, self.stream_identifier.streamid, os.urandom(16), key, self.private_key)
+                token = generate_query_token(self.stream_identifier.owner, self.stream_identifier.streamid, str(bytearray(16)), key, self.private_key)
                 chunk = fetch_chunk(self.connection, self.vc_client, token)
                 self.result_store[self.my_id].append(chunk)
             except Exception:
