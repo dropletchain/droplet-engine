@@ -55,11 +55,11 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
     fig_size = [fig_width,fig_height/1.22]
 
     params = {'backend': 'ps',
-        'axes.labelsize': 18,
-        'legend.fontsize': 16,
-        'xtick.labelsize': 16,
-        'ytick.labelsize': 16,
-        'font.size': 16,
+        'axes.labelsize': 20,
+        'legend.fontsize': 18,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'font.size': 18,
         'figure.figsize': fig_size,
         'font.family': 'times new roman'}
 
