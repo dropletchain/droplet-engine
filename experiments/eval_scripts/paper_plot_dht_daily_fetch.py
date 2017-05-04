@@ -54,7 +54,7 @@ def plot_dht_s3_get_tp():
                 temp_list = []
                 if granularity in gran_to_str:
                     for entry in fetch_steps(os.path.join(data_path, filename)):
-                        data = fetch_data_from_db(os.path.join(data_path, filename), entry, 1, 8)
+                        data = fetch_data_from_db(os.path.join(data_path, filename), entry, 5, 105)
                         data_avg, data_err = process_data(data[:, 1])
                         temp_list.append([entry, data_avg, data_err])
                     result_data.append((granularity, np.asarray(temp_list)))

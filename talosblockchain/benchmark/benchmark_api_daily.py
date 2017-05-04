@@ -135,7 +135,7 @@ def run_benchmark_fetch_par(num_rounds, data_path, num_entries, granularity, fet
     if not num_entries % granularity == 0:
         num_fetches += 1
 
-    for x in xrange(fetch_granularity, num_entries + 1, fetch_granularity):
+    for x in fetch_granularity:
         num_fetches = x / granularity
         if not x % granularity == 0:
             num_fetches += 1
@@ -144,10 +144,8 @@ def run_benchmark_fetch_par(num_rounds, data_path, num_entries, granularity, fet
             time_keeper = TimeKeeper()
             results = [[]] * num_threads
 
-            if num_fetches / 2 < num_threads:
-                temp_threads = num_fetches / 2
-                if temp_threads == 0:
-                    temp_threads = 1
+            if num_fetches < num_threads:
+                temp_threads = num_fetches
                 print "Num Fetches: %d Temp_threads %d" % (num_fetches, temp_threads)
                 threads = [Fetchjob(idx, results, DHTRestClient(dhtip=ip, dhtport=port), block_id, private_key, identifier)
                            for idx, block_id in enumerate(splitting(range(num_fetches), temp_threads))]
@@ -173,6 +171,9 @@ def run_benchmark_fetch_par(num_rounds, data_path, num_entries, granularity, fet
     print "DONE"
 
 
+def create_list():
+    return range(1, 17) + range(18, 33, 2) + range(36, 65, 4) + range(72, 129, 8)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Run benchmark")
     parser.add_argument('--dhtport', type=int, help='dhtport', default=PORT, required=False)
@@ -186,7 +187,7 @@ if __name__ == "__main__":
     parser.add_argument('--name', type=str, help='name', default="CLIENT_STORE_GET", required=False)
 
     parser.add_argument('--datapath', type=str, help='datapath', default="../../raw-data/EcoSmart", required=False)
-    parser.add_argument('--num_entries', type=int, help='num_entries', default=2419200, required=False)
+    parser.add_argument('--num_entries', type=int, help='num_entries', default=11059200, required=False)
     parser.add_argument('--granularity', type=int, help='granularity', default=86400, required=False)
     parser.add_argument('--fetch_granularity', type=int, help='fetch_granularity', default=86400, required=False)
     parser.add_argument('--num_threads', type=int, help='num_threads', default=16, required=False)
@@ -202,8 +203,9 @@ if __name__ == "__main__":
     try:
         private_key = BitcoinVersionedPrivateKey(args.private_key)
         policy_nonce = base64.b64decode(args.nonce)
+        fetch_granularity = map(lambda x: x * 86400, create_list())
         run_benchmark_fetch_par(args.num_rounds, args.datapath, args.num_entries, args.granularity,
-                                args.fetch_granularity, args.num_threads, logger,
+                                fetch_granularity, args.num_threads, logger,
                                 private_key=private_key, policy_nonce=policy_nonce,
                                 stream_id=args.stream_id, txid=args.txid,
                                 ip=args.dhtserver, port=args.dhtport)
