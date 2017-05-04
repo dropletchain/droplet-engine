@@ -82,13 +82,14 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
         print len(data.tolist())
         bp = ax1.boxplot(data.tolist(), 0, '')
         ax1.set_xticklabels(map(lambda x: str(int(x)), nodes.tolist()))
-        ax1.set_ylabel("Time in milliseconds [ms]")
+        ax1.set_ylabel("Time [ms]")
         ax1.set_xlabel("k value")
 
-        plt.setp(bp['boxes'], color='0.5')
-        plt.setp(bp['whiskers'], color='0.7')
-        plt.setp(bp['medians'], color='0.0')
-        ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+        plt.setp(bp['boxes'], color='0.4', linewidth=1.5)
+        plt.setp(bp['whiskers'], color='0.4', linestyle='-', linewidth=1)
+        plt.setp(bp['medians'], color='0.1', linewidth=1)
+        plt.setp(bp['caps'], color='0.4', linewidth=1)
+        ax1.yaxis.grid(True, linestyle=':', which='major', color='0.7',
                        alpha=0.5)
 
         ax2.set_title("Get")
@@ -98,13 +99,13 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
         ax2.set_xticklabels(map(lambda x: str(int(x)), nodes.tolist()))
         ax2.set_xlabel("k value")
 
-        plt.setp(bp['boxes'], color='0.5')
-        plt.setp(bp['whiskers'], color='0.7')
-        plt.setp(bp['medians'], color='0.0')
-        ax2.yaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+        plt.setp(bp['boxes'], color='0.4', linewidth=1.5)
+        plt.setp(bp['whiskers'], color='0.4', linestyle='-', linewidth=1)
+        plt.setp(bp['medians'], color='0.1', linewidth=1)
+        plt.setp(bp['caps'], color='0.4', linewidth=1)
+        ax2.yaxis.grid(True, linestyle=':', which='major', color='0.7',
                        alpha=0.5)
-
-        #f.suptitle("RTT-%d median latency DHT operations" % 20, fontsize=24, y=1.02)
+        plt.tight_layout()
 
     else:
         fig_size = [fig_width, fig_height / 1.2]
