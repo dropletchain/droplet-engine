@@ -55,11 +55,11 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
     fig_size = [fig_width,fig_height/1.22]
 
     params = {'backend': 'ps',
-        'axes.labelsize': 18,
-        'legend.fontsize': 16,
-        'xtick.labelsize': 16,
-        'ytick.labelsize': 16,
-        'font.size': 16,
+        'axes.labelsize': 20,
+        'legend.fontsize': 18,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'font.size': 18,
         'figure.figsize': fig_size,
         'font.family': 'times new roman'}
 
@@ -80,31 +80,38 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
         nodes = data_store[:, 0]
         data = data_store[:, 1:]
         print len(data.tolist())
-        bp = ax1.boxplot(data.tolist(), 0, '')
+        bp1 = ax1.boxplot(data.tolist(), 0, '', patch_artist=True)
         ax1.set_xticklabels(map(lambda x: str(int(x)), nodes.tolist()))
-        ax1.set_ylabel("Time in milliseconds [ms]")
+        ax1.set_ylabel("Time [ms]")
         ax1.set_xlabel("k value")
 
-        plt.setp(bp['boxes'], color='0.5')
-        plt.setp(bp['whiskers'], color='0.7')
-        plt.setp(bp['medians'], color='0.0')
-        ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+        plt.setp(bp1['boxes'], color='0.3', linewidth=1.5)
+        plt.setp(bp1['whiskers'], color='0.3', linestyle='-', linewidth=1)
+        plt.setp(bp1['medians'], color='0.1', linewidth=1)
+        plt.setp(bp1['caps'], color='0.3', linewidth=1)
+        ax1.yaxis.grid(True, linestyle=':', which='major', color='0.7',
                        alpha=0.5)
 
         ax2.set_title("Get")
         nodes = data_get[:, 0]
         data = data_get[:, 1:]
-        bp = ax2.boxplot(data.tolist(), 0, '')
+        bp2 = ax2.boxplot(data.tolist(), 0, '', patch_artist=True)
         ax2.set_xticklabels(map(lambda x: str(int(x)), nodes.tolist()))
         ax2.set_xlabel("k value")
 
-        plt.setp(bp['boxes'], color='0.5')
-        plt.setp(bp['whiskers'], color='0.7')
-        plt.setp(bp['medians'], color='0.0')
-        ax2.yaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+        plt.setp(bp2['boxes'], color='0.3', linewidth=1.5)
+        plt.setp(bp2['whiskers'], color='0.3', linestyle='-', linewidth=1)
+        plt.setp(bp2['medians'], color='0.1', linewidth=1)
+        plt.setp(bp2['caps'], color='0.3', linewidth=1)
+        ax2.yaxis.grid(True, linestyle=':', which='major', color='0.7',
                        alpha=0.5)
+        plt.tight_layout()
 
-        #f.suptitle("RTT-%d median latency DHT operations" % 20, fontsize=24, y=1.02)
+        # fill with colors
+        colors = ['0.3']
+        for bplot in (bp1, bp2):
+            for patch, color in zip(bplot['boxes'], colors):
+                patch.set_facecolor(color)
 
     else:
         fig_size = [fig_width, fig_height / 1.2]
