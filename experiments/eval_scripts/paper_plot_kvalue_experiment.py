@@ -21,7 +21,6 @@ def extract_client_data_from_db(db_path, start_data, end_data):
 
 def plot_dht_kexperiemnt(number_of_nodes):
     path = "../data/local_dht_benchmark_kvalue_l10_a3"
-    kvalues = [3, 10, 20, 30, 40]
 
     data_store = []
     data_get = []
