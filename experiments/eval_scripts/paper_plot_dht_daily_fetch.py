@@ -62,12 +62,6 @@ def plot_dht_s3_get_tp():
                     result_data.append((granularity, np.asarray(temp_list)))
     result_data = sorted(result_data, key=lambda tup: tup[0])
 
-    golden_mean = ((math.sqrt(5) - 1.0) / 2.0) * 0.8
-    fig_with_pt = 600
-    inches_per_pt = 1.0 / 72.27 * 2
-    fig_with = fig_with_pt * inches_per_pt
-    fig_height = fig_with * golden_mean
-    fig_size = [fig_with, fig_height]
 
     # ---------------------------- GLOBAL VARIABLES --------------------------------#
     # figure settings
