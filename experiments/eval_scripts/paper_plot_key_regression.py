@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-SMARTPHONE = "Smartphone"
-IOT_DEVICE = "Iot device SW"
+SMARTPHONE = "Phone"
+IOT_DEVICE = "IoT SW"
 
 
 
@@ -54,23 +54,25 @@ def plot_key_regression(max_power):
     pdf_pages = PdfPages("../plots/paper_plot_key_regression.pdf")
     fig, ax = plt.subplots()
 
-    colors = ['0.1', '0.3', '0.5', '0.7', '0.9']
-    linestyles = ['-', '--', '-', '-.', '--']
+    colors = ['0.1', '0.1', '0.6', '0.6', '0.9']
+    linestyles = ['-', '-', '--', '--', '-']
 
     ax.set_yscale('log')
     ax.set_xscale('log', basex=2)
     for idx, type_key in enumerate(hast_time_data.keys()):
         cur_data = data[type_key]
-        ax.plot(number_of_hashes, cur_data[:, 0], '-o', label="%s normal" % type_key, color=colors[idx * 2],
+        ax.plot(number_of_hashes, cur_data[:, 0], '-o', label="%s" % type_key, color=colors[idx * 2],
                 linestyle=linestyles[idx])
-        ax.plot(number_of_hashes, cur_data[:, 1], '-o', label="%s optimized" % type_key, color=colors[idx * 2 + 1],
-                linestyle=linestyles[idx])
+        ax.plot(number_of_hashes, cur_data[:, 1], '-o', label="%s compact" % type_key, color=colors[idx * 2 + 1],
+                linestyle=linestyles[idx+2])
 
     ax.get_yaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
-    plt.xlabel('Version of the key')
-    plt.ylabel('Time in milliseconds[ms]')
+    plt.xlabel('Length of Hash Chain')
+    plt.ylabel('Time [ms]')
+    plt.ylim(0, 100000)
 
-    plt.legend(bbox_to_anchor=(0., 1.00, 1., .102), loc=3, ncol=2)
+    #bbox_to_anchor=(0., 1.00, 1., .102)
+    plt.legend(loc=2, ncol=2)
 
     F = plt.gcf()
     F.set_size_inches(fig_size)
