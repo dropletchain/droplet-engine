@@ -16,8 +16,8 @@ FETCH_ADDRESS_STORE = "SELECT time_crawl_nearest " \
                    "FROM ADD_CHUNK " \
                    "WHERE _rowid_>=? AND _rowid_<?;"
 
-FETCH_ADDRESS_GET = "SELECT time_find_value " \
-                   "FROM QUERY_CHUNK_ADDR " \
+FETCH_ADDRESS_GET = "SELECT time_fetch_addr " \
+                   "FROM CLIENT_STORE_GET " \
                    "WHERE _rowid_>=? AND _rowid_<?;"
 
 data_path_s3 = "../data/local_s3_benchmark/local_s3_benchmark.db"
