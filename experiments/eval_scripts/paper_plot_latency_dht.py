@@ -118,11 +118,11 @@ def plot_dht_latency():
     fig_size = [fig_width,fig_height/1.22]
 
     params = {'backend': 'ps',
-        'axes.labelsize': 18,
-        'legend.fontsize': 16,
-        'xtick.labelsize': 16,
-        'ytick.labelsize': 16,
-        'font.size': 16,
+        'axes.labelsize': 20,
+        'legend.fontsize': 18,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'font.size': 18,
         'figure.figsize': fig_size,
         'font.family': 'times new roman'}
 
@@ -165,7 +165,7 @@ def plot_dht_latency():
     ind = np.arange(1, len(nodes_g.tolist())+1)
     width = 0.25
 
-    colours = ['0.3', '0.3', '0.7', '0.7']
+    colours = ['0.25', '0.4', '0.7', '0.9']
     hatch_style='\\\\\\\\'
 
     ax1.grid(True, linestyle=':', color='0.8' , axis='y')
@@ -180,11 +180,11 @@ def plot_dht_latency():
 
     ax1.set_ylabel("Time [ms]")
     ax1.set_xticks(ind_long + width)
-    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())) + ["Plain", "Blockadit"])
-    ax1.set_xlabel("DHT Number of nodes                                Amazon S3")
+    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())) + ["Plain", "Secure"])
+    ax1.set_xlabel("       DHT Number of nodes                  Amazon S3")
 
     #ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), loc="upper left", ncol=2)
-    ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), bbox_to_anchor=(-0.02, 1.00, 1., .102), loc=3, ncol=4, columnspacing=1)
+    ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), bbox_to_anchor=(-0.15, 1.00, 1., .102), loc=3, ncol=4, columnspacing=1)
 
     #handletextpad=0.5, labelspacing=0.2, borderaxespad=0.2, borderpad=0.3)
 
@@ -193,9 +193,10 @@ def plot_dht_latency():
     ax1.yaxis.set_ticks(np.arange(0, 201, 20.0))
 
 
+
     F = plt.gcf()
     F.set_size_inches(fig_size)
-    pdf_pages.savefig(F, bbox_inches='tight')
+    pdf_pages.savefig(F, bbox_inches='tight', dpi=300)
     plt.clf()
     pdf_pages.close()
 

@@ -49,11 +49,11 @@ def plot_compression():
     fig_size = [fig_width,fig_height/1.22]
 
     params = {'backend': 'ps',
-        'axes.labelsize': 18,
-        'legend.fontsize': 16,
-        'xtick.labelsize': 16,
-        'ytick.labelsize': 16,
-        'font.size': 16,
+        'axes.labelsize': 20,
+        'legend.fontsize': 18,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'font.size': 18,
         'figure.figsize': fig_size,
         'font.family': 'times new roman'}
 
@@ -85,7 +85,7 @@ def plot_compression():
     plt.ylabel('Compression Ratio')
     plt.ylim(ymin=0, ymax=12)
 
-    plt.legend(bbox_to_anchor=(0., 1.00, 1., .102), loc=3, ncol=4)
+    plt.legend(bbox_to_anchor=(-0.03, 1.00, 1., .102), loc=3, ncol=4, columnspacing=0.75)
 
     plt.grid(True, linestyle=':', color='0.8', zorder=0)
     F = plt.gcf()

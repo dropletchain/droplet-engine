@@ -36,13 +36,13 @@ def plot_key_regression(max_power):
     fig_size = [fig_width, fig_height / 1.22]
 
     params = {'backend': 'ps',
-              'axes.labelsize': 18,
-              'legend.fontsize': 16,
-              'xtick.labelsize': 16,
-              'ytick.labelsize': 16,
-              'font.size': 16,
-              'figure.figsize': fig_size,
-              'font.family': 'times new roman'}
+        'axes.labelsize': 20,
+        'legend.fontsize': 18,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'font.size': 18,
+        'figure.figsize': fig_size,
+        'font.family': 'times new roman'}
 
     fig_size = [fig_width, fig_height / 1.2]
 
@@ -70,9 +70,10 @@ def plot_key_regression(max_power):
     plt.xlabel('Length of Hash Chain')
     plt.ylabel('Time [ms]')
     plt.ylim(0, 100000)
+    plt.xlim(0, 80000)
 
     #bbox_to_anchor=(0., 1.00, 1., .102)
-    plt.legend(loc=2, ncol=2)
+    plt.legend(loc=2, ncol=2, columnspacing=1, labelspacing=0.1)
 
     F = plt.gcf()
     F.set_size_inches(fig_size)

@@ -36,13 +36,13 @@ def bitcoin_plot():
     fig_size = [fig_width, fig_height / 1.22]
 
     params = {'backend': 'ps',
-              'axes.labelsize': 18,
-              'legend.fontsize': 16,
-              'xtick.labelsize': 16,
-              'ytick.labelsize': 16,
-              'font.size': 16,
-              'figure.figsize': fig_size,
-              'font.family': 'times new roman'}
+        'axes.labelsize': 20,
+        'legend.fontsize': 18,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'font.size': 18,
+        'figure.figsize': fig_size,
+        'font.family': 'times new roman'}
 
     pdf_pages = PdfPages('../plots/paper_plot_bitcoin_transaction.pdf')
     fig_size = [fig_width, fig_height / 1.2]

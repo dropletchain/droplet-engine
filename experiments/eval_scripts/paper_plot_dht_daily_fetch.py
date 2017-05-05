@@ -73,13 +73,13 @@ def plot_dht_s3_get_tp():
     fig_size = [fig_width, fig_height / 1.22]
 
     params = {'backend': 'ps',
-              'axes.labelsize': 18,
-              'legend.fontsize': 16,
-              'xtick.labelsize': 16,
-              'ytick.labelsize': 16,
-              'font.size': 16,
-              'figure.figsize': fig_size,
-              'font.family': 'times new roman'}
+        'axes.labelsize': 20,
+        'legend.fontsize': 18,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'font.size': 18,
+        'figure.figsize': fig_size,
+        'font.family': 'times new roman'}
 
     fig_size = [fig_width, fig_height / 1.2]
 
@@ -102,7 +102,7 @@ def plot_dht_s3_get_tp():
 
     ax.get_yaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     ax.get_xaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
-    plt.xlabel('Number of days')
+    plt.xlabel('Number of Days')
     plt.ylabel('Time [ms]')
     plt.ylim(0,10000)
     #plt.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
@@ -110,7 +110,7 @@ def plot_dht_s3_get_tp():
 
 
     #bbox_to_anchor=(0., 1.00, 1., .102)
-    plt.legend(loc=2, ncol=2)
+    plt.legend(loc=2, ncol=2, columnspacing=1)
 
     F = plt.gcf()
     F.set_size_inches(fig_size)

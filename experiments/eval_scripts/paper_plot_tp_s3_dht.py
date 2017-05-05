@@ -79,11 +79,11 @@ def plot_dht_s3_get_tp():
     fig_size = [fig_width,fig_height/1.22]
 
     params = {'backend': 'ps',
-        'axes.labelsize': 18,
-        'legend.fontsize': 16,
-        'xtick.labelsize': 16,
-        'ytick.labelsize': 16,
-        'font.size': 16,
+        'axes.labelsize': 20,
+        'legend.fontsize': 18,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'font.size': 18,
         'figure.figsize': fig_size,
         'font.family': 'times new roman'}
 
@@ -114,9 +114,9 @@ def plot_dht_s3_get_tp():
     ax1.set_ylabel("Throughput [get/s]")
     xticks = ind + width / 2
     ax1.set_xticks(xticks)
-    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes.tolist())) + ["Plain", "Blockadit"])
+    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes.tolist())) + ["Plain", "Secure"])
     # HACK xD
-    ax1.set_xlabel("DHT Number of nodes                                  Amazon S3")
+    ax1.set_xlabel("       DHT Number of nodes                  Amazon S3")
 
     #ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
     ax1.set_ylim([0, 275])
