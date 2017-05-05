@@ -133,6 +133,7 @@ def run_benchmark_fetch_par(num_rounds, num_fetches, num_threads, out_logger,
             if chunk is None:
                 print "No result for chunk %d " % idx
         out_logger.log_times_keeper(time_keeper)
+    out_logger.flush_to_db()
     print "DONE"
 
 
