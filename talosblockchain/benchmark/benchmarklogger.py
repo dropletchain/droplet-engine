@@ -73,6 +73,7 @@ class SQLLiteBenchmarkLogger(BenchmarkLogger):
             conn.commit()
         finally:
             c.close()
+            self.log = []
 
     def close(self):
         try:
