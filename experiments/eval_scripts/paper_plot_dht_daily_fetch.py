@@ -106,6 +106,7 @@ def plot_dht_s3_get_tp():
     plt.ylabel('Time [ms]')
     plt.ylim(0,10000)
     #plt.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
+    ax.yaxis.set_ticks([100,1000,10000])#np.arange(0, 201, 20.0))
 
 
     #bbox_to_anchor=(0., 1.00, 1., .102)
