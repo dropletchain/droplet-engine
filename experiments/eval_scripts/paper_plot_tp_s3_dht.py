@@ -103,7 +103,7 @@ def plot_dht_s3_get_tp():
     avg_tp_s3_enc, std_tp_s3_enc = compute_tp_s3(s3_enc_data, 1000)
 
     ind = np.arange(len(nodes.tolist()) + 2)
-    width = 0.5
+    width = 0.4
 
     data_bars = np.asarray(avg_tp.tolist() + avg_tp_s3_plain.tolist() + avg_tp_s3_enc.tolist())
     data__err = np.asarray(std_tp.tolist() + std_tp_s3_plain.tolist() + std_tp_s3_enc.tolist())
@@ -114,11 +114,11 @@ def plot_dht_s3_get_tp():
     ax1.set_ylabel("Throughput [get/s]")
     xticks = ind + width / 2
     ax1.set_xticks(xticks)
-    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes.tolist())) + ["plain", "Blockadit"])
+    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes.tolist())) + ["Plain", "Blockadit"])
     # HACK xD
-    ax1.set_xlabel("DHT Number of nodes                                  S3")
+    ax1.set_xlabel("DHT Number of nodes                                  Amazon S3")
 
-    ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
+    #ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
     ax1.set_ylim([0, 275])
     #f.suptitle("Parallel get throughput 20ms RTT", fontsize=24, y=1.02)
     #plt.axis('tight')

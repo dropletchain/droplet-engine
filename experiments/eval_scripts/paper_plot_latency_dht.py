@@ -168,9 +168,9 @@ def plot_dht_latency():
     colours = ['0.3', '0.3', '0.7', '0.7']
     hatch_style='\\\\\\\\'
 
-    ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
-    rects1 = ax1.bar(ind_long, mean_s, width, color=colours[0], yerr=std_s, error_kw=dict(ecolor='0.6', lw=1, capsize=4, capthick=1), zorder=3)
-    rects2 = ax1.bar(ind_long + width, mean_g, width, hatch=hatch_style, color=colours[1], yerr=std_g, error_kw=dict(ecolor='0.6', lw=1, capsize=5, capthick=1), zorder=3)
+    ax1.grid(True, linestyle=':', color='0.8' , axis='y')
+    rects1 = ax1.bar(ind_long, mean_s, width, color=colours[0], yerr=std_s, error_kw=dict(ecolor='0.6', lw=1, capsize=4, capthick=1))
+    rects2 = ax1.bar(ind_long + width, mean_g, width, hatch=hatch_style, color=colours[1], yerr=std_g, error_kw=dict(ecolor='0.6', lw=1, capsize=5, capthick=1))
     print "store: ", mean_s
     print "get: ",mean_g
     
@@ -180,8 +180,8 @@ def plot_dht_latency():
 
     ax1.set_ylabel("Time [ms]")
     ax1.set_xticks(ind_long + width)
-    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())) + ["plain", "Blockadit"])
-    ax1.set_xlabel("DHT Number of nodes                                  S3")
+    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())) + ["Plain", "Blockadit"])
+    ax1.set_xlabel("DHT Number of nodes                                Amazon S3")
 
     #ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), loc="upper left", ncol=2)
     ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), bbox_to_anchor=(-0.02, 1.00, 1., .102), loc=3, ncol=4, columnspacing=1)
@@ -189,7 +189,7 @@ def plot_dht_latency():
     #handletextpad=0.5, labelspacing=0.2, borderaxespad=0.2, borderpad=0.3)
 
     #f.suptitle("RTT-%d average latency DHT operations" % latency, fontsize=24, y=1.02)
-    ax1.set_ylim([0, 205])
+    ax1.set_ylim([0, 215])
     ax1.yaxis.set_ticks(np.arange(0, 201, 20.0))
 
 
