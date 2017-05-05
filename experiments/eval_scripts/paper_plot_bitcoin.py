@@ -60,7 +60,7 @@ def bitcoin_plot():
 
     plt.plot(bc_dates, bc_data, color=colors[0], linestyle=linestyles[0], linewidth=1.5)
 
-    plt.ylabel('Time [m]')
+    plt.ylabel('Time [min]')
     plt.xlabel('From May 2016 to May 2017')
     plt.ylim(5,31)
 
