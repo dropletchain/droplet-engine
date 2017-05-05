@@ -91,8 +91,8 @@ def plot_dht_s3_get_tp():
     pdf_pages = PdfPages("../plots/paper_plot_dht_daily.pdf")
     fig, ax = plt.subplots()
 
-    colors = ['0.1', '0.3', '0.5',  '0.7', '0.9']
-    linestyles = ['-', '--', '-', '-.', '--']
+    colors = ['0.1', '0.4', '0.6',  '0.85']
+    linestyles = ['-', '-', '-', '-', '-']
 
     ax.set_yscale('log')
     ax.set_xscale('log', basex=2)
@@ -103,11 +103,13 @@ def plot_dht_s3_get_tp():
     ax.get_yaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     ax.get_xaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     plt.xlabel('Number of days')
-    plt.ylabel('Time in milliseconds[ms]')
+    plt.ylabel('Time [ms]')
+    plt.ylim(0,10000)
+    #plt.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
 
 
-
-    plt.legend(bbox_to_anchor=(0., 1.00, 1., .102), loc=3, ncol=2)
+    #bbox_to_anchor=(0., 1.00, 1., .102)
+    plt.legend(loc=2, ncol=2)
 
     F = plt.gcf()
     F.set_size_inches(fig_size)

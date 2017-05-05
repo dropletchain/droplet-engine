@@ -171,7 +171,9 @@ def plot_dht_latency():
     ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
     rects1 = ax1.bar(ind_long, mean_s, width, color=colours[0], yerr=std_s, error_kw=dict(ecolor='0.6', lw=1, capsize=4, capthick=1), zorder=3)
     rects2 = ax1.bar(ind_long + width, mean_g, width, hatch=hatch_style, color=colours[1], yerr=std_g, error_kw=dict(ecolor='0.6', lw=1, capsize=5, capthick=1), zorder=3)
-
+    print "store: ", mean_s
+    print "get: ",mean_g
+    
     rects3 = ax1.bar(ind, addr_mean_s, width, color=colours[2], zorder=3) #, yerr=addr_std_s, error_kw=dict(ecolor='0.75', lw=2, capsize=5, capthick=2))
     rects4 = ax1.bar(ind + width, addr_mean_g, width, color=colours[3], hatch=hatch_style, zorder=3) #, yerr=addr_std_g, error_kw=dict(ecolor='0.25', lw=2, capsize=5, capthick=2))
 

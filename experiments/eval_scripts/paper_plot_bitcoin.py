@@ -58,10 +58,11 @@ def bitcoin_plot():
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
     plt.gcf().autofmt_xdate()
 
-    plt.plot(bc_dates, bc_data, color=colors[1], linestyle=linestyles[0])
+    plt.plot(bc_dates, bc_data, color=colors[0], linestyle=linestyles[0], linewidth=1.5)
 
-    plt.ylabel('Time in minutes [m]')
-    plt.xlabel('Month from 2016 to 2017')
+    plt.ylabel('Time [min]')
+    plt.xlabel('From May 2016 to May 2017')
+    plt.ylim(5,31)
 
     plt.grid(True, linestyle=':', color='0.8', zorder=0)
     F = plt.gcf()
