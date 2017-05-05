@@ -67,7 +67,7 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
 
 
     if do_box:
-        fig_size = [fig_width, fig_height / 1.2]
+        fig_size = [fig_width, fig_height / 1.0]
 
         plt.rcParams.update(params)
         plt.axes([0.12, 0.32, 0.85, 0.63], frameon=True)
@@ -80,7 +80,7 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
         nodes = data_store[:, 0]
         data = data_store[:, 1:]
         print len(data.tolist())
-        bp1 = ax1.boxplot(data.tolist(), 0, '', patch_artist=True)
+        bp1 = ax1.boxplot(data.tolist(), 0, 'b+', patch_artist=True)
         ax1.set_xticklabels(map(lambda x: str(int(x)), nodes.tolist()))
         ax1.set_ylabel("Time [ms]")
         ax1.set_xlabel("k value")
@@ -97,7 +97,7 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
         ax2.set_title("Get")
         nodes = data_get[:, 0]
         data = data_get[:, 1:]
-        bp2 = ax2.boxplot(data.tolist(), 0, '', patch_artist=True)
+        bp2 = ax2.boxplot(data.tolist(), 0, 'b+', patch_artist=True)
         ax2.set_xticklabels(map(lambda x: str(int(x)), nodes.tolist()))
         ax2.set_xlabel("k value")
         
