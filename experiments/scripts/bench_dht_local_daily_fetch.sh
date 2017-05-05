@@ -8,10 +8,10 @@ PROJECT_PATH="talosblockchain/"
 KVALUE=10
 ALPHA=3
 SECURE=1
-ITERATIONS=101
+ITERATIONS=100
 NUM_THREADS=32
 LATENCY=10
-NUM_NODES=1024
+NUM_NODES=512
 NUM_ENTRIES=11059200
 
 BENCHMARK_NAME="local_dht_benchmark_daily_fetch_k${KVALUE}_a${ALPHA}"
@@ -54,20 +54,21 @@ for (( c=0; c<$arraylength; c++ ))
 do
 	echo "Run $NUM_NODES dht nodes"
 	NUM_HELPER_NODES=$((NUM_NODES-1))
-	./scripts/run_dht_nodes.sh 127.0.0.1 $NUM_HELPER_NODES $SECURE $KVALUE $ALPHA
+	./scripts/run_dht_nodes_no_log.sh 127.0.0.1 $NUM_HELPER_NODES $SECURE $KVALUE $ALPHA
 
 	echo "DHT nodes run wait bootstrap ${SLEEP_TIME}s..."
 	sleep $SLEEP_TIME
 	ROUND_NAME=${BENCHMARK_NAME}_n${NUM_NODES}_l${LATENCY}_g${GRANULARITIES[c]}_fg${F_GRANULARITIES[c]}
 	echo "Start benchmark"
-	$cmd ./benchmark/benchmark_api_daily.py --log_db "$BENCHMARK_NAME/$ROUND_NAME.db" --datapath "../raw-data/EcoSmart" --num_rounds $ITERATIONS --num_entries $NUM_ENTRIES --granularity ${GRANULARITIES[c]} --fetch_granularity ${F_GRANULARITIES[c]} --num_threads $NUM_THREADS
+	$cmd ./benchmark/benchmark_api_daily.py --log_db "$BENCHMARK_NAME/$ROUND_NAME.db" --datapath "../raw-data/ECOSmart" --num_rounds $ITERATIONS --num_entries $NUM_ENTRIES --granularity ${GRANULARITIES[c]} --fetch_granularity ${F_GRANULARITIES[c]} --num_threads $NUM_THREADS
 
-	echo "Extract data from logs"
-	$cmd ./benchmark/logextraction.py --logpath ./dhtstorage/logs --dbname "$BENCHMARK_NAME/$ROUND_NAME.db"
+	#echo "Extract data from logs"
+	#$cmd ./benchmark/logextraction.py --logpath ./dhtstorage/logs --dbname "$BENCHMARK_NAME/$ROUND_NAME.db"
 
 	echo "Terminate Nodes"
 	./scripts/terminate_dht_nodes.sh
-
+	
+	sleep 5
 	echo "Remove DHT Files"
 	rm -r ./dhtstorage
 

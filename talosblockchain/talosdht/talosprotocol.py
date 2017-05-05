@@ -423,7 +423,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
     New protocol for the talos storage, base protocol from bmuller's implementation
     """
 
-    def __init__(self, ecdsa_privkey, sourceNode, storage, ksize, talos_vc=TalosVCRestClient(), cbits=10):
+    def __init__(self, ecdsa_privkey, sourceNode, storage, ksize, talos_vc=TalosVCRestClient(), cbits=10, bench_mode=True):
         TalosWeakSignedRPCProtocol.__init__(self, ecdsa_privkey, sourceNode.id, cbits=cbits)
         self.router = TalosKademliaRoutingTable(self, ksize, sourceNode)
         self.storage = storage
@@ -431,6 +431,7 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         self.log = Logger(system=self)
         self.talos_vc = talos_vc
         self.http_client = None
+        self.bench_mode = bench_mode
 
     def getRefreshIDs(self):
         """
@@ -559,7 +560,8 @@ class TalosSKademliaProtocol(TalosWeakSignedRPCProtocol):
         if self.router.isNewNode(node):
             self.log.info("Welcoming new node %s" % node)
             ds = []
-            threads.deferToThread(perform_stores)
+            if not self.bench_mode:
+                threads.deferToThread(perform_stores)
             self.router.addContact(node)
             return defer.gatherResults(ds)
 

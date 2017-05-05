@@ -30,7 +30,8 @@ if __name__ == "__main__":
 
     f = None
     if args.logfile is None:
-        log.startLogging(sys.stdout)
+        #log.startLogging(sys.stdout)
+        pass
     else:
         f = open(args.logfile, 'w')
         log.startLogging(f)
