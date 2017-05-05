@@ -85,12 +85,14 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
         ax1.set_ylabel("Time [ms]")
         ax1.set_xlabel("k value")
 
-        plt.setp(bp1['boxes'], color='0.3', linewidth=1.5)
-        plt.setp(bp1['whiskers'], color='0.3', linestyle='-', linewidth=1)
-        plt.setp(bp1['medians'], color='0.1', linewidth=1)
-        plt.setp(bp1['caps'], color='0.3', linewidth=1)
+        plt.setp(bp1['boxes'], color='0.4', linewidth=1.5)
+        plt.setp(bp1['whiskers'], color='0.4', linestyle='-', linewidth=1)
+        plt.setp(bp1['medians'], color='0.0', linewidth=1)
+        plt.setp(bp1['caps'], color='0.4', linewidth=1)
         ax1.yaxis.grid(True, linestyle=':', which='major', color='0.7',
                        alpha=0.5)
+                       
+        ax1.set_ylim([0, 350])
 
         ax2.set_title("Get")
         nodes = data_get[:, 0]
@@ -98,17 +100,18 @@ def plot_dht_kexperiemnt(number_of_nodes, do_box):
         bp2 = ax2.boxplot(data.tolist(), 0, '', patch_artist=True)
         ax2.set_xticklabels(map(lambda x: str(int(x)), nodes.tolist()))
         ax2.set_xlabel("k value")
+        
 
-        plt.setp(bp2['boxes'], color='0.3', linewidth=1.5)
-        plt.setp(bp2['whiskers'], color='0.3', linestyle='-', linewidth=1)
-        plt.setp(bp2['medians'], color='0.1', linewidth=1)
-        plt.setp(bp2['caps'], color='0.3', linewidth=1)
+        plt.setp(bp2['boxes'], color='0.4', linewidth=1.5)
+        plt.setp(bp2['whiskers'], color='0.4', linestyle='-', linewidth=1)
+        plt.setp(bp2['medians'], color='0.0', linewidth=1)
+        plt.setp(bp2['caps'], color='0.4', linewidth=1)
         ax2.yaxis.grid(True, linestyle=':', which='major', color='0.7',
                        alpha=0.5)
         plt.tight_layout()
 
         # fill with colors
-        colors = ['0.3']
+        colors = ['0.4']
         for bplot in (bp1, bp2):
             for patch, color in zip(bplot['boxes'], colors):
                 patch.set_facecolor(color)
