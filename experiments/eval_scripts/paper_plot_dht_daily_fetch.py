@@ -4,6 +4,8 @@ import re
 import sqlite3
 
 import math
+
+from matplotlib import ticker
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -54,12 +56,11 @@ def plot_dht_s3_get_tp():
                 temp_list = []
                 if granularity in gran_to_str:
                     for entry in fetch_steps(os.path.join(data_path, filename)):
-                        data = fetch_data_from_db(os.path.join(data_path, filename), entry, 5, 105)
+                        data = fetch_data_from_db(os.path.join(data_path, filename), entry, 0, 100)
                         data_avg, data_err = process_data(data[:, 1])
                         temp_list.append([entry, data_avg, data_err])
                     result_data.append((granularity, np.asarray(temp_list)))
     result_data = sorted(result_data, key=lambda tup: tup[0])
-
 
     golden_mean = ((math.sqrt(5) - 1.0) / 2.0) * 0.8
     fig_with_pt = 600
@@ -94,17 +95,22 @@ def plot_dht_s3_get_tp():
 
     # plot_latency fixed
     pdf_pages = PdfPages("../plots/paper_plot_dht_daily.pdf")
+    fig, ax = plt.subplots()
 
     colors = ['0.1', '0.3', '0.5',  '0.7', '0.9']
     linestyles = ['-', '--', '-', '-.', '--']
 
+    ax.set_yscale('log')
+    ax.set_xscale('log', basex=2)
     for idx, (granularity, data) in enumerate(result_data):
         x_values = np.asarray(map(entries_to_day, data[:, 0].tolist()))
-        plt.plot(x_values, data[:, 1], '-o', label="%s chunks" % gran_to_str[granularity], color=colors[idx], linestyle=linestyles[idx])
+        ax.plot(x_values, data[:, 1], '-o', label="%s chunks" % gran_to_str[granularity], color=colors[idx], linestyle=linestyles[idx])
 
-
+    ax.get_yaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
+    ax.get_xaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     plt.xlabel('Number of days')
     plt.ylabel('Time in milliseconds[ms]')
+
 
 
     plt.legend(bbox_to_anchor=(0., 1.00, 1., .102), loc=3, ncol=2)
