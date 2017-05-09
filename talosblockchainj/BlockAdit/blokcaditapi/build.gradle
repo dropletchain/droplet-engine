@@ -22,6 +22,7 @@ android {
 }
 
 dependencies {
+    compile 'org.json:json:20160212'
     compile 'org.bitcoinj:bitcoinj-core:0.14.4'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {

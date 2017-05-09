@@ -162,6 +162,10 @@ class MeasureCheck(unittest.TestCase):
         ident = DataStreamIdentifier("lubu", 1, "\x00", "lubu")
         print hexlify(ident.get_key_for_blockid(0))
 
+    def test_entry(self):
+        entry = DoubleEntry(1, "lubu", 0.55);
+        print hexlify(entry.encode())
+
     def test_key_siwtch(self):
         key = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")
 

@@ -5,15 +5,20 @@ import org.junit.Test;
 import java.security.KeyPair;
 import java.util.Random;
 
+import ch.ethz.blokcaditapi.storage.chunkentries.DoubleEntry;
+
 import static ch.ethz.blokcaditapi.storage.Util.bytesToHexString;
 import static ch.ethz.blokcaditapi.storage.Util.hexStringToByteArray;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by lukas on 08.05.17.
  */
 
-public class TestCloudCHunk {
+public class TestChunk {
 
     // nice xD
     private static String pyEncoded = "4a7abfdd6932f5de3e41abe953c042e14ad08338f72ced8afe43fa27878d50430100000059f7a5a9de7a44ad0f8b0cb95faee0a2a43af1f99ec7cab0" +
@@ -43,6 +48,8 @@ public class TestCloudCHunk {
             "c6f3a0d88e304402205617000b702fcfdebf5a206dde2d3c2748c5b0c8dcb7ee4622253613dd70a30d022012e0891123de9c33cb50a25411cdc12d66a97c3d53cb4bb22d143129f8ffd729";
 
     private static String pyBlockKey = "cf8088acdd995aad6f5dcad8b99df5dcc088bac9ff8468f85b3c279543f9d297";
+    private static String pyDoubleEntry = "190000000001000000000000006c7562759a9999999999e13f";
+
     @Test
     public void checkEncoding() throws Exception {
         Random rand = new Random();
@@ -107,6 +114,25 @@ public class TestCloudCHunk {
         chunk.key[6] = 0;
 
         assertFalse(chunk.checkSignature(pair.getPublic()));
+    }
+
+    @Test
+    public void testEntry() throws Exception {
+        DoubleEntry entry = new DoubleEntry(System.currentTimeMillis(), "hello", 1.556);
+        byte[] data = entry.encode();
+        DoubleEntry after = (DoubleEntry) (new DoubleEntry.DoubleEntryDecoder()).decode(data);
+        assertEquals(entry.getTimestamp(), after.getTimestamp());
+        assertEquals(entry.getMetadata(), after.getMetadata());
+        assertEquals(entry.getDataValue(), after.getDataValue());
+    }
+
+    @Test
+    public void testEntryPy() throws Exception {
+        byte[] data = Util.hexStringToByteArray(pyDoubleEntry);
+        DoubleEntry entry = (DoubleEntry) (new DoubleEntry.DoubleEntryDecoder()).decode(data);
+        assertEquals(entry.getTimestamp(), 1);
+        assertEquals(entry.getMetadata(), "lubu");
+        assertEquals(String.valueOf(entry.getDataValue()), "0.55");
     }
 
 

@@ -8,5 +8,5 @@ public interface EntryDecoder {
 
     public Entry decode(byte[] entryBytes);
 
-
+    public Entry decode(byte[] entryBytes, int offset, int len);
 }

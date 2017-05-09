@@ -29,7 +29,7 @@ public final class DoubleEntry implements Entry {
         return metadata;
     }
 
-    public Double getDataValue() {
+    public double getDataValue() {
         return dataValue;
     }
 
@@ -57,10 +57,9 @@ public final class DoubleEntry implements Entry {
     }
 
     public static class DoubleEntryDecoder implements EntryDecoder {
-        @Override
-        public Entry decode(byte[] entryBytes) {
+
+        private Entry decodeLocal(ByteBuffer buffer) {
             int lenMeta;
-            ByteBuffer buffer = ByteBuffer.wrap(entryBytes);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             int len = buffer.getInt();
             buffer.get();
@@ -70,6 +69,18 @@ public final class DoubleEntry implements Entry {
             buffer.get(metaDataBytes);
             double value = buffer.getDouble();
             return new DoubleEntry(timestamp, new String(metaDataBytes), value);
+        }
+
+        @Override
+        public Entry decode(byte[] entryBytes) {
+            ByteBuffer buffer = ByteBuffer.wrap(entryBytes);
+            return decodeLocal(buffer);
+        }
+
+        @Override
+        public Entry decode(byte[] entryBytes, int offset, int len) {
+            ByteBuffer buffer = ByteBuffer.wrap(entryBytes, offset, len);
+            return decodeLocal(buffer);
         }
     }
 }

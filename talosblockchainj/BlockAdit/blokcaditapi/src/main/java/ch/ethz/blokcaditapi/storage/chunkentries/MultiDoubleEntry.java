@@ -3,7 +3,6 @@ package ch.ethz.blokcaditapi.storage.chunkentries;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import static android.R.attr.value;
 import static ch.ethz.blokcaditapi.storage.chunkentries.EntryFactory.TYPE_MULTI_DOUBLE_ENTRY;
 
 /**
@@ -63,10 +62,9 @@ public class MultiDoubleEntry implements Entry {
     }
 
     public static class MultiDoubleEntryDecoder implements EntryDecoder {
-        @Override
-        public Entry decode(byte[] entryBytes) {
+
+        private Entry decodeLocal(ByteBuffer buffer) {
             int lenMeta;
-            ByteBuffer buffer = ByteBuffer.wrap(entryBytes);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             int len = buffer.getInt();
             buffer.get();
@@ -81,6 +79,18 @@ public class MultiDoubleEntry implements Entry {
                 dataValues[i] = buffer.getDouble();
             }
             return new MultiDoubleEntry(timestamp, new String(metaDataBytes), dataValues);
+        }
+
+        @Override
+        public Entry decode(byte[] entryBytes) {
+            ByteBuffer buffer = ByteBuffer.wrap(entryBytes);
+            return decodeLocal(buffer);
+        }
+
+        @Override
+        public Entry decode(byte[] entryBytes, int offset, int len) {
+            ByteBuffer buffer = ByteBuffer.wrap(entryBytes, offset, len);
+            return decodeLocal(buffer);
         }
     }
 }

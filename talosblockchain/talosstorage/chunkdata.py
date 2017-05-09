@@ -147,10 +147,10 @@ class PictureEntry(Entry):
         return TYPE_PICTURE_ENTRY
 
     def get_encoded_size(self):
-        return struct.calcsize("IBQI") + len(self.metadata) + len(self.picture_data)
+        return struct.calcsize("<IBQI") + len(self.metadata) + len(self.picture_data)
 
     def get_encoded_size_compressed(self, compressed_len):
-        return struct.calcsize("IBQI") + len(self.metadata) + compressed_len
+        return struct.calcsize("<IBQI") + len(self.metadata) + compressed_len
 
     def encode(self, use_compression=True):
         if use_compression:
@@ -161,15 +161,15 @@ class PictureEntry(Entry):
         else:
             compressed_picture = self.picture_data
             total_size = self.get_encoded_size_compressed(len(compressed_picture))
-        return struct.pack("IBQI", total_size, self.get_type_id(), self.timestamp, len(self.metadata)) + self.metadata + compressed_picture
+        return struct.pack("<IBQI", total_size, self.get_type_id(), self.timestamp, len(self.metadata)) + self.metadata + compressed_picture
 
     def __str__(self):
         return "%s %s" % (str(self.timestamp), self.metadata)
 
     @staticmethod
     def decode(encoded, use_decompression=True):
-        len_struct = struct.calcsize("IBQI")
-        len_tot, _, timestamp, len_meta = struct.unpack("IBQI", encoded[:len_struct])
+        len_struct = struct.calcsize("<IBQI")
+        len_tot, _, timestamp, len_meta = struct.unpack("<IBQI", encoded[:len_struct])
         metadata = encoded[len_struct:(len_struct + len_meta)]
         value = encoded[(len_struct + len_meta):]
         if use_decompression:
@@ -200,19 +200,19 @@ class DoubleEntry(Entry):
         return TYPE_DOUBLE_ENTRY
 
     def get_encoded_size(self):
-        return struct.calcsize("IBQ") + len(self.metadata) + struct.calcsize("d")
+        return struct.calcsize("<IBQ") + len(self.metadata) + struct.calcsize("d")
 
     def encode(self, use_compression=False):
         total_size = self.get_encoded_size()
-        return struct.pack("IBQ", total_size, self.get_type_id(), self.timestamp) + self.metadata + struct.pack("d", self.value)
+        return struct.pack("<IBQ", total_size, self.get_type_id(), self.timestamp) + self.metadata + struct.pack("d", self.value)
 
     def __str__(self):
         return "%s %s %s" % (str(self.timestamp), self.metadata, str(self.value))
 
     @staticmethod
     def decode(encoded, use_compression=False):
-        len_struct = struct.calcsize("IBQ")
-        len_tot, _, timestamp = struct.unpack("IBQ", encoded[:len_struct])
+        len_struct = struct.calcsize("<IBQ")
+        len_tot, _, timestamp = struct.unpack("<IBQ", encoded[:len_struct])
         len_meta = len_tot - len_struct - struct.calcsize("d")
         metadata = encoded[len_struct:(len_struct + len_meta)]
         value, = struct.unpack("d", encoded[(len_struct + len_meta):])
@@ -230,11 +230,11 @@ class MultiDoubleEntry(Entry):
         return TYPE_MULTI_DOUBLE_ENTRY
 
     def get_encoded_size(self):
-        return struct.calcsize("IBQI") + len(self.metadata) + (struct.calcsize("d")*len(self.values))
+        return struct.calcsize("<IBQI") + len(self.metadata) + (struct.calcsize("d")*len(self.values))
 
     def encode(self, use_compression=False):
         total_size = self.get_encoded_size()
-        temp = struct.pack("IBQI", total_size, self.get_type_id(), self.timestamp, len(self.metadata)) + self.metadata
+        temp = struct.pack("<IBQI", total_size, self.get_type_id(), self.timestamp, len(self.metadata)) + self.metadata
         for value in self.values:
             temp += struct.pack("d", value)
         return temp
@@ -244,8 +244,8 @@ class MultiDoubleEntry(Entry):
 
     @staticmethod
     def decode(encoded, use_compression=False):
-        len_struct = struct.calcsize("IBQI")
-        len_tot, _, timestamp, len_meta = struct.unpack("IBQI", encoded[:len_struct])
+        len_struct = struct.calcsize("<IBQI")
+        len_tot, _, timestamp, len_meta = struct.unpack("<IBQI", encoded[:len_struct])
         size_double = struct.calcsize("d")
         num_double = (len_tot - len_struct - len_meta) / size_double
         metadata = encoded[len_struct:(len_struct + len_meta)]
@@ -265,11 +265,11 @@ class MultiIntegerEntry(Entry):
         return TYPE_MULTI_INT_ENTRY
 
     def get_encoded_size(self):
-        return struct.calcsize("IBQI") + len(self.metadata) + (struct.calcsize("H")*len(self.values))
+        return struct.calcsize("<IBQI") + len(self.metadata) + (struct.calcsize("H")*len(self.values))
 
     def encode(self, use_compression=False):
         total_size = self.get_encoded_size()
-        temp = struct.pack("IBQI", total_size, self.get_type_id(), self.timestamp, len(self.metadata)) + self.metadata
+        temp = struct.pack("<IBQI", total_size, self.get_type_id(), self.timestamp, len(self.metadata)) + self.metadata
         for value in self.values:
             temp += struct.pack("I", value)
         return temp
@@ -279,8 +279,8 @@ class MultiIntegerEntry(Entry):
 
     @staticmethod
     def decode(encoded, use_compression=False):
-        len_struct = struct.calcsize("IBQI")
-        len_tot, _, timestamp, len_meta = struct.unpack("IBQI", encoded[:len_struct])
+        len_struct = struct.calcsize("<IBQI")
+        len_tot, _, timestamp, len_meta = struct.unpack("<IBQI", encoded[:len_struct])
         size_double = struct.calcsize("I")
         num_double = (len_tot - len_struct - len_meta) / size_double
         metadata = encoded[len_struct:(len_struct + len_meta)]
@@ -346,11 +346,11 @@ class ChunkData:
         Assumes: |len_entry (4 byte)| type | encoded entry|
         """
         len_encoded = len(encoded)
-        len_integer = struct.calcsize("IB")
+        len_integer = struct.calcsize("<IB")
         cur_pos = 0
         entries = []
         while cur_pos < len_encoded:
-            len_entry, type_entry = struct.unpack("IB", encoded[cur_pos:(cur_pos + len_integer)])
+            len_entry, type_entry = struct.unpack("<IB", encoded[cur_pos:(cur_pos + len_integer)])
             entry_decoder = DECODER_FOR_TYPE[int(type_entry)]
             entries.append(entry_decoder(encoded[cur_pos:(cur_pos + len_entry)], use_compression))
             cur_pos += len_entry
@@ -391,12 +391,12 @@ VERSION_BYTES = 4
 MAC_BYTES = 16
 
 def _encode_cloud_chunk_public_part(lookup_key, key_version, policy_tag):
-    return lookup_key + struct.pack("I", key_version) + policy_tag
+    return lookup_key + struct.pack("<I", key_version) + policy_tag
 
 
 def _enocde_cloud_chunk_without_signature(lookup_key, key_version, policy_tag, encrypted_data, mac_tag):
     return _encode_cloud_chunk_public_part(lookup_key, key_version, policy_tag) + \
-           struct.pack("I", len(encrypted_data)) + encrypted_data + \
+           struct.pack("<I", len(encrypted_data)) + encrypted_data + \
            mac_tag
 
 
@@ -459,7 +459,7 @@ class CloudChunk:
         return check_signed_data(public_key, self.signature, data)
 
     def get_encoded_len(self):
-        return struct.calcsize("I") + 2 * HASH_BYTES + VERSION_BYTES + MAC_BYTES + \
+        return struct.calcsize("<I") + 2 * HASH_BYTES + VERSION_BYTES + MAC_BYTES + \
                len(self.signature) + len(self.encrypted_data)
 
     def encode(self):
@@ -484,14 +484,14 @@ class CloudChunk:
         try:
             encoded = bytes(encoded)
             cur_pos = 0
-            len_int = struct.calcsize("I")
+            len_int = struct.calcsize("<I")
             key = encoded[:HASH_BYTES]
             cur_pos += HASH_BYTES
-            key_version, = struct.unpack("I", encoded[cur_pos:(cur_pos + VERSION_BYTES)])
+            key_version, = struct.unpack("<I", encoded[cur_pos:(cur_pos + VERSION_BYTES)])
             cur_pos += VERSION_BYTES
             policy_tag = encoded[cur_pos:(cur_pos + HASH_BYTES)]
             cur_pos += HASH_BYTES
-            enc_len, = struct.unpack("I", encoded[cur_pos:(cur_pos + len_int)])
+            enc_len, = struct.unpack("<I", encoded[cur_pos:(cur_pos + len_int)])
             cur_pos += len_int
             encrypted_data = encoded[cur_pos:(cur_pos + enc_len)]
             cur_pos += enc_len
