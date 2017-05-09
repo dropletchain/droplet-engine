@@ -37,6 +37,7 @@ class TestChunk(unittest.TestCase):
             self.assertEquals(str(chunk_after.entries[i]), str(chunk.entries[i]))
 
         encoded_cloud_chunk = cd.encode()
+        print hexlify(encoded_cloud_chunk)
         cloud_chunk_after = CloudChunk.decode(encoded_cloud_chunk)
 
         self.assertTrue(cloud_chunk_after.check_signature(private_key.public_key()))
@@ -156,6 +157,10 @@ class MeasureCheck(unittest.TestCase):
             return False
 
         self.assertTrue(check_access_allowed_tmp(key.public_key().to_hex(), policy))
+
+    def test_identifier(self):
+        ident = DataStreamIdentifier("lubu", 1, "\x00", "lubu")
+        print hexlify(ident.get_key_for_blockid(0))
 
     def test_key_siwtch(self):
         key = BitcoinVersionedPrivateKey("cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1")
