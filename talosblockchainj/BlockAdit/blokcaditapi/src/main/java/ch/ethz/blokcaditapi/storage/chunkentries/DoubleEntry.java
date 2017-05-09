@@ -61,6 +61,7 @@ public final class DoubleEntry implements Entry {
         public Entry decode(byte[] entryBytes) {
             int lenMeta;
             ByteBuffer buffer = ByteBuffer.wrap(entryBytes);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
             int len = buffer.getInt();
             buffer.get();
             long timestamp = buffer.getLong();
