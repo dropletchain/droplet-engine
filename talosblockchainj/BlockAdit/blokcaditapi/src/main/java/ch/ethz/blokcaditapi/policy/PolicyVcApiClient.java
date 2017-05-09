@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -58,7 +59,7 @@ public class PolicyVcApiClient {
         HttpURLConnection c = (HttpURLConnection) url.openConnection();
         c.setRequestMethod("GET");
         String result = null;
-        try (InputStreamReader reader = new InputStreamReader(c.getInputStream(), Charsets.UTF_8)){
+        try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(c.getInputStream()), Charsets.UTF_8)){
             result = CharStreams.toString(reader);
         }
         if (containsError(result))
