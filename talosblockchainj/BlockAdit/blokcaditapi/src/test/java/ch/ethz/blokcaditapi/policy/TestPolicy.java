@@ -1,6 +1,9 @@
 package ch.ethz.blokcaditapi.policy;
 
 import org.junit.Test;
+
+import java.util.List;
+
 import static org.junit.Assert.*;
 /**
  * Created by lukas on 09.05.17.
@@ -36,5 +39,21 @@ public class TestPolicy {
         assertEquals("mhJ7QEzyZhPA9D2f9Vaab1saKgBAUMQ9qx", after.getOwner());
         assertEquals(1, after.getShares().size());
         assertEquals(2, after.getTimes().size());
+    }
+
+    @Test
+    public void testClient() throws Exception {
+        PolicyVcApiClient client = new PolicyVcApiClient("46.101.113.112", 5000);
+        List<String> owners = client.getPolicyOwners(10, 0);
+        assertTrue(owners.size()>0);
+
+        for (String owner : owners) {
+            List<Integer> streams = client.getStreamIdsForOwner(owner);
+            assertTrue(streams.size()>0);
+            for (Integer id : streams) {
+                Policy a = client.getPolicy(owner, id);
+                assertEquals(a.getOwner(), owner);
+            }
+        }
     }
 }

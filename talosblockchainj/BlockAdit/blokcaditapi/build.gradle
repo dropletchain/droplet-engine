@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.0"
 
     defaultConfig {
-        minSdkVersion 18
+        minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -24,6 +24,7 @@ android {
 dependencies {
     compile 'org.json:json:20160212'
     compile 'org.bitcoinj:bitcoinj-core:0.14.4'
+    compile group: 'com.google.guava', name: 'guava', version: '19.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
