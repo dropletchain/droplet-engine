@@ -34,7 +34,7 @@ nonce = "asdfgcbfndhstdzf"
 max_streams = 3
 
 for stream_id in range(1, max_streams+1):
-    policy_client.create_policy(1, stream_id, timestamp, interval, os.urandom(16))
+    policy_client.create_policy(1 , stream_id, timestamp, interval, os.urandom(16))
     client.bitcoind.generate(1)
     print "Create Policy Stream-id %d" % (stream_id, )
 

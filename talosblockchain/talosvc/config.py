@@ -119,46 +119,46 @@ NAME_OPCODES = {
 
 
 def get_policy_cmd_create_str(type, stream_id, timestamp_start, interval, nonce):
-    cmd = MAGIC_BYTES + CREATE_POLICY + struct.pack("BIQQ", type, stream_id, timestamp_start, interval) + nonce
+    cmd = MAGIC_BYTES + CREATE_POLICY + struct.pack("<BIQQ", type, stream_id, timestamp_start, interval) + nonce
     assert len(cmd) <= MAX_BITCOIN_BYTES
     return cmd
 
 
 def get_policy_cmd_addaccess_str(stream_id, keys):
     assert len(keys) <= 2
-    cmd = MAGIC_BYTES + GRANT_ACCESS + struct.pack("IB", stream_id, len(keys))
+    cmd = MAGIC_BYTES + GRANT_ACCESS + struct.pack("<IB", stream_id, len(keys))
     for key in keys:
         bin_key = address.address_to_bin_hash160(key)
-        cmd += struct.pack("B", len(bin_key)) + bin_key
+        cmd += struct.pack("<B", len(bin_key)) + bin_key
     assert len(cmd) <= MAX_BITCOIN_BYTES
     return cmd
 
 
 def get_policy_cmd_removeacces_str(stream_id, keys):
     assert len(keys) <= 2
-    cmd = MAGIC_BYTES + REVOKE_ACCESS + struct.pack("IB", stream_id, len(keys))
+    cmd = MAGIC_BYTES + REVOKE_ACCESS + struct.pack("<IB", stream_id, len(keys))
     for key in keys:
         bin_key = address.address_to_bin_hash160(key)
-        cmd += struct.pack("B", len(bin_key)) + bin_key
+        cmd += struct.pack("<B", len(bin_key)) + bin_key
     assert len(cmd) <= MAX_BITCOIN_BYTES
     return cmd
 
 
 def get_policy_change_interval_str(stream_id, timestamp_start, interval):
-    cmd = MAGIC_BYTES + CHANGE_INTERVAL + struct.pack("IQQ", stream_id, timestamp_start, interval)
+    cmd = MAGIC_BYTES + CHANGE_INTERVAL + struct.pack("<IQQ", stream_id, timestamp_start, interval)
     assert len(cmd) <= MAX_BITCOIN_BYTES
     return cmd
 
 
 def get_policy_invalidate_str(stream_id):
-    cmd = MAGIC_BYTES + INVALIDATE_POLICY + struct.pack("I", stream_id)
+    cmd = MAGIC_BYTES + INVALIDATE_POLICY + struct.pack("<I", stream_id)
     assert len(cmd) <= MAX_BITCOIN_BYTES
     return cmd
 
 
 def parse_policy_cmd_create_data(create_str_data):
-    size_struct = struct.calcsize("BIQQ")
-    type, stream_id, timestamp_start, interval = struct.unpack("BIQQ", create_str_data[:size_struct])
+    size_struct = struct.calcsize("<BIQQ")
+    type, stream_id, timestamp_start, interval = struct.unpack("<BIQQ", create_str_data[:size_struct])
     nonce = create_str_data[size_struct:]
     return {
         OPCODE_FIELD_TYPE: type,
@@ -170,12 +170,12 @@ def parse_policy_cmd_create_data(create_str_data):
 
 
 def parse_policy_cmd_addaccess_data(addaccess_str_data):
-    size_struct = struct.calcsize("IB")
-    stream_id, num_keys = struct.unpack("IB", addaccess_str_data[:size_struct])
+    size_struct = struct.calcsize("<IB")
+    stream_id, num_keys = struct.unpack("<IB", addaccess_str_data[:size_struct])
 
     keys = []
     for key_id in range(num_keys):
-        len, = struct.unpack("B", addaccess_str_data[size_struct:(size_struct + 1)])
+        len, = struct.unpack("<B", addaccess_str_data[size_struct:(size_struct + 1)])
         bin_key = addaccess_str_data[(size_struct + 1):(size_struct + 1 + len)]
         keys.append(address.bin_hash160_to_address(bin_key, USED_VERSIONBYTE))
         size_struct += len + 1
@@ -187,12 +187,12 @@ def parse_policy_cmd_addaccess_data(addaccess_str_data):
 
 
 def parse_policy_removeacces_data(removeacces_str_data):
-    size_struct = struct.calcsize("IB")
-    stream_id, num_keys = struct.unpack("IB", removeacces_str_data[:size_struct])
+    size_struct = struct.calcsize("<IB")
+    stream_id, num_keys = struct.unpack("<IB", removeacces_str_data[:size_struct])
 
     keys = []
     for key_id in range(num_keys):
-        len, = struct.unpack("B", removeacces_str_data[size_struct:(size_struct + 1)])
+        len, = struct.unpack("<B", removeacces_str_data[size_struct:(size_struct + 1)])
         bin_key = removeacces_str_data[(size_struct + 1):(size_struct + 1 + len)]
         keys.append(address.bin_hash160_to_address(bin_key, USED_VERSIONBYTE))
         size_struct += len + 1
@@ -203,8 +203,8 @@ def parse_policy_removeacces_data(removeacces_str_data):
 
 
 def parse_policy_change_interval_data(change_interval_data_str):
-    size_struct = struct.calcsize("IQQ")
-    stream_id, timestamp_start, interval = struct.unpack("IQQ", change_interval_data_str[:size_struct])
+    size_struct = struct.calcsize("<IQQ")
+    stream_id, timestamp_start, interval = struct.unpack("<IQQ", change_interval_data_str[:size_struct])
     return {
         OPCODE_FIELD_STREAM_ID: stream_id,
         OPCODE_FIELD_TIMESTAMP_START: timestamp_start,
@@ -213,8 +213,8 @@ def parse_policy_change_interval_data(change_interval_data_str):
 
 
 def parse_policy_invalidate_data(invalidate_interval_data_str):
-    size_struct = struct.calcsize("I")
-    stream_id, = struct.unpack("I", invalidate_interval_data_str[:size_struct])
+    size_struct = struct.calcsize("<I")
+    stream_id, = struct.unpack("<I", invalidate_interval_data_str[:size_struct])
     return {
         OPCODE_FIELD_STREAM_ID: stream_id
     }

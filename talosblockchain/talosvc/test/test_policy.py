@@ -4,6 +4,8 @@ from talosvc.policy import Policy, create_policy_from_json_str
 from talosvc.config import *
 from talosvc.policydb import create_db, TalosPolicyDB
 
+import binascii
+
 
 class TestPolicy(unittest.TestCase):
 
@@ -41,3 +43,7 @@ class TestRandom(unittest.TestCase):
         db = create_db("test.db")
         db.close()
         print "ok"
+
+    def test_dem1(self):
+        data = get_policy_cmd_create_str(1, 1, 100, 200, '\x00' * 16)
+        print binascii.hexlify(data)

@@ -4,7 +4,11 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import ch.ethz.blokcaditapi.storage.Util;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 /**
  * Created by lukas on 09.05.17.
  */
@@ -19,6 +23,8 @@ public class TestPolicy {
             ", \"ts_interval\": 86400, \"txid\": \"8cf71b7ed09acf896b40fc087e56d3d4dbd8cc346a869bb8a81624153c0c2b8c\"}, " +
             "{\"ts_start\": 1491309508, \"ts_interval\": 43200, \"txid\": \"8db362cc6301183d2bbb026498d42cb113a85a20233" +
             "32205bb8024f6e5e1f5eb\"}]}";
+
+    private static String POL_CREATE_CMD = "74612b01010000006400000000000000c80000000000000000000000000000000000000000000000";
 
     @Test
     public void checkJSON() throws Exception {
@@ -56,4 +62,16 @@ public class TestPolicy {
             }
         }
     }
+
+
+    @Test
+    public void testOPCreate() throws Exception {
+        byte[] result = PolicyOPReturn.createPolicyCMD(1, 100, 200, new byte[16]);
+        byte[] expected = Util.hexStringToByteArray(POL_CREATE_CMD);
+        System.out.println(POL_CREATE_CMD);
+        System.out.println(Util.bytesToHexString(result));
+        assertArrayEquals(expected, result);
+    }
+
+
 }
