@@ -40,13 +40,19 @@ public class PolicyWallet extends Wallet {
         return super.importKeys(keys);
     }
 
-    private ECKey getKeyForAddress(Address owner) {
+    public ECKey getKeyForAddress(Address owner) {
         for (ECKey key : policyKeys)
-            if (getOwnerForKey(key).equals(owner))
+            if (getAddressForKey(key).equals(owner))
                 return key;
         return null;
     }
 
+    public List<Address> getOwnerAddresses() {
+        List<Address> addresses = new ArrayList<>();
+        for (ECKey key: policyKeys)
+            addresses.add(key.toAddress(params));
+        return null;
+    }
 
     public ECKey createNewPolicyKey() {
         ECKey key = new ECKey();
@@ -54,9 +60,8 @@ public class PolicyWallet extends Wallet {
         return key;
     }
 
-
-    public Address getOwnerForKey(ECKey key) {
-        return new Address(params, key.getPubKeyHash());
+    public Address getAddressForKey(ECKey key) {
+        return key.toAddress(params);
     }
 
     /*

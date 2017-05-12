@@ -3,6 +3,7 @@ package ch.ethz.blokcaditapi.storage;
 import android.annotation.TargetApi;
 import android.os.Build;
 
+import org.bitcoinj.core.ECKey;
 import org.junit.Test;
 
 import java.util.Random;
@@ -55,4 +56,18 @@ public class TestCrypto {
         }
         assertTrue(catched);
     }
+
+    @Test
+    public void testToken() throws Exception {
+        ECKey key = new ECKey();
+        String owner = "dfasdfasfasdfdsf";
+        int streamId = 2;
+        byte[] chunkKey = new byte[16];
+        byte[] nonce = new byte[16];
+        QueryToken token = QueryToken.createQueryToken(owner,streamId, nonce, chunkKey, key);
+        String tokenJs = token.toJSON();
+        System.out.print(tokenJs);
+    }
+
+
 }

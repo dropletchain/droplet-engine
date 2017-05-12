@@ -6,13 +6,14 @@ import org.json.JSONObject;
 import org.spongycastle.util.encoders.Base64;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by lukas on 09.05.17.
  */
 
-public class Policy {
+public final class Policy {
 
     public static final String OPCODE_FIELD_STREAM_ID = "streamid";
     public static final String OPCODE_FIELD_TIMESTAMP_START = "ts_start";
@@ -31,6 +32,8 @@ public class Policy {
     private String ownerPk;
     private List<IndexEntry> times = new ArrayList<>();
     private List<PolicyShare> shares = new ArrayList<>();
+
+    private boolean isInvalidated = false;
 
     Policy(String owner, int streamId, String nonce, String createTxid, String ownerPk, List<IndexEntry> times, List<PolicyShare> shares) {
         this.owner = owner;
@@ -52,6 +55,25 @@ public class Policy {
 
     public void addShare(PolicyShare share) {
         this.shares.add(share);
+    }
+
+    public void removeShare(String shareAddress) {
+        Iterator<PolicyShare> iter = shares.iterator();
+        while (iter.hasNext()) {
+            PolicyShare cur = iter.next();
+            if (cur.address.equals(shareAddress)) {
+                iter.remove();
+                return;
+            }
+        }
+    }
+
+    public boolean isInvalidated() {
+        return isInvalidated;
+    }
+
+    public void invalidate() {
+        isInvalidated = true;
     }
 
     public void addTimeIndex(IndexEntry entry) {
@@ -168,6 +190,17 @@ public class Policy {
                     obj.getLong(OPCODE_FIELD_INTERVAL),
                     obj.getString(OPCODE_FIELD_TXTID));
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof IndexEntry))
+                return false;
+            IndexEntry other = (IndexEntry) o;
+
+            return timestampStart == other.timestampStart &&
+                    timestampInterval == other.timestampInterval
+                    && txid.equals(other.txid);
+        }
     }
 
     public static class PolicyShare {
@@ -194,5 +227,47 @@ public class Policy {
             return new PolicyShare(obj.getString(OPCODE_FIELD_SHARE_ADDR),
                     obj.getString(OPCODE_FIELD_TXTID));
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof PolicyShare))
+                return false;
+            PolicyShare other = (PolicyShare) o;
+
+            return address.equals(other.address) && txid.equals(other.txid);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null)
+            return false;
+
+        if (!(o instanceof Policy))
+            return false;
+        Policy other = (Policy) o;
+
+        if (!this.owner.equals(other.owner))
+            return false;
+
+        if (!(this.streamId == other.streamId))
+            return false;
+
+        if (!this.nonce.equals(other.nonce))
+            return false;
+
+        if (!this.createTxid.equals(other.createTxid))
+            return false;
+
+        if (!this.ownerPk.equals(other.ownerPk))
+            return false;
+
+        if (!(this.isInvalidated == other.isInvalidated))
+            return false;
+
+        if(!(this.times.equals(other.times)))
+            return false;
+
+        return this.shares.equals(other.shares);
     }
 }

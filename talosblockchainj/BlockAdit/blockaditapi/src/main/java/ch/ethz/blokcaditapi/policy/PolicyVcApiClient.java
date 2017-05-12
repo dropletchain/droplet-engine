@@ -61,6 +61,8 @@ public class PolicyVcApiClient {
         String result = null;
         try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(c.getInputStream()), Charsets.UTF_8)){
             result = CharStreams.toString(reader);
+        } finally {
+            c.disconnect();
         }
         if (containsError(result))
             throw new PolicyClientException(result);
@@ -104,9 +106,7 @@ public class PolicyVcApiClient {
                 owners.add(array.getString(idx));
             }
             return owners;
-        } catch (IOException e) {
-            throw new PolicyClientException(e.getCause());
-        } catch (JSONException e) {
+        } catch (IOException | JSONException e) {
             throw new PolicyClientException(e.getCause());
         }
     }
@@ -122,9 +122,7 @@ public class PolicyVcApiClient {
                 streamIds.add(array.getInt(idx));
             }
             return streamIds;
-        } catch (IOException e) {
-            throw new PolicyClientException(e.getCause());
-        } catch (JSONException e) {
+        } catch (IOException | JSONException e) {
             throw new PolicyClientException(e.getCause());
         }
     }

@@ -8,4 +8,6 @@ import org.bitcoinj.core.ECKey;
 
 public interface StreamKeyFactory {
     public StreamKey createStreamKey(ECKey owner);
+
+    public StreamKey createShareStreamKey(ECKey share, byte[] input);
 }

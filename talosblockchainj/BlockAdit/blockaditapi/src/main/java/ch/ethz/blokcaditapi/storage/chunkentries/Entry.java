@@ -6,6 +6,10 @@ package ch.ethz.blokcaditapi.storage.chunkentries;
 
 public interface Entry {
 
+    public long getTimestamp();
+
+    public String getMetadata();
+
     public byte[] encode();
 
     public int getEncodedSize();

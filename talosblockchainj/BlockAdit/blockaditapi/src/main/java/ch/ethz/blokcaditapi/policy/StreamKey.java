@@ -1,5 +1,6 @@
 package ch.ethz.blokcaditapi.policy;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.ECKey;
 
 /**
@@ -8,7 +9,11 @@ import org.bitcoinj.core.ECKey;
 
 public interface StreamKey {
 
-    public ECKey getOwnerKey();
+    public int getStreamId();
+
+    public Address getSignAddress();
+
+    public ECKey getSignKey();
 
     public byte[] getSymKey(int version);
 
@@ -16,4 +21,5 @@ public interface StreamKey {
 
     public byte[] serializeLen();
 
+    public boolean canWrite();
 }

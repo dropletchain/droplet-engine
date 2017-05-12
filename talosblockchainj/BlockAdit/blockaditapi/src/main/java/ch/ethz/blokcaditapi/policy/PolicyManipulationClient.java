@@ -4,6 +4,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.store.BlockStoreException;
@@ -15,11 +16,12 @@ import java.security.SecureRandom;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by lukas on 09.05.17.
  */
-
 public class PolicyManipulationClient {
 
     private PolicyWallet wallet;
@@ -33,6 +35,8 @@ public class PolicyManipulationClient {
     private static int TIMEOUT = 10;
 
     private boolean running = false;
+
+    private Lock lock = new ReentrantLock();
 
     public PolicyManipulationClient(PolicyWallet wallet,  Coin fee, InetAddress address) throws BlockStoreException {
         MemoryBlockStore store = new MemoryBlockStore(wallet.getNetworkParameters());
@@ -65,9 +69,7 @@ public class PolicyManipulationClient {
         Wallet.SendResult result = wallet.sendOPReturnTransaction(owner, this.peerGroup, cmd, this.fee);
         try {
             return result.broadcastComplete.get(TIMEOUT, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new PolicyClientException(e.getCause());
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new PolicyClientException(e.getCause());
         } catch (TimeoutException e) {
             throw new PolicyClientException("Broadcast failed");
@@ -109,5 +111,9 @@ public class PolicyManipulationClient {
         this.checkRunning();
         byte[] cmd = PolicyOPReturn.invalidatePolicyCMD(streamId);
         return sendCommand(cmd, owner);
+    }
+
+    public NetworkParameters getNetwrokParameters() {
+        return wallet.getNetworkParameters();
     }
 }

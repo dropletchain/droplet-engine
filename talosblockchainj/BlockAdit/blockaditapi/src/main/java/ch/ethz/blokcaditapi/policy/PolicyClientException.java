@@ -4,7 +4,7 @@ package ch.ethz.blokcaditapi.policy;
  * Created by lukas on 09.05.17.
  */
 
-public class PolicyClientException extends RuntimeException {
+public class PolicyClientException extends Exception {
     public PolicyClientException() {
     }
 
