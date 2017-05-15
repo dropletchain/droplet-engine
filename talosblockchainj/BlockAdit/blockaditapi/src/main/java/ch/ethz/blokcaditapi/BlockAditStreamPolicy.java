@@ -13,7 +13,6 @@ import ch.ethz.blokcaditapi.policy.PolicyVcApiClient;
 /**
  * Created by lukas on 12.05.17.
  */
-
 public class BlockAditStreamPolicy implements IBlockAditStreamPolicy {
 
     private Policy localPolicy;
@@ -29,6 +28,9 @@ public class BlockAditStreamPolicy implements IBlockAditStreamPolicy {
         this.owner = owner;
         this.streamId = streamId;
         localPolicy = getActualPolicy();
+        if (localPolicy == null) {
+            localPolicy = new Policy(owner.toString(), streamId, "", "", "");
+        }
     }
 
     BlockAditStreamPolicy(PolicyVcApiClient client, PolicyManipulationClient policyClient, Address owner, int streamId, Policy localPolicy) throws PolicyClientException {
@@ -84,6 +86,8 @@ public class BlockAditStreamPolicy implements IBlockAditStreamPolicy {
 
     @Override
     public boolean checkLocalMatchesActual() throws PolicyClientException {
+        if (localPolicy == null)
+            return false;
         return localPolicy.equals(this.getActualPolicy());
     }
 

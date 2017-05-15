@@ -127,4 +127,31 @@ public class PolicyVcApiClient {
         }
     }
 
+    public List<AccessableStream> getAccessesForAddress(String address) throws PolicyClientException {
+        String args = String.format("has_access?share=%s", address);
+        try {
+            String result = performRequest(this.getUrl(args));
+            JSONObject obj = new JSONObject(result);
+            List<AccessableStream> streamIds = new ArrayList<>();
+            JSONArray array = obj.getJSONArray("has_access");
+            for (int idx=0; idx<array.length(); idx++) {
+                JSONObject cur = array.getJSONObject(idx);
+                streamIds.add(new AccessableStream(cur.getInt("streamid"), cur.getString("owner")));
+            }
+            return streamIds;
+        } catch (IOException | JSONException e) {
+            throw new PolicyClientException(e.getCause());
+        }
+    }
+
+    public static class AccessableStream {
+        public AccessableStream(int streamId, String ownerAddress) {
+            this.streamId = streamId;
+            this.ownerAddress = ownerAddress;
+        }
+
+        public int streamId;
+        public String ownerAddress;
+    }
+
 }

@@ -15,7 +15,7 @@ import ch.ethz.blokcaditapi.storage.chunkentries.EntryFactory;
  * Created by lukas on 08.05.17.
  */
 
-public class ChunkData implements Iterable{
+public class ChunkData implements Iterable<Entry> {
 
     private List<Entry> entries = new ArrayList<>();
     private int maxEntries;

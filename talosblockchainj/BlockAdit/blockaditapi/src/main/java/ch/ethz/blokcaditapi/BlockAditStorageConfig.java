@@ -15,7 +15,11 @@ public interface BlockAditStorageConfig {
 
     public int getVirtualchainPort();
 
-    public String getBicoinAddress();
+    public String getBitcoinAddress();
+
+    public String getStorageApiAddress();
+
+    public int getStorageApiPort();
 
     public NetworkParameters getNetworkParameters();
 

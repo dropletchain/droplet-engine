@@ -22,7 +22,7 @@ public class TestStorageClient {
 
     @Test
     public void testStore() throws Exception {
-        BlockAditDHTStorageClient client = new BlockAditDHTStorageClient("127.0.0.1", 14000);
+        BlockAditStorageAPI client = new BlockAditDHTStorageClient("127.0.0.1", 14000);
         ECKey key = Util.wifToKey(PRIVATE_KEY, true);
         byte[] nonce = Base64.decode(NONCE);
         byte[] symKey = new byte[16];

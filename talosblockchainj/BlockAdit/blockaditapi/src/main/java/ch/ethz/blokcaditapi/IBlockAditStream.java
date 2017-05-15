@@ -22,15 +22,15 @@ interface IBlockAditStream {
 
     boolean appendToStream(Entry entry) throws BlockAditStreamException;
 
-    void flushWriteChunk();
+    void flushWriteChunk() throws BlockAditStreamException;
 
-    List<Entry> getRange(long from, long to);
+    List<Entry> getRange(long from, long to) throws BlockAditStreamException;
 
-    Entry getEntry(long timestamp, String metadata);
+    Entry getEntry(long timestamp, String metadata) throws BlockAditStreamException;
 
     void presistToFile(File file);
 
-    boolean isApproved();
+    boolean isApproved() throws PolicyClientException;
 
     IBlockAditStreamPolicy getPolicyManipulator();
 

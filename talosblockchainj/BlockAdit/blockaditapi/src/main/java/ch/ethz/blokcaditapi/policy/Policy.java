@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import ch.ethz.blokcaditapi.storage.StreamIdentifier;
+
 /**
  * Created by lukas on 09.05.17.
  */
@@ -45,7 +47,7 @@ public final class Policy {
         this.shares = shares;
     }
 
-    Policy(String owner, int streamId, String nonce, String createTxid, String ownerPk) {
+    public Policy(String owner, int streamId, String nonce, String createTxid, String ownerPk) {
         this.owner = owner;
         this.streamId = streamId;
         this.nonce = nonce;
@@ -110,6 +112,11 @@ public final class Policy {
 
     public List<PolicyShare> getShares() {
         return shares;
+    }
+
+    public StreamIdentifier getStreamidentifier() {
+        return new StreamIdentifier(this.getOwner(), this.getStreamId(),
+                this.getNonceBin(), this.getCreateTxid());
     }
 
     public String toJson() {

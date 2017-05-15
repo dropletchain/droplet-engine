@@ -82,6 +82,30 @@ public class CloudChunk {
         return ChunkData.decodeFromByteString(finalData);
     }
 
+    public byte[] getKey() {
+        return key;
+    }
+
+    public int getKeyVersion() {
+        return keyVersion;
+    }
+
+    public byte[] getPolicyTag() {
+        return policyTag;
+    }
+
+    public byte[] getEncData() {
+        return encData;
+    }
+
+    public byte[] getGcmTag() {
+        return gcmTag;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
     public boolean checkSignature(ECKey key) throws InvalidKeyException {
         return StorageCrypto.checkECDSASig(key, this.encodeWithoutSignature(), this.signature);
     }

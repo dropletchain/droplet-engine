@@ -15,6 +15,12 @@ public interface StreamKey {
 
     public ECKey getSignKey();
 
+    public int getCurVersion();
+
+    public byte[] getCurSymKey();
+
+    public int updateVersion();
+
     public byte[] getSymKey(int version);
 
     public byte[] serialize();

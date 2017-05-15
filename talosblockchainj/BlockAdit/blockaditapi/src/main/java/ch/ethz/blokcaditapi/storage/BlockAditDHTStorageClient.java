@@ -24,7 +24,7 @@ import ch.ethz.blokcaditapi.policy.PolicyClientException;
  * Created by lukas on 12.05.17.
  */
 
-public class BlockAditDHTStorageClient {
+public class BlockAditDHTStorageClient implements BlockAditStorageAPI {
 
     private String ip;
     private int port;
@@ -146,6 +146,7 @@ public class BlockAditDHTStorageClient {
         }
     }
 
+    @Override
     public boolean storeChunk(CloudChunk chunk) throws IOException, PolicyClientException {
         String url = String.format("http://%s:%d/store_chunk", ip, port);
         ResultObject obj =  performStoreRequest(url, chunk.encode());
@@ -156,6 +157,7 @@ public class BlockAditDHTStorageClient {
     }
 
 
+    @Override
     public CloudChunk getChunk(ECKey identityKey, int blockId, StreamIdentifier identifier)
             throws IOException, PolicyClientException, BlockAditStorageAPIException {
         ByteResultObject result;
@@ -193,7 +195,7 @@ public class BlockAditDHTStorageClient {
 
     private static class FetchTask implements Runnable {
 
-        BlockAditDHTStorageClient client;
+        BlockAditStorageAPI client;
         int myID;
         CloudChunk[] results;
         ECKey identityKey;
@@ -201,7 +203,7 @@ public class BlockAditDHTStorageClient {
         StreamIdentifier identifier;
         Semaphore terminator;
 
-        FetchTask(BlockAditDHTStorageClient client, int myID, CloudChunk[] results, Semaphore terminator, ECKey identityKey, int blockId, StreamIdentifier identifier) {
+        FetchTask(BlockAditStorageAPI client, int myID, CloudChunk[] results, Semaphore terminator, ECKey identityKey, int blockId, StreamIdentifier identifier) {
             this.myID = myID;
             this.results = results;
             this.identityKey = identityKey;
@@ -224,6 +226,7 @@ public class BlockAditDHTStorageClient {
         }
     }
 
+    @Override
     public CloudChunk[] getRangeChunks(ECKey identityKey, int[] blockIds, StreamIdentifier identifier, int numThreads) {
         CloudChunk[] results = new CloudChunk[blockIds.length];
         Semaphore sem = new Semaphore(-blockIds.length + 1);
@@ -243,6 +246,7 @@ public class BlockAditDHTStorageClient {
         return results;
     }
 
+    @Override
     public CloudChunk[] getRangeChunks(ECKey identityKey, int fromId, int toId,
                                        StreamIdentifier identifier, int numThreads) {
         int[] listIdx = new int[toId-fromId];

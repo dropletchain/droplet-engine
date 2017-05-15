@@ -3,13 +3,19 @@ package ch.ethz.blokcaditapi;
 import org.bitcoinj.core.Address;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.List;
 
 import ch.ethz.blokcaditapi.policy.Policy;
 import ch.ethz.blokcaditapi.policy.PolicyClientException;
 import ch.ethz.blokcaditapi.policy.StreamKey;
+import ch.ethz.blokcaditapi.storage.BlockAditStorageAPI;
+import ch.ethz.blokcaditapi.storage.BlockAditStorageAPIException;
 import ch.ethz.blokcaditapi.storage.ChunkData;
+import ch.ethz.blokcaditapi.storage.CloudChunk;
+import ch.ethz.blokcaditapi.storage.StreamIdentifier;
 import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
 
 /**
@@ -18,16 +24,34 @@ import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
 
 public class BlockAditStream implements IBlockAditStream {
 
+    private static final int MAX_NUM_THREADS = 4;
+
+    private static class ChunkJobStoreJob {
+        int blockId;
+        ChunkData data;
+
+        public ChunkJobStoreJob(int blockId, ChunkData data) {
+            this.blockId = blockId;
+            this.data = data;
+        }
+    }
+
     private StreamKey streamKey;
+    private StreamIdentifier identifier;
+
+    private boolean isWriteable = false;
+
     private IBlockAditStreamPolicy policyForStream;
-    private List<ChunkData> toSend = new ArrayList<>();
+    private List<ChunkJobStoreJob> toSend = new ArrayList<>();
     private  ChunkData curWriteChunk;
     private int currentBlockID = -1;
+    private BlockAditStorageAPI storageAPI;
 
     private long startTimestamp;
     private long interval;
 
-    public BlockAditStream(StreamKey streamKey, IBlockAditStreamPolicy policyForStream) throws BlockAditStreamException {
+    public BlockAditStream(BlockAditStorageAPI storageAPI, StreamKey streamKey, IBlockAditStreamPolicy policyForStream) throws BlockAditStreamException {
+        this.storageAPI = storageAPI;
         this.streamKey = streamKey;
         this.policyForStream = policyForStream;
         Policy policy = policyForStream.getLocalPolicy();
@@ -38,10 +62,22 @@ public class BlockAditStream implements IBlockAditStream {
         startTimestamp = entry.timestampStart;
         interval = entry.timestampInterval;
         curWriteChunk = new ChunkData();
+        identifier = policyForStream.getLocalPolicy().getStreamidentifier();
+        isWriteable = identifier.getOwner().equals(streamKey.getSignAddress().toString());
     }
 
     private long calulateBlockId(long timestamp) {
         return (timestamp - startTimestamp) / interval;
+    }
+
+    private void pushChunksToCloud() throws PolicyClientException, InvalidKeyException, IOException {
+        Policy curPolicy = policyForStream.getActualPolicy();
+        for (ChunkJobStoreJob job: toSend) {
+            CloudChunk chunk = CloudChunk.createCloudChunk(curPolicy.getStreamidentifier(), job.blockId,
+                    streamKey.getSignKey(), streamKey.getCurVersion(),
+                    streamKey.getCurSymKey(), job.data, true);
+            this.storageAPI.storeChunk(chunk);
+        }
     }
 
     @Override
@@ -66,16 +102,24 @@ public class BlockAditStream implements IBlockAditStream {
 
     @Override
     public boolean appendToStream(Entry entry) throws BlockAditStreamException {
+        if (!isWriteable)
+            throw new BlockAditStreamException("Stream is not writable");
         int entryId = (int) calulateBlockId(entry.getTimestamp());
         if(currentBlockID == -1) {
             currentBlockID = entryId;
         } else if (currentBlockID == entryId)  {
             curWriteChunk.addEntry(entry);
         } else if (currentBlockID + 1 == entryId) {
-            toSend.add(curWriteChunk);
+            toSend.add(new ChunkJobStoreJob(currentBlockID, curWriteChunk));
             curWriteChunk = new ChunkData();
+            currentBlockID ++;
             curWriteChunk.addEntry(entry);
-            //TODO: Start send job
+
+            try {
+                pushChunksToCloud();
+            } catch (PolicyClientException | InvalidKeyException | IOException e) {
+                throw new BlockAditStreamException(e.getCause());
+            }
         } else {
             throw new BlockAditStreamException("Entry is not append");
         }
@@ -83,19 +127,71 @@ public class BlockAditStream implements IBlockAditStream {
     }
 
     @Override
-    public void flushWriteChunk() {
-        toSend.add(curWriteChunk);
+    public void flushWriteChunk() throws BlockAditStreamException {
+        toSend.add(new ChunkJobStoreJob(currentBlockID, curWriteChunk));
         curWriteChunk = new ChunkData();
-        //TODO: Start send job
+        currentBlockID ++;
+
+        try {
+            pushChunksToCloud();
+        } catch (PolicyClientException | InvalidKeyException | IOException e) {
+            throw new BlockAditStreamException(e.getCause());
+        }
+    }
+
+    private ChunkData dataFromChunk(CloudChunk chunk) {
+        try {
+            return chunk.retriveData(this.streamKey.getSymKey(chunk.getKeyVersion()), true);
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        return new ChunkData();
+    }
+
+    private ChunkData[] dataFromChunks(CloudChunk[] chunks) {
+        ChunkData[] data = new ChunkData[chunks.length];
+        for (int idx=0; idx<chunks.length; idx ++)
+            data[idx] = dataFromChunk(chunks[idx]);
+        return data;
     }
 
     @Override
-    public List<Entry> getRange(long from, long to) {
-        return null;
+    public List<Entry> getRange(long from, long to) throws BlockAditStreamException {
+        List<Entry> result = new ArrayList<>();
+        int blockIdForm, blockIdTo, len;
+        try {
+            blockIdForm = (int) calulateBlockId(from);
+            blockIdTo = (int) calulateBlockId(to) + 1;
+            CloudChunk[] chunks;
+            if (blockIdForm == blockIdTo - 1) {
+                chunks = new CloudChunk[1];
+                chunks[0] = this.storageAPI.getChunk(streamKey.getSignKey(), blockIdForm, identifier);
+            } else {
+                len = blockIdTo - blockIdForm;
+                chunks = this.storageAPI.getRangeChunks(streamKey.getSignKey(), blockIdForm,
+                        blockIdTo, identifier, len < MAX_NUM_THREADS ? len : MAX_NUM_THREADS);
+            }
+
+            for (ChunkData data: dataFromChunks(chunks)) {
+                for (Entry entry : data) {
+                    if (entry.getTimestamp() >= from && entry.getTimestamp()< to)
+                        result.add(entry);
+                }
+            }
+        } catch (PolicyClientException | IOException | BlockAditStorageAPIException e) {
+            throw new BlockAditStreamException(e.getCause());
+        }
+        return result;
     }
 
     @Override
-    public Entry getEntry(long timestamp, String metadata) {
+    public Entry getEntry(long timestamp, String metadata) throws BlockAditStreamException {
+        try {
+            int blockId = (int) calulateBlockId(timestamp);
+            CloudChunk chunk = this.storageAPI.getChunk(this.streamKey.getSignKey(), blockId, identifier);
+        } catch (PolicyClientException | IOException | BlockAditStorageAPIException e) {
+            throw new BlockAditStreamException(e.getCause());
+        }
         return null;
     }
 
@@ -105,8 +201,8 @@ public class BlockAditStream implements IBlockAditStream {
     }
 
     @Override
-    public boolean isApproved() {
-        return false;
+    public boolean isApproved() throws PolicyClientException {
+        return policyForStream.getActualPolicy() != null;
     }
 
     @Override

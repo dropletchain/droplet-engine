@@ -57,6 +57,10 @@ public class KeyManager {
         shareKeys.add(key);
     }
 
+    public Address generateOwnerKey() {
+        return wallet.getAddressForKey(wallet.createNewPolicyKey());
+    }
+
     public Address generateShareKey() {
         ECKey key = new ECKey();
         shareKeys.add(key);
@@ -107,6 +111,20 @@ public class KeyManager {
         StreamKey key = this.streamKeyFactory.createShareStreamKey(shareKey, keyData);
         shareStreamKeys.add(key);
         return key;
+    }
+
+    public StreamKey getStreamKey(Address owner, int streamId) {
+        for (StreamKey key : myStreamKeys)
+            if (key.getSignAddress().equals(owner) && key.getStreamId()==streamId)
+                return key;
+        return null;
+    }
+
+    public StreamKey getShareStreamKey(Address owner, int streamId) {
+        for (StreamKey key : shareStreamKeys)
+            if (key.getSignAddress().equals(owner) && key.getStreamId()==streamId)
+                return key;
+        return null;
     }
 
 }
