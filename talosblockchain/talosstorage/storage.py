@@ -55,7 +55,7 @@ class TalosStorage(object):
         try:
             check_signature(chunk, policy)
         except InvalidSignature:
-            raise InvalidChunkError("Chunk key doesn't match")
+            raise InvalidChunkError("Signature is invalid")
         time_keeper.stop_clock(ENTRY_PUT_CHECK_CHUNK_SIGNATURE)
 
     def check_access_valid(self, pubkey, policy):

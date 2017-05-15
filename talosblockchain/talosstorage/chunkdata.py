@@ -467,6 +467,10 @@ class CloudChunk:
                                                      self.policy_tag, self.encrypted_data, self.mac_tag) \
                + self.signature
 
+    def encode_without_signature(self):
+        return _enocde_cloud_chunk_without_signature(self.key, self.key_version,
+                                                     self.policy_tag, self.encrypted_data, self.mac_tag)
+
     def get_encoded_without_key(self):
         return self.encode()[HASH_BYTES:]
 

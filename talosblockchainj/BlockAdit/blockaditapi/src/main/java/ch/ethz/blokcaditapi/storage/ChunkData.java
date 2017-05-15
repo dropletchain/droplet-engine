@@ -39,7 +39,7 @@ public class ChunkData implements Iterable{
     }
 
     public boolean addEntry(Entry entry) {
-        if (maxEntries >= entries.size())
+        if (maxEntries <= entries.size())
             return false;
         this.entries.add(entry);
         return true;

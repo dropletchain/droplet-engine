@@ -11,7 +11,7 @@ class BitcoinTestnetPrivateKey(BitcoinPrivateKey):
     _pubkeyhash_version_byte = 111
 
 #private_key_hex = 'cQ9BsS11H7UaRTDz5cS8H7L2pV57zEjXe7aC2A7dRNatDhkhrEDb'
-private_key_hex = 'cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1'
+private_key_hex = 'cQ1HBRRvJ9DaV2UZsEf5w1uLAoXjSVpLYVH5dB5hZUWk5jeJ8KCL'
 private_key = BitcoinTestnetPrivateKey(private_key_hex)
 client = BitcoindClient("talos", "talos", port=18332, version_byte=111)
 

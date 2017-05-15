@@ -95,7 +95,7 @@ public class CloudChunk {
 
     public byte[] encodeWithoutSignature() {
         ByteBuffer result = ByteBuffer.allocate(HASH_BYTES * 2 + (Integer.SIZE/8) * 2 +
-                MAC_BYTES + this.encData.length + MAC_BYTES);
+                MAC_BYTES + this.encData.length);
         result.order(ByteOrder.LITTLE_ENDIAN);
         addPublicPart(result, true);
         addDataPart(result);

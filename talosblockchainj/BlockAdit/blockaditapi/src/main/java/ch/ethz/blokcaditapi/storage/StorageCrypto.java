@@ -38,7 +38,7 @@ public class StorageCrypto {
         compresser.setInput(data);
         compresser.finish();
         ByteArrayOutputStream bufferStream = new ByteArrayOutputStream(data.length);
-        while (!compresser.finished()) {
+        while (compresser.getTotalIn() < data.length) {
             byte[] output_buffer = new byte[data.length];
             int numBytes = compresser.deflate(output_buffer);
             bufferStream.write(output_buffer, 0, numBytes);
@@ -98,7 +98,7 @@ public class StorageCrypto {
         ArrayList<byte[]> result = new ArrayList<>(2);
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            sizeTag = cipher.getBlockSize() * 8;
+            sizeTag = cipher.getBlockSize();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (NoSuchPaddingException e) {
