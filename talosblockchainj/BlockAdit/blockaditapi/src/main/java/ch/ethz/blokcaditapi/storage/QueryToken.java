@@ -1,6 +1,7 @@
 package ch.ethz.blokcaditapi.storage;
 
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.spongycastle.util.encoders.Base64;
@@ -37,16 +38,24 @@ public class QueryToken {
         return buff.array();
     }
 
+    private static byte[] signMessage(ECKey key, byte[] data) {
+        Sha256Hash hash = Sha256Hash.of(data);
+        return key.sign(hash).encodeToDER();
+    }
+
+    private static boolean verifyMessage(ECKey key, byte[] data, byte[] signature) {
+        Sha256Hash hash = Sha256Hash.of(data);
+        return key.verify(hash, ECKey.ECDSASignature.decodeFromDER(signature));
+    }
+
     public static QueryToken createQueryToken(String owner, int streamId, byte[] nonce, byte[] chunkKey, ECKey key) {
         QueryToken token = new QueryToken();
         token.owner = owner;
         token.streamId = streamId;
         token.nonce = nonce;
         token.chunkKey = chunkKey;
-        String signature = key.signMessage(new String(getBytesSignature(owner, streamId, nonce, chunkKey)));
-        String pub = key.getPublicKeyAsHex();
-        token.signature = Base64.decode(signature);
-        token.pubkeyHex = pub;
+        token.signature = signMessage(key, getBytesSignature(owner, streamId, nonce, chunkKey));
+        token.pubkeyHex = key.getPublicKeyAsHex();
         return token;
     }
 

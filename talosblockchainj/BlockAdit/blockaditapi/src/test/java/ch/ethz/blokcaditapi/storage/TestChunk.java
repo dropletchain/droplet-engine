@@ -1,8 +1,8 @@
 package ch.ethz.blokcaditapi.storage;
 
+import org.bitcoinj.core.ECKey;
 import org.junit.Test;
 
-import java.security.KeyPair;
 import java.util.Random;
 
 import ch.ethz.blokcaditapi.storage.chunkentries.DoubleEntry;
@@ -105,15 +105,15 @@ public class TestChunk {
         rand.nextBytes(encData);
         rand.nextBytes(gcmTag);
         rand.nextBytes(signature);
-        KeyPair pair = StorageCrypto.generateECDSAKeys();
+        ECKey Signkey = new ECKey();
 
-        CloudChunk chunk = new CloudChunk(key, keyVersion, policyTag, encData, gcmTag, pair.getPrivate());
-        assertTrue(chunk.checkSignature(pair.getPublic()));
+        CloudChunk chunk = new CloudChunk(key, keyVersion, policyTag, encData, gcmTag, Signkey);
+        assertTrue(chunk.checkSignature(Signkey));
 
         chunk.key[3] = 0;
         chunk.key[6] = 0;
 
-        assertFalse(chunk.checkSignature(pair.getPublic()));
+        assertFalse(chunk.checkSignature(Signkey));
     }
 
     @Test
@@ -123,7 +123,7 @@ public class TestChunk {
         DoubleEntry after = (DoubleEntry) (new DoubleEntry.DoubleEntryDecoder()).decode(data);
         assertEquals(entry.getTimestamp(), after.getTimestamp());
         assertEquals(entry.getMetadata(), after.getMetadata());
-        assertEquals(entry.getDataValue(), after.getDataValue());
+        assertEquals(entry.getDataValue(), after.getDataValue(), 0.00001);
     }
 
     @Test

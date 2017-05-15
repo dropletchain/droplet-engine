@@ -3,7 +3,9 @@ package ch.ethz.blokcaditapi.storage;
 import android.annotation.TargetApi;
 import android.os.Build;
 
+import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.params.RegTestParams;
 import org.junit.Test;
 
 import java.util.Random;
@@ -57,14 +59,38 @@ public class TestCrypto {
         assertTrue(catched);
     }
 
+    private ECKey wifToKey(String priv, boolean isTestnet) {
+        byte[] data = Base58.decodeChecked(priv);
+        char first = priv.charAt(0);
+        byte[] real = null;
+        if ((isTestnet && first =='c') ||
+                (!isTestnet && (first=='K' || first=='L'))) {
+            real = new byte[data.length - 2];
+            System.arraycopy(data, 1, real, 0, data.length - 2);
+        } else {
+            real = new byte[data.length - 1];
+            System.arraycopy(data, 1, real, 0, data.length - 1);
+        }
+        return ECKey.fromPrivate(real);
+    }
+
     @Test
     public void testToken() throws Exception {
-        ECKey key = new ECKey();
+        String priv = "cPuiZfHTkWAPhPvMSPetvP1jRarkQ8BRtPrEVuP5PhDsTGrrcm2f";
+        ECKey key = wifToKey(priv, true);
         String owner = "dfasdfasfasdfdsf";
         int streamId = 2;
         byte[] chunkKey = new byte[16];
         byte[] nonce = new byte[16];
+
         QueryToken token = QueryToken.createQueryToken(owner,streamId, nonce, chunkKey, key);
+        byte[] signData = QueryToken.getBytesSignature(owner, streamId, nonce, chunkKey);
+
+        System.out.println(key.getPrivateKeyAsHex());
+        System.out.println(key.getPublicKeyAsHex());
+        System.out.println(key.getPrivateKeyAsWiF(RegTestParams.get()));
+
+        System.out.println(Util.bytesToHexString(signData));
         String tokenJs = token.toJSON();
         System.out.print(tokenJs);
     }

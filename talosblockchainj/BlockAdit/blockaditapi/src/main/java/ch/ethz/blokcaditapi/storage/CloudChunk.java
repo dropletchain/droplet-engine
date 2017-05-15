@@ -1,10 +1,10 @@
 package ch.ethz.blokcaditapi.storage;
 
+import org.bitcoinj.core.ECKey;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.InvalidKeyException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
@@ -37,7 +37,7 @@ public class CloudChunk {
         this.signature = signature;
     }
 
-    CloudChunk(byte[] key, int keyVersion, byte[] policyTag, byte[] encData, byte[] gcmTag, PrivateKey signKey) throws InvalidKeyException {
+    CloudChunk(byte[] key, int keyVersion, byte[] policyTag, byte[] encData, byte[] gcmTag, ECKey signKey) throws InvalidKeyException {
         this.key = key;
         this.keyVersion = keyVersion;
         this.policyTag = policyTag;
@@ -59,7 +59,7 @@ public class CloudChunk {
         buffer.put(this.gcmTag);
     }
 
-    public void updateSignature(PrivateKey key) throws InvalidKeyException {
+    public void updateSignature(ECKey key) throws InvalidKeyException {
         this.signature = StorageCrypto.signECDSA(key, this.encodeWithoutSignature());
     }
 
@@ -82,7 +82,7 @@ public class CloudChunk {
         return ChunkData.decodeFromByteString(finalData);
     }
 
-    public boolean checkSignature(PublicKey key) throws InvalidKeyException {
+    public boolean checkSignature(ECKey key) throws InvalidKeyException {
         return StorageCrypto.checkECDSASig(key, this.encodeWithoutSignature(), this.signature);
     }
 
@@ -133,7 +133,7 @@ public class CloudChunk {
     }
 
 
-    public static CloudChunk createCloudChunk(StreamIdentifier ident, int blockId, PrivateKey key,
+    public static CloudChunk createCloudChunk(StreamIdentifier ident, int blockId, ECKey key,
                                               int keyVersion, byte[] symKey, ChunkData data, boolean useCompression) throws InvalidKeyException {
         byte[] encodedData = data.encode();
         byte[] dataCompressed;

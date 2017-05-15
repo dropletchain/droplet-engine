@@ -3,17 +3,16 @@ package ch.ethz.blokcaditapi.storage;
 import android.annotation.TargetApi;
 import android.os.Build;
 
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
+
 import java.io.ByteArrayOutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Signature;
-import java.security.SignatureException;
 import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
 import java.util.List;
@@ -140,32 +139,22 @@ public class StorageCrypto {
         return null;
     }
 
-    public static byte[] signECDSA(PrivateKey key, byte[] toSign) throws InvalidKeyException {
-        try {
-            Signature sig = Signature.getInstance("SHA256withECDSA");
-            sig.initSign(key);
-            sig.update(toSign);
-            return sig.sign();
-        } catch (NoSuchAlgorithmException a) {
-            a.printStackTrace();
-        } catch (SignatureException e) {
-            e.printStackTrace();
-        }
-        return null;
+    private static byte[] signMessage(ECKey key, byte[] data) {
+        Sha256Hash hash = Sha256Hash.of(data);
+        return key.sign(hash).encodeToDER();
     }
 
-    public static boolean checkECDSASig(PublicKey key, byte[] data, byte[] signature) throws InvalidKeyException {
-        try {
-            Signature ver = Signature.getInstance("SHA256withECDSA");
-            ver.initVerify(key);
-            ver.update(data);
-            return ver.verify(signature);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (SignatureException e) {
-            e.printStackTrace();
-        }
-        return false;
+    private static boolean verifyMessage(ECKey key, byte[] data, byte[] signature) {
+        Sha256Hash hash = Sha256Hash.of(data);
+        return key.verify(hash, ECKey.ECDSASignature.decodeFromDER(signature));
+    }
+
+    public static byte[] signECDSA(ECKey key, byte[] toSign) throws InvalidKeyException {
+        return signMessage(key, toSign);
+    }
+
+    public static boolean checkECDSASig(ECKey key, byte[] data, byte[] signature) throws InvalidKeyException {
+        return verifyMessage(key, data, signature);
     }
 
     public static KeyPair generateECDSAKeys() {
