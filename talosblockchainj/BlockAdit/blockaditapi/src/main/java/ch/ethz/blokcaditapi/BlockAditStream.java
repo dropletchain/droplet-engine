@@ -101,6 +101,18 @@ public class BlockAditStream implements IBlockAditStream {
     }
 
     @Override
+    public boolean storeChunk(int id, ChunkData data) {
+        this.toSend.add(new ChunkJobStoreJob(id, data));
+        try {
+            pushChunksToCloud();
+        } catch (PolicyClientException | InvalidKeyException | IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public boolean appendToStream(Entry entry) throws BlockAditStreamException {
         if (!isWriteable)
             throw new BlockAditStreamException("Stream is not writable");
@@ -192,6 +204,19 @@ public class BlockAditStream implements IBlockAditStream {
             throw new BlockAditStreamException(e.getCause());
         }
         return result;
+    }
+
+    @Override
+    public List<Entry> getEntriesForBlock(int blockId) throws BlockAditStreamException {
+        ChunkData data = null;
+        try {
+            CloudChunk chunk = this.storageAPI.getChunk(streamKey.getSignKey(), blockId, identifier);
+            data = dataFromChunk(chunk);
+        } catch (IOException | BlockAditStorageAPIException | PolicyClientException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+        return data.getEntries();
     }
 
     @Override

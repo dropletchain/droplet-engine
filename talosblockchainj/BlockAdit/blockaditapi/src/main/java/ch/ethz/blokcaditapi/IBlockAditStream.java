@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.List;
 
 import ch.ethz.blokcaditapi.policy.PolicyClientException;
+import ch.ethz.blokcaditapi.storage.ChunkData;
 import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
 
 /**
@@ -20,6 +21,8 @@ public interface IBlockAditStream {
 
     List<Address> getShares() throws PolicyClientException;
 
+    boolean storeChunk(int id, ChunkData data);
+
     boolean appendToStream(Entry entry) throws BlockAditStreamException;
 
     boolean appendToStream(List<Entry> entries) throws BlockAditStreamException;
@@ -27,6 +30,8 @@ public interface IBlockAditStream {
     void flushWriteChunk() throws BlockAditStreamException;
 
     List<Entry> getRange(long from, long to) throws BlockAditStreamException;
+
+    List<Entry> getEntriesForBlock(int blockId) throws BlockAditStreamException;
 
     Entry getEntry(long timestamp, String metadata) throws BlockAditStreamException;
 

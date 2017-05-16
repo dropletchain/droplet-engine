@@ -6,6 +6,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import ch.ethz.blockadit.R;
 import ch.ethz.blockadit.activities.CloudSelectActivity;
@@ -21,6 +22,10 @@ import ch.ethz.blockadit.fitbitapi.model.HeartQuery;
 import ch.ethz.blockadit.fitbitapi.model.StepsQuery;
 import ch.ethz.blockadit.util.AppUtil;
 import ch.ethz.blokcaditapi.BlockAditStorage;
+import ch.ethz.blokcaditapi.IBlockAditStream;
+import ch.ethz.blokcaditapi.storage.ChunkData;
+
+import static android.os.Build.VERSION_CODES.M;
 
 
 /*
@@ -59,68 +64,20 @@ import ch.ethz.blokcaditapi.BlockAditStorage;
 
 public class BlockAditFitbitAPI {
 
-    private BlockAditStorage storage;
+    private IBlockAditStream stream;
 
     public BlockAditFitbitAPI(Context conn) {
     }
 
-    public void storeData(User u, StepsQuery steps) throws TalosModuleException {
-        String date = steps.activitiesSteps.iterator().next().getDateTime();
-        Date datesql = Date.valueOf(date);
-        for(Dataset dataSet : steps.activitiesStepsIntraday.getDataset()) {
-            Time time = Time.valueOf(dataSet.getTime());
-            if(dataSet.getValue()!=0) {
-                module.insertDataset(u, datesql, time, Datatype.STEPS.name(), dataSet.getValue());
-            }
+    public void storeChunks(int[] blockIds, ChunkData[] data) {
+        if (blockIds.length != data.length)
+            throw new IllegalArgumentException("Arrays do not have the same size");
+
+        for (int idx=0; idx < blockIds.length; idx++) {
+            this.stream.storeChunk(blockIds[idx], data[idx]);
         }
     }
 
-    public void storeData(User u, FloorQuery floors) throws TalosModuleException {
-        String date = floors.activitiesFloors.iterator().next().getDateTime();
-        Date datesql = Date.valueOf(date);
-        for(Dataset dataSet : floors.activitiesFloorsIntraday.getDataset()) {
-            Time time = Time.valueOf(dataSet.getTime());
-            if(dataSet.getValue()!=0) {
-                module.insertDataset(u, datesql, time, Datatype.FLOORS.name(), dataSet.getValue());
-            }
-        }
-    }
-
-    public void storeData(User u, CaloriesQuery calories) throws TalosModuleException {
-        String date = calories.activitiesCalories.iterator().next().getDateTime();
-        Date datesql = Date.valueOf(date);
-        for(DoubleDataSet dataSet : calories.activitiesCaloriesIntraday.getDataset()) {
-            Time time = Time.valueOf(dataSet.getTime());
-            if(dataSet.getValue()!=0) {
-                int data = AppUtil.transformToInt( dataSet.getValue(), CaloriesQuery.CAL_RAD);
-                module.insertDataset(u, datesql, time, Datatype.CALORIES.name(), data);
-            }
-        }
-    }
-
-    public void storeData(User u, DistQuery dist) throws TalosModuleException {
-        String date = dist.activitiesDistance.iterator().next().getDateTime();
-        Date datesql = Date.valueOf(date);
-        for(DoubleDataSet dataSet : dist.activitiesDistanceIntraday.getDataset()) {
-            Time time = Time.valueOf(dataSet.getTime());
-            if(dataSet.getValue()!=0) {
-                int data = AppUtil.transformToInt( dataSet.getValue(), DistQuery.DIST_RAD);
-                module.insertDataset(u, datesql, time, Datatype.DISTANCE.name(), data);
-            }
-        }
-    }
-
-    public void storeData(User u, HeartQuery heartQuery) throws TalosModuleException {
-        String date = heartQuery.getDateTime();
-        Date datesql = Date.valueOf(date);
-        for(DoubleDataSet dataSet : heartQuery.getActivitiesHeartIntraday().getDataset()) {
-            Time time = Time.valueOf(dataSet.getTime());
-            if(dataSet.getValue()!=0) {
-                int data = AppUtil.transformToInt( dataSet.getValue(), HeartQuery.DIST_RAD);
-                module.insertDataset(u, datesql, time, Datatype.HEARTRATE.name(), data);
-            }
-        }
-    }
 
     public ArrayList<DataEntryAgrDate> getAgrDataPerDate(User u, Date from, Date to, Datatype type) throws TalosModuleException {
         TalosResult res = module.getValuesByDay(u, from, to, type.getDisplayRep());
@@ -140,7 +97,7 @@ public class BlockAditFitbitAPI {
         return data;
     }
 
-    public ArrayList<CloudSelectActivity.CloudListItem> getCloudListItems(User u, Date today) throws TalosModuleException {
+    public ArrayList<CloudSelectActivity.CloudListItem> getCloudListItems(Date today) throws TalosModuleException {
         ArrayList<CloudSelectActivity.CloudListItem> items = new ArrayList<>();
         HashMap<Datatype, CloudSelectActivity.CloudListItem> mappings = new HashMap<>();
         TalosResult res = module.getValuesDuringDay(u, today);
