@@ -12,7 +12,7 @@ import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
  * Created by lukas on 12.05.17.
  */
 
-interface IBlockAditStream {
+public interface IBlockAditStream {
 
     Address getOwner();
 
@@ -21,6 +21,8 @@ interface IBlockAditStream {
     List<Address> getShares() throws PolicyClientException;
 
     boolean appendToStream(Entry entry) throws BlockAditStreamException;
+
+    boolean appendToStream(List<Entry> entries) throws BlockAditStreamException;
 
     void flushWriteChunk() throws BlockAditStreamException;
 
@@ -34,5 +36,6 @@ interface IBlockAditStream {
 
     IBlockAditStreamPolicy getPolicyManipulator();
 
+    byte[] getSerializedKey();
 
 }

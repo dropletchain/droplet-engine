@@ -87,7 +87,7 @@ public class BlockAditStream implements IBlockAditStream {
 
     @Override
     public int getStreamId() {
-        return this.streamKey.getStreamId();
+        return this.identifier.getStreamId();
     }
 
     @Override
@@ -107,6 +107,7 @@ public class BlockAditStream implements IBlockAditStream {
         int entryId = (int) calulateBlockId(entry.getTimestamp());
         if(currentBlockID == -1) {
             currentBlockID = entryId;
+            curWriteChunk.addEntry(entry);
         } else if (currentBlockID == entryId)  {
             curWriteChunk.addEntry(entry);
         } else if (currentBlockID + 1 == entryId) {
@@ -127,15 +128,24 @@ public class BlockAditStream implements IBlockAditStream {
     }
 
     @Override
-    public void flushWriteChunk() throws BlockAditStreamException {
-        toSend.add(new ChunkJobStoreJob(currentBlockID, curWriteChunk));
-        curWriteChunk = new ChunkData();
-        currentBlockID ++;
+    public boolean appendToStream(List<Entry> entries) throws BlockAditStreamException {
+        for (Entry entry : entries)
+            this.appendToStream(entry);
+        return true;
+    }
 
-        try {
-            pushChunksToCloud();
-        } catch (PolicyClientException | InvalidKeyException | IOException e) {
-            throw new BlockAditStreamException(e.getCause());
+    @Override
+    public void flushWriteChunk() throws BlockAditStreamException {
+        if(!curWriteChunk.getEntries().isEmpty()) {
+            toSend.add(new ChunkJobStoreJob(currentBlockID, curWriteChunk));
+            curWriteChunk = new ChunkData();
+            currentBlockID++;
+
+            try {
+                pushChunksToCloud();
+            } catch (PolicyClientException | InvalidKeyException | IOException e) {
+                throw new BlockAditStreamException(e.getCause());
+            }
         }
     }
 
@@ -161,9 +171,9 @@ public class BlockAditStream implements IBlockAditStream {
         int blockIdForm, blockIdTo, len;
         try {
             blockIdForm = (int) calulateBlockId(from);
-            blockIdTo = (int) calulateBlockId(to) + 1;
+            blockIdTo = (int) calulateBlockId(to);
             CloudChunk[] chunks;
-            if (blockIdForm == blockIdTo - 1) {
+            if (blockIdForm == blockIdTo) {
                 chunks = new CloudChunk[1];
                 chunks[0] = this.storageAPI.getChunk(streamKey.getSignKey(), blockIdForm, identifier);
             } else {
@@ -207,7 +217,12 @@ public class BlockAditStream implements IBlockAditStream {
 
     @Override
     public IBlockAditStreamPolicy getPolicyManipulator() {
-        return null;
+        return this.policyForStream;
+    }
+
+    @Override
+    public byte[] getSerializedKey() {
+        return this.streamKey.serialize();
     }
 
     public static BlockAditStream fromFile(File file, KeyManager manager) {

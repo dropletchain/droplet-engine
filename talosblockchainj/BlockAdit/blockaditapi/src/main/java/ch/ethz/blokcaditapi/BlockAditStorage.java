@@ -36,12 +36,17 @@ public class BlockAditStorage {
     private  Random rand = new Random();
 
     public BlockAditStorage(String password, File keyManagerFile, BlockAditStorageConfig config) throws UnknownHostException, BlockStoreException {
-        this.keyManager = KeyManager.fromFile(password, keyManagerFile);
-        this.policyManipulationClient = this.keyManager.createPolicyManipulator(config.getTransactionFee(),
-                InetAddress.getByName(config.getBitcoinAddress()));
-
+        //TODO
     }
 
+    public BlockAditStorage(KeyManager keyManager, BlockAditStorageConfig config) throws UnknownHostException, BlockStoreException {
+        this.keyManager = keyManager;
+        this.config = config;
+        this.policyVcApiClient = new PolicyVcApiClient(config.getVirtualchainAddress(),
+                config.getVirtualchainPort(), config.getPolicyCacheTime());
+        this.policyManipulationClient = keyManager.createPolicyManipulator(config.getTransactionFee(),
+                InetAddress.getByName(config.getBitcoinAddress()));
+    }
 
     private IBlockAditStreamPolicy createStreamPolicy(Address owner, int streamId) throws PolicyClientException {
         return new BlockAditStreamPolicy(policyVcApiClient, policyManipulationClient, owner, streamId);
@@ -61,7 +66,7 @@ public class BlockAditStorage {
 
     public IBlockAditStream createNewStream(Address owner, int id, long startTime, long interval)
             throws InsufficientMoneyException, PolicyClientException, BlockAditStreamException {
-        StreamKey key = keyManager.createNewStreamKey(owner);
+        StreamKey key = keyManager.createNewStreamKey(owner, id);
         Transaction transaction = policyManipulationClient.createPolicy(owner, id, startTime, interval);
         Policy temp = new Policy(owner.toString(), id, "", transaction.getHashAsString(), key.getSignKey().getPublicKeyAsHex());
         return new BlockAditStream(createStorageApi(), key, createStreamPolicy(owner, id, temp));

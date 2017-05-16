@@ -65,8 +65,11 @@ public class CloudChunk {
 
     public ChunkData retriveData(byte[] symKey, boolean useCompression) throws InvalidKeyException {
         byte[] data = null, finalData;
+        byte[] encData = new byte[this.encData.length + this.gcmTag.length];
+        System.arraycopy(this.encData, 0, encData, 0, this.encData.length);
+        System.arraycopy(this.gcmTag, 0, encData, this.encData.length, this.gcmTag.length);
         try {
-            data = StorageCrypto.decryptAESGcm(symKey, this.encData, this.encodePublicPart());
+            data = StorageCrypto.decryptAESGcm(symKey, encData, this.encodePublicPart());
         } catch (BadPaddingException e) {
             throw new ChunkExcpetion("Chunk integrity check failed");
         }

@@ -53,6 +53,14 @@ public class KeyManager {
         wallet.importKey(key);
     }
 
+    public void addStreamKey(StreamKey key) {
+        myStreamKeys.add(key);
+    }
+
+    public void addShareKey(StreamKey key) {
+        shareStreamKeys.add(key);
+    }
+
     public void addShareKey(ECKey key) {
         shareKeys.add(key);
     }
@@ -79,15 +87,6 @@ public class KeyManager {
         return addresses;
     }
 
-    public StreamKey createNewStreamKey(Address owner) throws BlockAditStreamException {
-        ECKey ownerKey = this.wallet.getKeyForAddress(owner);
-        if (ownerKey == null)
-            throw new BlockAditStreamException("No key for address");
-        StreamKey key = this.streamKeyFactory.createStreamKey(ownerKey);
-        myStreamKeys.add(key);
-        return key;
-    }
-
     private ECKey getKeyForShareAddress(Address shareAddress) {
         for (ECKey key : shareKeys) {
             Address temp = this.wallet.getAddressForKey(key);
@@ -97,32 +96,34 @@ public class KeyManager {
         return null;
     }
 
-    public StreamKey createNewStreamKey() {
-        ECKey owner = this.wallet.createNewPolicyKey();
-        StreamKey key = this.streamKeyFactory.createStreamKey(owner);
+    public StreamKey createNewStreamKey(Address owner, int streamId) throws BlockAditStreamException {
+        ECKey ownerKey = this.wallet.getKeyForAddress(owner);
+        if (ownerKey == null)
+            throw new BlockAditStreamException("No key for address");
+        StreamKey key = this.streamKeyFactory.createStreamKey(wallet.getNetworkParameters(), ownerKey, streamId);
         myStreamKeys.add(key);
         return key;
     }
 
-    public StreamKey createNewShareStreamKey(Address shareAddress, byte[] keyData) throws BlockAditStreamException {
+    public StreamKey createNewShareStreamKey(Address owner, int streamid, Address shareAddress, byte[] keyData) throws BlockAditStreamException {
         ECKey shareKey = getKeyForShareAddress(shareAddress);
         if (shareKey == null)
             throw new BlockAditStreamException("No key for share address");
-        StreamKey key = this.streamKeyFactory.createShareStreamKey(shareKey, keyData);
+        StreamKey key = this.streamKeyFactory.createShareStreamKey(owner, shareKey, keyData, streamid);
         shareStreamKeys.add(key);
         return key;
     }
 
     public StreamKey getStreamKey(Address owner, int streamId) {
         for (StreamKey key : myStreamKeys)
-            if (key.getSignAddress().equals(owner) && key.getStreamId()==streamId)
+            if (key.getOwnerAddress().equals(owner) && key.getStreamId()==streamId)
                 return key;
         return null;
     }
 
     public StreamKey getShareStreamKey(Address owner, int streamId) {
         for (StreamKey key : shareStreamKeys)
-            if (key.getSignAddress().equals(owner) && key.getStreamId()==streamId)
+            if (key.getOwnerAddress().equals(owner) && key.getStreamId()==streamId)
                 return key;
         return null;
     }

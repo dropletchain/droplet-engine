@@ -1,4 +1,6 @@
 import json
+import time
+import threading
 from threading import Timer
 
 from flask import Flask
@@ -12,18 +14,9 @@ from talosvc.talosvirtualchain import sync_blockchain
 Implements a REST Api for the talos virtualchain
 """
 
-SYNC_INTERVAL = 60
-
-RUNNING = True
-
 conf = get_default_talos_config()
 
 app = Flask("Talos-Virtualchain")
-
-
-def set_sync_interval(interval):
-    global SYNC_INTERVAL
-    SYNC_INTERVAL = interval
 
 
 def get_state():
@@ -33,18 +26,22 @@ def get_state():
     return state
 
 
-def sync_state():
-    app.logger.info('Sync Virtualchain')
-    try:
-        sync_blockchain(conf)
-    finally:
-        if RUNNING:
-            Timer(SYNC_INTERVAL, sync_state, ()).start()
+class VCSychronizer(threading.Thread):
+    def __init__(self, interval, config=get_default_talos_config()):
+        threading.Thread.__init__(self)
+        self.config = config
+        self._stop_event = threading.Event()
+        self.interval = interval
 
+    def run(self):
+        while not self._stop_event.is_set():
+            app.logger.info('Sync Virtualchain')
+            curTime = time.time()
+            sync_blockchain(conf)
+            time.sleep(self.interval - (time.time() - curTime))
 
-@app.before_first_request
-def initialize():
-    Timer(SYNC_INTERVAL, sync_state, ()).start()
+    def stop_sync(self):
+        self._stop_event.set()
 
 
 @app.teardown_appcontext
@@ -52,8 +49,6 @@ def close_connection(exception):
     state = getattr(g, '_state', None)
     if state is not None:
         state.close()
-    global RUNNING
-    RUNNING = False
 
 
 @app.route('/policy', methods=['GET'])
@@ -107,6 +102,29 @@ def get_owners():
             return "NO RESULT FOUND", 400
         else:
             return json.dumps({'owners': [x[0] for x in res]})
+    except RuntimeError:
+        return "ERROR", 400
+
+
+@app.route('/has_access', methods=['GET'])
+def has_access():
+    """
+    API:
+    /has_access?share=<share_address>
+    """
+    share_addr = request.args.get('share')
+
+    if share_addr is None:
+        return "ERROR", 400
+
+    vc_state = get_state()
+
+    try:
+        res = vc_state.get_has_access(share_addr)
+        if res is None:
+            return "NO RESULT FOUND", 400
+        else:
+            return json.dumps({'has_access':  [{"owner": x[0], "streamid": x[1]} for x in res]})
     except RuntimeError:
         return "ERROR", 400
 

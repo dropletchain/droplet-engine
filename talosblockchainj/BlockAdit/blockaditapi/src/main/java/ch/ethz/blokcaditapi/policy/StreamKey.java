@@ -11,6 +11,8 @@ public interface StreamKey {
 
     public int getStreamId();
 
+    public Address getOwnerAddress();
+
     public Address getSignAddress();
 
     public ECKey getSignKey();
@@ -25,7 +27,7 @@ public interface StreamKey {
 
     public byte[] serialize();
 
-    public byte[] serializeLen();
+    public int serializeLen();
 
     public boolean canWrite();
 }

@@ -51,7 +51,7 @@ public class PolicyWallet extends Wallet {
         List<Address> addresses = new ArrayList<>();
         for (ECKey key: policyKeys)
             addresses.add(key.toAddress(params));
-        return null;
+        return addresses;
     }
 
     public ECKey createNewPolicyKey() {

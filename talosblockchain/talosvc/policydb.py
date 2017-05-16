@@ -59,6 +59,8 @@ SQL_FETCH_POLICIES_FOR_OWNER = "SELECT policy.stream_id FROM policy WHERE policy
 SQL_FETCH_OWNERS = "SELECT DISTINCT policy.owner FROM policy LIMIT ? OFFSET ?"
 SQL_FETCH_POLICY_WITH_TXID = "SELECT * FROM policy WHERE policy.txid=?"
 
+SQL_FETCH_HAS_ACCESS = "SELECT owner, stream_id FROM policy WHERE txid in (SELECT tx_policy FROM shares WHERE pubkey=?);"
+
 
 def create_db(db_filename):
     if os.path.exists(db_filename):
@@ -156,6 +158,15 @@ def fetch_poilicies_for_owner(conn, owner):
     c = conn.cursor()
     try:
         c.execute(SQL_FETCH_POLICIES_FOR_OWNER, (owner,))
+        return c.fetchall()
+    finally:
+        c.close()
+
+
+def fetch_has_access_for_share_address(conn, address):
+    c = conn.cursor()
+    try:
+        c.execute(SQL_FETCH_HAS_ACCESS, (address,))
         return c.fetchall()
     finally:
         c.close()
@@ -380,3 +391,6 @@ class TalosPolicyDB(virtualchain.StateEngine):
 
     def get_policy_with_txid(self, txid):
         return fetch_policy_with_txid(self.db, txid)
+
+    def get_has_access(self, share_address):
+        return fetch_has_access_for_share_address(self.db, share_address)

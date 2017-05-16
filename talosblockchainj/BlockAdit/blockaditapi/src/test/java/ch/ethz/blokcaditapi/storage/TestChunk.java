@@ -117,6 +117,25 @@ public class TestChunk {
     }
 
     @Test
+    public void checkGCM() throws Exception {
+        Random rand = new Random();
+        byte[] key = new byte[16];
+        byte[] policyTag = new byte[16];
+        rand.nextBytes(key);
+        ECKey Signkey = new ECKey();
+        ChunkData data = new ChunkData();
+        for(int i=0; i<100; i++) {
+            data.addEntry(new DoubleEntry(i, "test", i * 0.2));
+        }
+        StreamIdentifier ident = new StreamIdentifier("mhJ7QEzyZhPA9D2f9Vaab1saKgBAUMQ9qx", 1, new byte[16], Util.bytesToHexString(policyTag));
+        CloudChunk chunk = CloudChunk.createCloudChunk(ident, 0, Signkey, 0, key, data, true);
+
+        ChunkData after = chunk.retriveData(key, true);
+
+        assertEquals(after.getEntries().size(), data.getEntries().size());
+    }
+
+    @Test
     public void testEntry() throws Exception {
         DoubleEntry entry = new DoubleEntry(System.currentTimeMillis(), "hello", 1.556);
         byte[] data = entry.encode();
