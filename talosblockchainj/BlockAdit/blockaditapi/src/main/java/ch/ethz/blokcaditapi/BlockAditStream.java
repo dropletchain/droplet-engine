@@ -101,13 +101,12 @@ public class BlockAditStream implements IBlockAditStream {
     }
 
     @Override
-    public boolean storeChunk(int id, ChunkData data) {
+    public boolean storeChunk(int id, ChunkData data) throws BlockAditStreamException {
         this.toSend.add(new ChunkJobStoreJob(id, data));
         try {
             pushChunksToCloud();
         } catch (PolicyClientException | InvalidKeyException | IOException e) {
-            e.printStackTrace();
-            return false;
+            throw new BlockAditStreamException(e.getCause());
         }
         return true;
     }

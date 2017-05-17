@@ -1,36 +1,21 @@
 package ch.ethz.blockadit.blockadit;
 
-import android.content.Context;
-
 import java.sql.Date;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ch.ethz.blockadit.R;
 import ch.ethz.blockadit.activities.CloudSelectActivity;
 import ch.ethz.blockadit.blockadit.model.DataEntry;
 import ch.ethz.blockadit.blockadit.model.DataEntryAgrDate;
 import ch.ethz.blockadit.blockadit.model.DataEntryAgrTime;
-import ch.ethz.blockadit.fitbitapi.model.CaloriesQuery;
-import ch.ethz.blockadit.fitbitapi.model.Dataset;
-import ch.ethz.blockadit.fitbitapi.model.DistQuery;
-import ch.ethz.blockadit.fitbitapi.model.DoubleDataSet;
-import ch.ethz.blockadit.fitbitapi.model.FloorQuery;
-import ch.ethz.blockadit.fitbitapi.model.HeartQuery;
-import ch.ethz.blockadit.fitbitapi.model.StepsQuery;
-import ch.ethz.blockadit.util.AppUtil;
 import ch.ethz.blockadit.util.BlockIDComputer;
-import ch.ethz.blokcaditapi.BlockAditStorage;
 import ch.ethz.blokcaditapi.BlockAditStreamException;
 import ch.ethz.blokcaditapi.IBlockAditStream;
 import ch.ethz.blokcaditapi.storage.ChunkData;
 import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
-
-import static android.os.Build.VERSION_CODES.M;
 
 
 /*
@@ -81,7 +66,7 @@ public class BlockAditFitbitAPI {
         return stream;
     }
 
-    public void storeChunks(int[] blockIds, ChunkData[] data) {
+    public void storeChunks(int[] blockIds, ChunkData[] data) throws BlockAditStreamException {
         if (blockIds.length != data.length)
             throw new IllegalArgumentException("Arrays do not have the same size");
 

@@ -34,6 +34,9 @@ package ch.ethz.blockadit.util;
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 public class AppUtil {
 
     public static final boolean MEASURE_CLOUD_ACCESS = false;
@@ -47,6 +50,18 @@ public class AppUtil {
         double temp = (double) data;
         temp = temp / Math.pow(10.0,radix);
         return temp;
+    }
+
+    public static java.util.Date transformDates(java.sql.Date date, java.sql.Time time) {
+        //Hack :S Why are dates so stupidly handled in Java
+        SimpleDateFormat combinedformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+        try {
+            return combinedformat.parse(dateFormat.format(date) + " " + timeFormat.format(time));
+        } catch (ParseException e) {
+            return new java.util.Date();
+        }
     }
 
 }

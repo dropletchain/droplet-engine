@@ -12,6 +12,7 @@ import ch.ethz.blokcaditapi.storage.Util;
 
 /**
  * Created by lukas on 16.05.17.
+ * Plaintext keys for demo
  */
 
 public class DemoUser {

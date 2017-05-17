@@ -4,12 +4,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import ch.ethz.blockadit.R;
-import ch.ethz.blockadit.fitbitapi.model.CaloriesQuery;
-import ch.ethz.blockadit.fitbitapi.model.DistQuery;
-import ch.ethz.blockadit.fitbitapi.model.HeartQuery;
-import ch.ethz.blockadit.util.AppUtil;
-import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
+import ch.ethz.blokcaditapi.storage.chunkentries.Averagor;
 import ch.ethz.blokcaditapi.storage.chunkentries.EntryProcessor;
+import ch.ethz.blokcaditapi.storage.chunkentries.Sumator;
 
 /*
  * Copyright (c) 2016, Institute for Pervasive Computing, ETH Zurich.
@@ -66,11 +63,20 @@ public enum Datatype {
     }
 
     public static EntryProcessor getEntryProcessorForType(Datatype type) {
-        return null;
+        switch (type) {
+            case HEARTRATE:
+                return new Averagor(1);
+            case STEPS:
+            case CALORIES:
+            case DISTANCE:
+            case FLOORS:
+            default:
+                return new Sumator(1);
+        }
     }
 
     public static boolean filterPerType(Datatype type, String metadata) {
-        return true;
+        return metadata.equals(type.getDisplayRep());
     }
 
     public static int performAVG(Datatype type, int num, int max) {
