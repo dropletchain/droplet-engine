@@ -61,6 +61,11 @@ public class MultiDoubleEntry implements Entry {
         return TYPE_MULTI_DOUBLE_ENTRY;
     }
 
+    @Override
+    public void accept(EntryProcessor processor) {
+        processor.process(this);
+    }
+
     public static class MultiDoubleEntryDecoder implements EntryDecoder {
 
         private Entry decodeLocal(ByteBuffer buffer) {

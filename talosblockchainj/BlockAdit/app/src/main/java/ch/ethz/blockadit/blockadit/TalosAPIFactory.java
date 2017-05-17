@@ -3,6 +3,7 @@ package ch.ethz.blockadit.blockadit;
 import android.content.Context;
 
 import ch.ethz.blockadit.util.AppUtil;
+import ch.ethz.blokcaditapi.IBlockAditStream;
 
 /*
  * Copyright (c) 2016, Institute for Pervasive Computing, ETH Zurich.
@@ -39,10 +40,7 @@ import ch.ethz.blockadit.util.AppUtil;
  */
 
 public class TalosAPIFactory {
-    public static BlockAditFitbitAPI createAPI(Context conn) {
-        if(AppUtil.MEASURE_CLOUD_ACCESS)
-            return new TalosModuleFitbitAPIMEASURE(conn);
-        else
-            return new BlockAditFitbitAPI(conn);
+    public static BlockAditFitbitAPI createAPI(IBlockAditStream stream) {
+        return new BlockAditFitbitAPI(stream);
     }
 }

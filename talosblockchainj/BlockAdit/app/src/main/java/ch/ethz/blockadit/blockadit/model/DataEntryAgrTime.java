@@ -40,6 +40,6 @@ public interface DataEntryAgrTime {
 
     public Time getTime();
 
-    public int getValue();
+    public double getValue();
 
 }

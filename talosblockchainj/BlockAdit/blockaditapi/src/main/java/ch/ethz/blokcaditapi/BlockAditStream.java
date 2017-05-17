@@ -177,9 +177,7 @@ public class BlockAditStream implements IBlockAditStream {
         return data;
     }
 
-    @Override
-    public List<Entry> getRange(long from, long to) throws BlockAditStreamException {
-        List<Entry> result = new ArrayList<>();
+    private CloudChunk[] fetchRange(long from, long to) throws BlockAditStreamException {
         int blockIdForm, blockIdTo, len;
         try {
             blockIdForm = (int) calulateBlockId(from);
@@ -193,15 +191,31 @@ public class BlockAditStream implements IBlockAditStream {
                 chunks = this.storageAPI.getRangeChunks(streamKey.getSignKey(), blockIdForm,
                         blockIdTo, identifier, len < MAX_NUM_THREADS ? len : MAX_NUM_THREADS);
             }
-
-            for (ChunkData data: dataFromChunks(chunks)) {
-                for (Entry entry : data) {
-                    if (entry.getTimestamp() >= from && entry.getTimestamp()< to)
-                        result.add(entry);
-                }
-            }
+            return chunks;
         } catch (PolicyClientException | IOException | BlockAditStorageAPIException e) {
             throw new BlockAditStreamException(e.getCause());
+        }
+    }
+
+    @Override
+    public List<Entry> getRange(long from, long to) throws BlockAditStreamException {
+        List<Entry> result = new ArrayList<>();
+        CloudChunk[] chunks = fetchRange(from, to);
+        for (ChunkData data: dataFromChunks(chunks)) {
+            for (Entry entry : data) {
+                if (entry.getTimestamp() >= from && entry.getTimestamp()< to)
+                    result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public List<List<Entry>> getRangeChunked(long from, long to) throws BlockAditStreamException {
+        List<List<Entry>> result = new ArrayList<>();
+        CloudChunk[] chunks = fetchRange(from, to);
+        for (ChunkData data: dataFromChunks(chunks)) {
+            result.add(data.getEntries());
         }
         return result;
     }
@@ -248,6 +262,14 @@ public class BlockAditStream implements IBlockAditStream {
     @Override
     public byte[] getSerializedKey() {
         return this.streamKey.serialize();
+    }
+
+    public long getStartTimestamp() {
+        return startTimestamp;
+    }
+
+    public long getInterval() {
+        return interval;
     }
 
     public static BlockAditStream fromFile(File file, KeyManager manager) {

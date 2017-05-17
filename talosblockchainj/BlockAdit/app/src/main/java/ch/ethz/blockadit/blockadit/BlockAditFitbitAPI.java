@@ -5,8 +5,10 @@ import android.content.Context;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ch.ethz.blockadit.R;
 import ch.ethz.blockadit.activities.CloudSelectActivity;
@@ -21,9 +23,12 @@ import ch.ethz.blockadit.fitbitapi.model.FloorQuery;
 import ch.ethz.blockadit.fitbitapi.model.HeartQuery;
 import ch.ethz.blockadit.fitbitapi.model.StepsQuery;
 import ch.ethz.blockadit.util.AppUtil;
+import ch.ethz.blockadit.util.BlockIDComputer;
 import ch.ethz.blokcaditapi.BlockAditStorage;
+import ch.ethz.blokcaditapi.BlockAditStreamException;
 import ch.ethz.blokcaditapi.IBlockAditStream;
 import ch.ethz.blokcaditapi.storage.ChunkData;
+import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
 
 import static android.os.Build.VERSION_CODES.M;
 
@@ -65,8 +70,15 @@ import static android.os.Build.VERSION_CODES.M;
 public class BlockAditFitbitAPI {
 
     private IBlockAditStream stream;
+    private BlockIDComputer blockIDComp;
 
-    public BlockAditFitbitAPI(Context conn) {
+    public BlockAditFitbitAPI(IBlockAditStream stream) {
+        this.stream = stream;
+        blockIDComp = new BlockIDComputer();
+    }
+
+    public IBlockAditStream getStream() {
+        return stream;
     }
 
     public void storeChunks(int[] blockIds, ChunkData[] data) {
@@ -78,37 +90,50 @@ public class BlockAditFitbitAPI {
         }
     }
 
-
-    public ArrayList<DataEntryAgrDate> getAgrDataPerDate(User u, Date from, Date to, Datatype type) throws TalosModuleException {
-        TalosResult res = module.getValuesByDay(u, from, to, type.getDisplayRep());
+    public ArrayList<DataEntryAgrDate> getAgrDataPerDate(Date from, Date to, Datatype type) throws BlockAditStreamException {
+        long fromUnix = blockIDComp.dateToUnix(from);
+        long toUnix = blockIDComp.dateToUnix(to);
+        List<Entry> entries = stream.getRange(fromUnix, toUnix);
         ArrayList<DataEntryAgrDate> data = new ArrayList<>();
-        while (res.next()) {
-            data.add(DataEntry.createFromTalosResult(res, type));
+        List<Aggregator.DateSummary> byDate = Aggregator.splitByDate(entries, type);
+        for (Aggregator.DateSummary summary : byDate) {
+            double[] result = Aggregator.aggregateDataForType(summary.entries, type);
+            data.add(DataEntry.createFrom(summary.date, result[0]));
         }
         return data;
     }
 
-    public ArrayList<DataEntryAgrTime> getAgrDataForDate(User u, Date curDate, Datatype type) throws TalosModuleException {
-        TalosResult res = module.agrDailySummary(u, curDate, type.getDisplayRep(), 30);
+    public ArrayList<DataEntryAgrTime> getAgrDataForDate(Date curDate, Datatype type) throws BlockAditStreamException {
+        long fromUnix = blockIDComp.dateToUnix(curDate);
+        Calendar c = Calendar.getInstance();
+        c.setTime(curDate);
+        c.add(Calendar.DATE, 1);
+        long toUnix =  blockIDComp.dateToUnix(c.getTime());
+        List<Entry> entries = stream.getRange(fromUnix, toUnix);
         ArrayList<DataEntryAgrTime> data = new ArrayList<>();
-        while (res.next()) {
-            data.add(DataEntry.createFromTalosResultTime(res, type));
+        List<Aggregator.DateTimeSummary> byDate = Aggregator.splitByGranularity(entries, curDate, 15 * 60, type);
+        for (Aggregator.DateTimeSummary summary : byDate) {
+            double[] result = Aggregator.aggregateDataForType(summary.entries, type);
+            data.add(DataEntry.createTimeFrom(summary.time, result[0]));
         }
         return data;
     }
 
-    public ArrayList<CloudSelectActivity.CloudListItem> getCloudListItems(Date today) throws TalosModuleException {
+    public ArrayList<CloudSelectActivity.CloudListItem> getCloudListItems(Date today) throws BlockAditStreamException {
         ArrayList<CloudSelectActivity.CloudListItem> items = new ArrayList<>();
         HashMap<Datatype, CloudSelectActivity.CloudListItem> mappings = new HashMap<>();
-        TalosResult res = module.getValuesDuringDay(u, today);
-        while (res.next()) {
-            Datatype type = Datatype.valueOf(res.getString("datatype"));
-            int numVals = res.getInt("SUM(data)");
-            int max= res.getInt("COUNT(data)");
-            numVals = Datatype.performAVG(type, numVals, max);
-            mappings.put(type, new CloudSelectActivity.CloudListItem(type, type.formatValue(numVals)));
+        long fromUnix = blockIDComp.dateToUnix(today);
+        Calendar c = Calendar.getInstance();
+        c.setTime(today);
+        c.add(Calendar.DATE, 1);
+        long toUnix =  blockIDComp.dateToUnix(c.getTime());
+        List<Entry> entries = stream.getRange(fromUnix, toUnix);
+        Map<Datatype, List<Entry>> dataTypeToEntry = Aggregator.splitByDatype(entries);
+        for (Map.Entry<Datatype, List<Entry>> mapping :dataTypeToEntry.entrySet()) {
+            double[] aggrData = Aggregator.aggregateDataForType(mapping.getValue(), mapping.getKey());
+            Datatype type = mapping.getKey();
+            mappings.put(type, new CloudSelectActivity.CloudListItem(type, type.formatValue(aggrData[0])));
         }
-
         for(Datatype in : Datatype.values()) {
             if(mappings.containsKey(in)) {
                 items.add(mappings.get(in));
@@ -119,16 +144,4 @@ public class BlockAditFitbitAPI {
         return items;
     }
 
-    public boolean registerUser(User u) throws TalosModuleException {
-        return module.registerUser(u);
-    }
-
-    public java.util.Date getMostActualDate(User u) throws TalosModuleException {
-        TalosResult res = module.getMostActualDate(u);
-        if(res.next()) {
-            String strDate = res.getString("date");
-            return Date.valueOf(strDate);
-        }
-        return null;
-    }
 }

@@ -48,9 +48,9 @@ public class DataEntry implements DataEntryAgrDate, DataEntryAgrTime {
 
     private String type;
 
-    private int value;
+    private double value;
 
-    private DataEntry(int id, Date date, Time time, String type, int value) {
+    private DataEntry(int id, Date date, Time time, String type, double value) {
         this.id = id;
         this.date = date;
         this.time = time;
@@ -58,14 +58,22 @@ public class DataEntry implements DataEntryAgrDate, DataEntryAgrTime {
         this.value = value;
     }
 
-    private DataEntry(Date date, int value) {
+    private DataEntry(Date date, double value) {
         this.date = date;
         this.value = value;
     }
 
-    private DataEntry(Time time, int value) {
+    private DataEntry(Time time, double value) {
         this.time = time;
         this.value = value;
+    }
+
+    public static DataEntryAgrDate createFrom(java.sql.Date date, double result) {
+        return new DataEntry(date, result);
+    }
+
+    public static DataEntryAgrTime createTimeFrom(java.sql.Time time, double result) {
+        return new DataEntry(time, result);
     }
 
     public int getId() {
@@ -84,7 +92,7 @@ public class DataEntry implements DataEntryAgrDate, DataEntryAgrTime {
         return type;
     }
 
-    public int getValue() {
+    public double getValue() {
         return value;
     }
 }

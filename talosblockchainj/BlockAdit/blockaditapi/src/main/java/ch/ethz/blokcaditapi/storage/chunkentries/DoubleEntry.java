@@ -56,6 +56,11 @@ public final class DoubleEntry implements Entry {
         return TYPE_DOUBLE_ENTRY;
     }
 
+    @Override
+    public void accept(EntryProcessor processor) {
+        processor.process(this);
+    }
+
     public static class DoubleEntryDecoder implements EntryDecoder {
 
         private Entry decodeLocal(ByteBuffer buffer) {

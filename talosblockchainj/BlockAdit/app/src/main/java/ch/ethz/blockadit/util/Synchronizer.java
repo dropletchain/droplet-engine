@@ -2,18 +2,31 @@ package ch.ethz.blockadit.util;
 
 import android.content.Context;
 
+import java.sql.Time;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
+import ch.ethz.blockadit.R;
+import ch.ethz.blockadit.blockadit.Datatype;
 import ch.ethz.blockadit.blockadit.TalosAPIFactory;
 import ch.ethz.blockadit.blockadit.BlockAditFitbitAPI;
 import ch.ethz.blockadit.fitbitapi.FitbitAPI;
 import ch.ethz.blockadit.fitbitapi.FitbitAPIException;
 import ch.ethz.blockadit.fitbitapi.TokenInfo;
 import ch.ethz.blockadit.fitbitapi.model.CaloriesQuery;
+import ch.ethz.blockadit.fitbitapi.model.Dataset;
 import ch.ethz.blockadit.fitbitapi.model.DistQuery;
 import ch.ethz.blockadit.fitbitapi.model.FloorQuery;
 import ch.ethz.blockadit.fitbitapi.model.HeartQuery;
 import ch.ethz.blockadit.fitbitapi.model.StepsQuery;
+import ch.ethz.blokcaditapi.IBlockAditStream;
+import ch.ethz.blokcaditapi.storage.ChunkData;
+
+import static ch.ethz.blockadit.blockadit.Datatype.CALORIES;
+import static ch.ethz.blockadit.blockadit.Datatype.DISTANCE;
+import static ch.ethz.blockadit.blockadit.Datatype.FLOORS;
+import static ch.ethz.blockadit.blockadit.Datatype.STEPS;
 
 
 /*
@@ -56,33 +69,47 @@ public class Synchronizer {
 
     private FitbitAPI fitbit;
 
-    public Synchronizer(Context con, TokenInfo token) {
+    private BlockIDComputer computer;
+
+    private Set<Datatype> types;
+
+    public Synchronizer(IBlockAditStream con, TokenInfo token, Set<Datatype> types) {
         talosApi = TalosAPIFactory.createAPI(con);
         fitbit = new FitbitAPI(token);
+        this.types = types;
+        computer = new BlockIDComputer(talosApi.getStream().getStartTimestamp(),
+                talosApi.getStream().getInterval());
     }
 
-    public void transferDataStepFromDate(DemoUser u, Date date) throws TalosModuleException, FitbitAPIException {
-        StepsQuery query = fitbit.getStepsFromDate(date);
-        talosApi.storeData(u, query);
+    private static void transferData(ChunkData[] chunks, java.sql.Date dateSql, List<Dataset> datasets) {
+        for(Dataset dataSet : datasets) {
+            Time time = Time.valueOf(dataSet.getTime());
+            dateSql.getTime(); +
+            module.insertDataset(u, datesql, time, Datatype.FLOORS.name(), dataSet.getValue());
+        }
     }
 
-    public void transferDataFloorFromDate(DemoUser u, Date date) throws TalosModuleException, FitbitAPIException {
-        FloorQuery query = fitbit.getFloorsFromDate(date);
-        talosApi.storeData(u, query);
-    }
+    public void transferDataForDate(Date date, int numBlocks) {
+        ChunkData[] chunkdata = new ChunkData[numBlocks];
+        for (int iter=0; iter<chunkdata.length; iter++)
+                chunkdata[iter] = new ChunkData();
 
-    public void transferDataCaloriesFromDate(DemoUser u, Date date) throws TalosModuleException, FitbitAPIException {
-        CaloriesQuery query = fitbit.getCaloriesFromDate(date);
-        talosApi.storeData(u, query);
-    }
-
-    public void transferDataDistanceFromDate(DemoUser u, Date date) throws TalosModuleException, FitbitAPIException {
-        DistQuery query = fitbit.getDistanceFromDate(date);
-        talosApi.storeData(u, query);
-    }
-
-    public void transferDataHeartFromDate(DemoUser u, Date date) throws TalosModuleException, FitbitAPIException {
-        HeartQuery query = fitbit.getHearthRateFromDate(date);
-        talosApi.storeData(u, query);
+        if (types.contains(Datatype.FLOORS)) {
+            FloorQuery query = fitbit.getFloorsFromDate(date);
+            String dateStr = query.activitiesFloors.iterator().next().getDateTime();
+            java.sql.Date datesql = java.sql.Date.valueOf(dateStr);
+        }
+        if (types.contains(Datatype.CALORIES)) {
+            CaloriesQuery query = fitbit.getCaloriesFromDate(date);
+        }
+        if (types.contains(Datatype.DISTANCE)) {
+            DistQuery query = fitbit.getDistanceFromDate(date);
+        }
+        if (types.contains(Datatype.STEPS)) {
+            StepsQuery query = fitbit.getStepsFromDate(date);
+        }
+        if (types.contains(Datatype.HEARTRATE)) {
+            HeartQuery query = fitbit.getHearthRateFromDate(date);
+        }
     }
 }

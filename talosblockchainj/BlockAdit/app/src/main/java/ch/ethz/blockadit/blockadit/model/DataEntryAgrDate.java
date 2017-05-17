@@ -41,5 +41,5 @@ public interface DataEntryAgrDate {
 
     public Date getDate();
 
-    public int getValue();
+    public double getValue();
 }

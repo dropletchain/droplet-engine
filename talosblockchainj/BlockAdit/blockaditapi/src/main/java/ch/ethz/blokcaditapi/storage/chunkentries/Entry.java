@@ -16,4 +16,5 @@ public interface Entry {
 
     public int getType();
 
+    public void accept(EntryProcessor processor);
 }

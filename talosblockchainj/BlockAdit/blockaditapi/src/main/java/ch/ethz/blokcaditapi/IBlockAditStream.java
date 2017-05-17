@@ -31,6 +31,8 @@ public interface IBlockAditStream {
 
     List<Entry> getRange(long from, long to) throws BlockAditStreamException;
 
+    List<List<Entry>> getRangeChunked(long from, long to) throws BlockAditStreamException;
+
     List<Entry> getEntriesForBlock(int blockId) throws BlockAditStreamException;
 
     Entry getEntry(long timestamp, String metadata) throws BlockAditStreamException;
@@ -42,5 +44,10 @@ public interface IBlockAditStream {
     IBlockAditStreamPolicy getPolicyManipulator();
 
     byte[] getSerializedKey();
+
+    public long getStartTimestamp();
+
+    public long getInterval();
+
 
 }

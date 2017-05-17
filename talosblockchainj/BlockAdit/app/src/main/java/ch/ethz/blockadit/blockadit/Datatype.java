@@ -8,6 +8,8 @@ import ch.ethz.blockadit.fitbitapi.model.CaloriesQuery;
 import ch.ethz.blockadit.fitbitapi.model.DistQuery;
 import ch.ethz.blockadit.fitbitapi.model.HeartQuery;
 import ch.ethz.blockadit.util.AppUtil;
+import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
+import ch.ethz.blokcaditapi.storage.chunkentries.EntryProcessor;
 
 /*
  * Copyright (c) 2016, Institute for Pervasive Computing, ETH Zurich.
@@ -63,6 +65,14 @@ public enum Datatype {
 
     }
 
+    public static EntryProcessor getEntryProcessorForType(Datatype type) {
+        return null;
+    }
+
+    public static boolean filterPerType(Datatype type, String metadata) {
+        return true;
+    }
+
     public static int performAVG(Datatype type, int num, int max) {
         switch (type) {
             case HEARTRATE:
@@ -95,18 +105,18 @@ public enum Datatype {
         return R.drawable.login;
     }
 
-    public String formatValue(int value) {
+    public String formatValue(double value) {
         switch (this) {
             case CALORIES:
-                return String.format("%.0f", AppUtil.transfromToDouble(value, CaloriesQuery.CAL_RAD));
+                return String.format("%.0f", value);
             case DISTANCE:
-                return String.format("%.2f", AppUtil.transfromToDouble(value, DistQuery.DIST_RAD));
+                return String.format("%.2f", value);
             case HEARTRATE:
-                return String.format("%.2f", AppUtil.transfromToDouble(value, HeartQuery.DIST_RAD));
+                return String.format("%.2f", value);
             case STEPS:
             case FLOORS:
             default:
-                return String.valueOf(value);
+                return String.valueOf((int) value);
         }
     }
 

@@ -11,6 +11,9 @@ public class BlockIDComputer {
     private long from;
     private long interval;
 
+    public BlockIDComputer() {
+    }
+
     public BlockIDComputer(long from, long interval) {
         this.from = from;
         this.interval = interval;
