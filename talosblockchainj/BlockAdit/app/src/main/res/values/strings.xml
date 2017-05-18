@@ -1,15 +1,13 @@
 <resources>
-    <string name="app_name">Talos Fitbit App</string>
+    <string name="app_name">BlockAditum Fitbit App</string>
     <string name="title_activity_fitbit_data_loader">FitbitDataLoader</string>
     <string name="title_sync">Fitbit to Talos Sync</string>
     <string name="title_cloud">Secure Cloud</string>
 
-    <!--Talos Metadata must be defined beforehand-->
-    <string name="server_client_id">GOOLGE_SIGN_INSERVER_ID</string>
     <!--Fitbit api developer id: see https://dev.fitbit.com/-->
-    <string name="fitbit_client_id">FB_ID</string>
-    <string name="TalosCloudAddr">CLOUD_ADDR</string>
-    <string name="TalosCloudPort">8080</string>
+    <string name="fitbit_client_id">227KLR</string>
+
+    <string name="demo_cur_date">10.05.2017</string>
 
     <string name="title_activity_data_daily">DataDailyActivity</string>
     <string name="dummy_button">Dummy Button</string>
@@ -17,4 +15,27 @@
     <string name="title_activity_test_swipe">TestSwipe</string>
     <string name="action_settings">Settings</string>
     <string name="section_format">Hello World from section: %1$d</string>
+    <string name="title_activity_demo_select">DemoSelectActivity</string>
+
+
+    <string-array name="user_names">
+        <item>Hossein</item>
+        <item>Lukas</item>
+        <item>Simon</item>
+        <item>Anwar</item>
+    </string-array>
+
+    <string-array name="user_keys">
+        <item>cMuRy6QaookV4sc42PJtAbTP52BjN3hTyiuDNvgcRruMqWtEi6Wt</item>
+        <item>cRqXft6LxmDUyowSf7AWzUMnnUBbBCard77DXZNpYgVnYwdZyVan</item>
+        <item>cRoLXLur1LSZDwCpv1ocsdjqo6HLJscp8JL6c1ajgtf7TkKR8XAE</item>
+        <item>cTrPQVQsbEyy6sBrww9GBM1buKNvqEm2KGzsc52US2fEZwNtBbnq</item>
+    </string-array>
+
+    <string-array name="user_share_keys">
+        <item>cT3GKi6SbCwKEG2o9BJCtrmaCDSkAFfvF6nwS3GDb4xbCNBiUoy6</item>
+        <item>cPgubj9RVQJJiZWzz1uXyXEjA3rRgruWyu6CzhzRwTZjkWrkAPsu</item>
+        <item>cUhGwkKxrdoLnJSX3pBjLHmwsAocxZfW4g9kFGtzGvgUf8Vv7AwZ</item>
+        <item>cThYAx1xLBgXKDY5jh3EB2HYSeXY2js1hjimQgDCPeZSKj19Vrcq</item>
+    </string-array>
 </resources>

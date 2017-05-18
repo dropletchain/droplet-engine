@@ -1,37 +1,6 @@
 package ch.ethz.blockadit.activities;
 
-import android.app.Activity;
-import android.app.DatePickerDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.DatePicker;
-import android.widget.TextView;
-
-import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-
-import ch.ethz.blockadit.R;
-import ch.ethz.blockadit.blockadit.Datatype;
-import ch.ethz.blockadit.blockadit.TalosAPIFactory;
-import ch.ethz.blockadit.blockadit.BlockAditFitbitAPI;
-import ch.ethz.blockadit.blockadit.model.DataEntryAgrDate;
 
 
 /*
@@ -70,7 +39,7 @@ import ch.ethz.blockadit.blockadit.model.DataEntryAgrDate;
 
 public class DataWeeklyActivity extends AppCompatActivity {
 
-    private BarChart mChart;
+    /*private BarChart mChart;
     private Calendar currentCalendar;
 
     private TextView fromDate;
@@ -314,5 +283,5 @@ public class DataWeeklyActivity extends AppCompatActivity {
             Date date = cur.getTime();
             attached.onDataSet(date);
         }
-    }
+    }*/
 }

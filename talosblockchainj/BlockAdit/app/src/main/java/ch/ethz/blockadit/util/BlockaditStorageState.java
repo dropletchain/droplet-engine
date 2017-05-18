@@ -19,7 +19,7 @@ public class BlockaditStorageState {
 
     private static Semaphore lock = new Semaphore(1);
 
-    public BlockAditStorage getStorageForUser(DemoUser user) throws UnknownHostException, BlockStoreException, InterruptedException {
+    public static BlockAditStorage getStorageForUser(DemoUser user) throws UnknownHostException, BlockStoreException, InterruptedException {
         lock.acquire();
         try {
             if (storages.containsKey(user.getName()))

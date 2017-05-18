@@ -1,33 +1,10 @@
 package ch.ethz.blockadit.activities;
 
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
-import android.os.AsyncTask;
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import ch.ethz.blockadit.R;
-import ch.ethz.blockadit.blockadit.BlockAditFitbitAPI;
 import ch.ethz.blockadit.blockadit.Datatype;
-import ch.ethz.blockadit.blockadit.TalosAPIFactory;
 /*
  * Copyright (c) 2016, Institute for Pervasive Computing, ETH Zurich.
  * All rights reserved.
@@ -63,7 +40,7 @@ import ch.ethz.blockadit.blockadit.TalosAPIFactory;
  */
 
 public class CloudSelectActivity extends AppCompatActivity {
-
+    /*
     private ListView list;
     private ArrayList<CloudListItem> itemsList = new ArrayList<>();
 
@@ -169,7 +146,7 @@ public class CloudSelectActivity extends AppCompatActivity {
                 }
             }).execute();
     }
-
+    */
     public static class CloudListItem implements Serializable {
         private Datatype type;
         private String content;
@@ -180,7 +157,7 @@ public class CloudSelectActivity extends AppCompatActivity {
     }
 
 
-
+    /*
     public synchronized void onRightClick(View v) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(curDate);
@@ -249,5 +226,5 @@ public class CloudSelectActivity extends AppCompatActivity {
 
             return convertView;
         }
-    }
+    }*/
 }

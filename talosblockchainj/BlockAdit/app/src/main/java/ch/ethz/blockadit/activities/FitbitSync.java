@@ -1,32 +1,44 @@
 package ch.ethz.blockadit.activities;
 
-import android.app.Activity;
-import android.app.DatePickerDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
+import org.bitcoinj.store.BlockStoreException;
+
+import java.net.UnknownHostException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ch.ethz.blockadit.R;
 import ch.ethz.blockadit.fitbitapi.FitbitAPI;
 import ch.ethz.blockadit.fitbitapi.TokenInfo;
-import ch.ethz.blockadit.util.Synchronizer;
+import ch.ethz.blockadit.util.BlockaditStorageState;
+import ch.ethz.blockadit.util.DemoDataLoader;
+import ch.ethz.blockadit.util.DemoUser;
+import ch.ethz.blokcaditapi.BlockAditStorage;
+import ch.ethz.blokcaditapi.BlockAditStreamException;
+import ch.ethz.blokcaditapi.IBlockAditStream;
+import ch.ethz.blokcaditapi.policy.PolicyClientException;
 
 
 /*
@@ -64,23 +76,26 @@ import ch.ethz.blockadit.util.Synchronizer;
  */
 
 public class FitbitSync extends AppCompatActivity {
-
     private static final String CALLBACK = "fitbittalos://logincallback";
     private static final String SCOPE = "activity%20heartrate";
 
     public static final String ACCESS_TOKEN_KEY = "ACC_KEY";
 
     private TokenInfo info = null;
-    private Synchronizer sync = null;
-
     private Button fromDate;
     private Button toDate;
     private boolean isFormDate = true;
 
     private ProgressBar bar;
     private TextView progressText;
+    private Spinner spinner;
 
     public int dateIndex = 0;
+
+    private static DemoUser user;
+    private BlockAditStorage storage;
+    ArrayList<IBlockAditStream> streams = new ArrayList<>();
+    int curSelectIndex = -1;
 
 
     @Override
@@ -90,12 +105,17 @@ public class FitbitSync extends AppCompatActivity {
         String data = getIntent().getDataString();
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         getSupportActionBar().setTitle(getResources().getString(R.string.title_sync));
+        Intent creator = getIntent();
+        if(creator!=null && creator.getExtras().containsKey(ActivitiesUtil.DEMO_USER_KEY)) {
+            String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
+            user = DemoUser.fromString(userData);
+        }
 
         if(data==null || !data.contains(CALLBACK)) {
             boolean auth = true;
             if(sharedPref.contains(ACCESS_TOKEN_KEY)) {
                 info = TokenInfo.fromJSON(sharedPref.getString(ACCESS_TOKEN_KEY, ""));
-                auth = !info.isValid();
+                auth = !info.isValid();*
                 if(auth) {
                     SharedPreferences.Editor editor = sharedPref.edit();
                     editor.remove(ACCESS_TOKEN_KEY);
@@ -110,6 +130,7 @@ public class FitbitSync extends AppCompatActivity {
             }
 
         } else {
+
             Uri uri = Uri.parse(data);
             try {
                 info = TokenInfo.fromURI(uri);
@@ -121,21 +142,79 @@ public class FitbitSync extends AppCompatActivity {
             editor.putString(ACCESS_TOKEN_KEY, info.toString());
             editor.apply();
         }
+        try {
+            storage = BlockaditStorageState.getStorageForUser(user);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (BlockStoreException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        sync = new Synchronizer(this, info);
-
-        Calendar c = Calendar.getInstance();
+        DemoDataLoader loader = new DemoDataLoader(this);
+        spinner = (Spinner) findViewById(R.id.spinner);
         fromDate = (Button) findViewById(R.id.fromDateSelect);
         toDate = (Button) findViewById(R.id.toDateSelect);
         bar = (ProgressBar) findViewById(R.id.progressBar);
         progressText = (TextView) findViewById(R.id.progress);
-        Date to = c.getTime();
-        Date from = getFromDate();
-        fromDate.setText(ActivitiesUtil.titleFormat.format(from));
-        toDate.setText(ActivitiesUtil.titleFormat.format(to));
+
+        fromDate.setText(ActivitiesUtil.titleFormat.format(loader.getCurDate()));
+        toDate.setText(ActivitiesUtil.titleFormat.format(loader.getCurDate()));
         bar.setVisibility(View.INVISIBLE);
         progressText.setVisibility(View.INVISIBLE);
     }
+
+    private void setSpinnerData() {
+        final Spinner spinner = this.spinner;
+        new AsyncTask<Void, Integer, List<IBlockAditStream>>() {
+            @Override
+            protected List<IBlockAditStream> doInBackground(Void... params) {
+                try {
+                    return storage.getStreams();
+                } catch (PolicyClientException e) {
+                    e.printStackTrace();
+                    return new ArrayList<IBlockAditStream>();
+                } catch (BlockAditStreamException e) {
+                    e.printStackTrace();
+                    return new ArrayList<IBlockAditStream>();
+                }
+            }
+
+            @Override
+            protected void onPostExecute(List<IBlockAditStream> s) {
+                super.onPostExecute(s);
+
+                ArrayList<IBlockAditStream> streamsTemp = new ArrayList<>();
+                for (int i=0; i<s.size(); i++)
+                    streamsTemp.add(s.get(i));
+                streams = streamsTemp;
+                spinner.setAdapter(new StreamAdapter(getApplicationContext(), streamsTemp));
+            }
+        }.execute();
+    }
+
+    public class StreamAdapter extends ArrayAdapter<IBlockAditStream> {
+
+        private ArrayList<IBlockAditStream> items;
+        public StreamAdapter(@NonNull Context context, ArrayList<IBlockAditStream> items) {
+            super(context, android.R.layout.simple_spinner_dropdown_item, items);
+            this.items = items;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_spinner_dropdown_item, parent, false);
+            }
+            if(convertView!= null && (convertView instanceof TextView)) {
+                TextView textView = (TextView) convertView;
+                textView.setText(String.format("Stream %d", items.get(position).getStreamId()));
+            }
+            return convertView;
+        }
+    }
+
 
     private Date getFromDate() {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
@@ -175,15 +254,15 @@ public class FitbitSync extends AppCompatActivity {
     }
 
     public void onFromDateSelect(View v) {
-        isFormDate = true;
-        DialogFragment newFragment = new FitbitSyncDatePicker();
-        newFragment.show(this.getFragmentManager(), "tag1");
+        //isFormDate = true;
+        //DialogFragment newFragment = new FitbitSyncDatePicker();
+        //newFragment.show(this.getFragmentManager(), "tag1");
     }
 
     public void onToDateSelect(View v) {
-        isFormDate = false;
-        DialogFragment newFragment = new FitbitSyncDatePicker();
-        newFragment.show(this.getFragmentManager(), "tag2");
+        //isFormDate = false;
+        //DialogFragment newFragment = new FitbitSyncDatePicker();
+        //newFragment.show(this.getFragmentManager(), "tag2");
     }
 
 
@@ -194,6 +273,7 @@ public class FitbitSync extends AppCompatActivity {
         final AtomicInteger curCount = new AtomicInteger(0);
         AtomicInteger semCountIIn = new AtomicInteger(0);
         AtomicInteger semCountOut = new AtomicInteger(numJobs);
+        /*
         (new SyncTask(from, to, curCount, semCountIIn, semCountOut, new SnycJob() {
             @Override
             public void runSync(User u, Date date) throws TalosModuleException {
@@ -223,13 +303,14 @@ public class FitbitSync extends AppCompatActivity {
             public void runSync(User u, Date date) throws TalosModuleException {
                 sync.transferDataHeartFromDate(u, date);
             }
-        })).execute();
+        })).execute();*/
     }
 
     public interface SnycJob {
-        public void runSync(User u, Date date) throws TalosModuleException;
+        //public void runSync(User u, Date date) throws TalosModuleException;
     }
 
+    /*
     public class SyncTask extends AsyncTask<Void,Integer,String> {
 
         private int progressMax = 1;
@@ -263,8 +344,8 @@ public class FitbitSync extends AppCompatActivity {
                 numDates++;
             }
 
-            if(numDates!=0)
-                progressMax = numDates*5;
+            if (numDates != 0)
+                progressMax = numDates * 5;
 
             start.setTime(from);
             end.setTime(to);
@@ -283,71 +364,40 @@ public class FitbitSync extends AppCompatActivity {
             return "Success";
         }
 
-    private void reportProgress(int curVal) {
-        publishProgress((int) (((float)curVal/((float)progressMax))*100));
-    }
 
-
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        if(semCountIn.getAndIncrement() == 0) {
-            bar.setVisibility(View.VISIBLE);
-            progressText.setText("Loading....");
-            progressText.setVisibility(View.VISIBLE);
-            bar.setProgress(0);
+        private void reportProgress(int curVal) {
+            publishProgress((int) (((float) curVal / ((float) progressMax)) * 100));
         }
-    }
 
-    @Override
-    protected void onProgressUpdate(Integer... values) {
-        super.onProgressUpdate(values);
-        synchronized (curCount) {
-            bar.setProgress(values[0]);
-            bar.invalidate();
-        }
-    }
-
-    @Override
-    protected void onPostExecute(String s) {
-        super.onPostExecute(s);
-        if(semCountOut.decrementAndGet() == 0) {
-            storeToDate(getDate(toDate));
-            bar.setVisibility(View.INVISIBLE);
-            progressText.setText(s);
-        }
-    }
-}
-
-
-    public static class FitbitSyncDatePicker extends DialogFragment implements DatePickerDialog.OnDateSetListener {
-
-        private FitbitSync attached;
 
         @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            attached = (FitbitSync) activity;
+        protected void onPreExecute() {
+            super.onPreExecute();
+            if (semCountIn.getAndIncrement() == 0) {
+                bar.setVisibility(View.VISIBLE);
+                progressText.setText("Loading....");
+                progressText.setVisibility(View.VISIBLE);
+                bar.setProgress(0);
+            }
         }
 
         @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Calendar c = Calendar.getInstance();
-            int month = c.get(Calendar.MONTH);
-            int day = c.get(Calendar.DAY_OF_MONTH);
-            int year = c.get(Calendar.YEAR);
-
-            return new DatePickerDialog(getActivity(),this,year,month,day);
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            synchronized (curCount) {
+                bar.setProgress(values[0]);
+                bar.invalidate();
+            }
         }
 
         @Override
-        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-            Calendar cur = Calendar.getInstance();
-            cur.set(year, monthOfYear, dayOfMonth);
-            Date date = cur.getTime();
-            attached.onDataSet(date);
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (semCountOut.decrementAndGet() == 0) {
+                storeToDate(getDate(toDate));
+                bar.setVisibility(View.INVISIBLE);
+                progressText.setText(s);
+            }
         }
-    }
-
-
+    }*/
 }

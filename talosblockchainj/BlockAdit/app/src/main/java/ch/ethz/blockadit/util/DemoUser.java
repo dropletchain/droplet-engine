@@ -47,4 +47,13 @@ public class DemoUser {
     public String getShareKey() {
         return shareKey;
     }
+
+    public String toString() {
+        return String.format("%s,%s,%s", name, ownerKey, shareKey);
+    }
+
+    public static DemoUser fromString(String user) {
+        String[] splits = user.split(",");
+        return new DemoUser(splits[0], splits[1], splits[2]);
+    }
 }

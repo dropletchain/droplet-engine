@@ -28,6 +28,13 @@
             android:nestedScrollingEnabled="true"
             android:background="@color/heavierBG" />
 
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true" />
+
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -109,5 +116,7 @@
             android:indeterminate="false" />
 
     </LinearLayout>
+
+
 
 </RelativeLayout>

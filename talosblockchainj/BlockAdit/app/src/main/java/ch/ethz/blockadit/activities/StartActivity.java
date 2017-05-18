@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 
 import ch.ethz.blockadit.R;
+import ch.ethz.blockadit.util.DemoUser;
 
 
 /*
@@ -45,19 +46,17 @@ import ch.ethz.blockadit.R;
 
 public class StartActivity extends AppCompatActivity  {
 
-    private static final int RC_SIGN_IN = 9001;
-
-
     private Button logoutButton = null;
-    private static boolean logInState = false;
+    private DemoUser user;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        logoutButton = (Button) findViewById(R.id.logbutton);
-        updateUI(logInState);
+        Intent creator = getIntent();
+        String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
+        this.user = DemoUser.fromString(userData);
     }
 
     @Override
@@ -65,30 +64,9 @@ public class StartActivity extends AppCompatActivity  {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-
-
-    private void updateUI(boolean signedIn) {
-        if (signedIn) {
-            logoutButton.setText("Logout");
-            findViewById(R.id.syndata).setVisibility(View.VISIBLE);
-            findViewById(R.id.mycloud).setVisibility(View.VISIBLE);
-            findViewById(R.id.fitbitimg).setVisibility(View.VISIBLE);
-            findViewById(R.id.cloudimg).setVisibility(View.VISIBLE);
-            findViewById(R.id.userimg).setVisibility(View.VISIBLE);
-            logInState = true;
-        } else {
-            logoutButton.setText("LogIn");
-            findViewById(R.id.syndata).setVisibility(View.INVISIBLE);
-            findViewById(R.id.mycloud).setVisibility(View.INVISIBLE);
-            findViewById(R.id.fitbitimg).setVisibility(View.INVISIBLE);
-            findViewById(R.id.cloudimg).setVisibility(View.INVISIBLE);
-            findViewById(R.id.userimg).setVisibility(View.INVISIBLE);
-            logInState = false;
-        }
-    }
-
     public void onSyncData(View v) {
         Intent intent = new Intent(this, FitbitSync.class);
+        intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
         startActivity(intent);
     }
 
