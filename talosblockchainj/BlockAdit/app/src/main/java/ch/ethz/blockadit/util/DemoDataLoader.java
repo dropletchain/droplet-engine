@@ -3,13 +3,6 @@ package ch.ethz.blockadit.util;
 import android.content.Context;
 import android.content.res.Resources;
 
-import org.bitcoinj.core.Base58;
-import org.bitcoinj.core.DumpedPrivateKey;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.RegTestParams;
-
-import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,7 +16,6 @@ import ch.ethz.blockadit.R;
 public class DemoDataLoader {
 
     private Context context;
-    private NetworkParameters parameters = RegTestParams.get();
 
     public DemoDataLoader(Context context) {
         this.context = context;
@@ -45,16 +37,7 @@ public class DemoDataLoader {
     }
 
     public String getAddressForUser(DemoUser user) {
-        ECKey key;
-        String privKey = user.getOwnerKey();
-        if (privKey.length() == 51 || privKey.length() == 52) {
-            DumpedPrivateKey dumpedPrivateKey = DumpedPrivateKey.fromBase58(parameters, privKey);
-            key = dumpedPrivateKey.getKey();
-        } else {
-            BigInteger privKeyNum= Base58.decodeToBigInteger(privKey);
-            key = ECKey.fromPrivate(privKeyNum);
-        }
-        return key.toAddress(parameters).toString();
+        return user.getOwnerAddress().toString();
     }
 
     public Date getCurDate() {

@@ -22,13 +22,13 @@ import ch.ethz.blokcaditapi.policy.StreamKeyFactory;
 
 public class KeyManager {
 
-    private List<StreamKey> myStreamKeys = new ArrayList<>();
-    private List<StreamKey> shareStreamKeys = new ArrayList<>();
-    private List<ECKey> shareKeys = new ArrayList<>();
-    private PolicyWallet wallet;
-    private StreamKeyFactory streamKeyFactory;
+    protected List<StreamKey> myStreamKeys = new ArrayList<>();
+    protected List<StreamKey> shareStreamKeys = new ArrayList<>();
+    protected List<ECKey> shareKeys = new ArrayList<>();
+    protected PolicyWallet wallet;
+    protected StreamKeyFactory streamKeyFactory;
 
-    private KeyManager() {}
+    protected KeyManager() {}
 
     public static KeyManager fromFile(String password, File file) {
         return null;

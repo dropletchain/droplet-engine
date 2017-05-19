@@ -38,4 +38,12 @@
         <item>cUhGwkKxrdoLnJSX3pBjLHmwsAocxZfW4g9kFGtzGvgUf8Vv7AwZ</item>
         <item>cThYAx1xLBgXKDY5jh3EB2HYSeXY2js1hjimQgDCPeZSKj19Vrcq</item>
     </string-array>
+
+    <string-array name="intervals">
+        <item>1d</item>
+        <item>12h</item>
+        <item>6h</item>
+    </string-array>
+
+    <string name="title_activity_policy_settings">Settings</string>
 </resources>

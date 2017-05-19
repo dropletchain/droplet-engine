@@ -19,11 +19,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".activities.StartActivity"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.FitbitSync"
             android:parentActivityName=".activities.StartActivity"
@@ -56,6 +54,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="ch.ethz.blockadit.activities.DataWeeklyActivity" />
         </activity>
+        <activity
+            android:name=".activities.PolicySettingsActivity"
+            android:label="@string/title_activity_policy_settings" />
+        <activity android:name=".activities.CreateStream"></activity>
     </application>
 
 </manifest>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="ch.ethz.blockadit.activities.CreateStream"
+    android:background="@color/lightBG">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:weightSum="1"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true">
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create Stream"
+            android:textSize="30sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginRight="20dp">
+
+                <TextView
+                    android:id="@+id/textView4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:text="From "
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <Button
+                android:id="@+id/fromDateSelect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.6"
+                android:background="@color/heavierBG"
+                android:onClick="selectedFromDate"
+                android:padding="10dp"
+                android:text="12.05.2015" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/imtervalText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Interval"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <Spinner
+                android:id="@+id/spinnerInterval"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/radioSteps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Steps" />
+
+            <RadioButton
+                android:id="@+id/radioFloors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Floors" />
+
+            <RadioButton
+                android:id="@+id/radioDistance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Distance" />
+
+            <RadioButton
+                android:id="@+id/radioCalendar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Calendar" />
+
+            <RadioButton
+                android:id="@+id/radioHeart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Heartrate" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical">
+
+        <ProgressBar
+            android:id="@+id/progressCreateStream"
+            style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/createStreamButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="fill_horizontal"
+            android:layout_margin="5dp"
+            android:background="@color/heavierBG"
+            android:onClick="onCreateStream"
+            android:text="Create Stream"
+            android:textAlignment="center"
+            android:textSize="25dp" />
+
+    </LinearLayout>
+
+</RelativeLayout>

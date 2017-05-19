@@ -41,6 +41,8 @@ public interface IBlockAditStream {
 
     boolean isApproved() throws PolicyClientException;
 
+    boolean isTemporary();
+
     IBlockAditStreamPolicy getPolicyManipulator();
 
     byte[] getSerializedKey();

@@ -25,7 +25,7 @@ public class BasicStreamKey implements StreamKey {
 
     private BasicStreamKey() {};
 
-    BasicStreamKey(int streamID,Address owner, ECKey identityKey, int curKeyVersion, byte[] symKey) {
+    public BasicStreamKey(int streamID, Address owner, ECKey identityKey, int curKeyVersion, byte[] symKey) {
         this.owner = owner;
         this.streamID = streamID;
         this.identityKey = identityKey;
@@ -33,7 +33,7 @@ public class BasicStreamKey implements StreamKey {
         this.symKey = symKey;
     }
 
-    BasicStreamKey(int streamID, NetworkParameters params, ECKey identityKey, int curKeyVersion, byte[] symKey) {
+    public BasicStreamKey(int streamID, NetworkParameters params, ECKey identityKey, int curKeyVersion, byte[] symKey) {
         this(streamID, identityKey.toAddress(params), identityKey, curKeyVersion, symKey);
     }
 

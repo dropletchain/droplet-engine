@@ -29,15 +29,12 @@ public class PolicyWallet extends Wallet {
 
     @Override
     public boolean importKey(ECKey key) {
-        policyKeys.add(key);
-        return super.importKey(key);
+        if(!policyKeys.contains(key)) {
+            policyKeys.add(key);
+            return super.importKey(key);
+        }
+        return false;
 
-    }
-
-    @Override
-    public int importKeys(List<ECKey> keys) {
-        policyKeys.addAll(keys);
-        return super.importKeys(keys);
     }
 
     public ECKey getKeyForAddress(Address owner) {

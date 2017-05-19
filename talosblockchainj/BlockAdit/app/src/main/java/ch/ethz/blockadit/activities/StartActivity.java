@@ -1,13 +1,21 @@
 package ch.ethz.blockadit.activities;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
+import org.bitcoinj.store.BlockStoreException;
+
+import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import ch.ethz.blockadit.R;
+import ch.ethz.blockadit.util.BlockaditStorageState;
 import ch.ethz.blockadit.util.DemoUser;
+import ch.ethz.blokcaditapi.BlockAditStorage;
 
 
 /*
@@ -49,6 +57,7 @@ public class StartActivity extends AppCompatActivity  {
     private Button logoutButton = null;
     private DemoUser user;
 
+    private AtomicBoolean loaded = new AtomicBoolean(false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,25 +66,58 @@ public class StartActivity extends AppCompatActivity  {
         Intent creator = getIntent();
         String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
         this.user = DemoUser.fromString(userData);
+        loadStorage();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    private void loadStorage() {
+        new AsyncTask<Void, Integer, Boolean>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                try {
+                    BlockAditStorage storage = BlockaditStorageState.getStorageForUser(user);
+                    if(storage != null)
+                        storage.preLoadBlockchainState();
+                } catch (UnknownHostException | BlockStoreException | InterruptedException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean stream) {
+                super.onPostExecute(stream);
+                loaded.set(true);
+            }
+        }.execute();
     }
 
     public void onSyncData(View v) {
+        if(!loaded.get())
+            return;
         Intent intent = new Intent(this, FitbitSync.class);
         intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
         startActivity(intent);
     }
 
     public void onMyCloud(View v) {
+        if(!loaded.get())
+            return;
         Intent intent = new Intent(this, CloudSelectActivity.class);
         startActivity(intent);
     }
 
     public void onLogButton(View v) {
+        if(!loaded.get())
+            return;
+        Intent intent = new Intent(getApplicationContext(), PolicySettingsActivity.class);
+        intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
+        startActivity(intent);
     }
 
 

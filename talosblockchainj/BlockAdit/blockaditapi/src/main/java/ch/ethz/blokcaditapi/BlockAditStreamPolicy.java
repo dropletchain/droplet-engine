@@ -34,7 +34,10 @@ public class BlockAditStreamPolicy implements IBlockAditStreamPolicy {
     }
 
     BlockAditStreamPolicy(PolicyVcApiClient client, PolicyManipulationClient policyClient, Address owner, int streamId, Policy localPolicy) throws PolicyClientException {
-        this(client, policyClient, owner, streamId);
+        this.client = client;
+        this.policyClient = policyClient;
+        this.owner = owner;
+        this.streamId = streamId;
         this.localPolicy = localPolicy;
     }
 

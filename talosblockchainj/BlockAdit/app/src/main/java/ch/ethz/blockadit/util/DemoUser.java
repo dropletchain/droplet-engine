@@ -1,13 +1,18 @@
 package ch.ethz.blockadit.util;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Base58;
+import org.bitcoinj.core.DumpedPrivateKey;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.store.BlockStoreException;
 
+import java.math.BigInteger;
 import java.net.UnknownHostException;
 
 import ch.ethz.blokcaditapi.BlockAditStorage;
 import ch.ethz.blokcaditapi.KeyManager;
-import ch.ethz.blokcaditapi.policy.BasicStreamKeyFactory;
 import ch.ethz.blokcaditapi.storage.Util;
 
 /**
@@ -16,6 +21,8 @@ import ch.ethz.blokcaditapi.storage.Util;
  */
 
 public class DemoUser {
+
+    private static final NetworkParameters params = RegTestParams.get();
 
     private String name;
 
@@ -30,9 +37,12 @@ public class DemoUser {
     }
 
     public BlockAditStorage createStorage() throws BlockStoreException, UnknownHostException {
-        KeyManager manager = KeyManager.getNew(RegTestParams.get(), new BasicStreamKeyFactory());
-        manager.addKey(Util.wifToKey(ownerKey, true));
-        manager.addShareKey(Util.wifToKey(shareKey, true));
+        DemoKeyFactory factory = new DemoKeyFactory();
+        KeyManager manager = DemoKeyManager.getNew(RegTestParams.get(), factory);
+        ECKey owner = Util.wifToKey(ownerKey, true);
+        ECKey share = Util.wifToKey(shareKey, true);
+        manager.addKey(owner);
+        manager.addShareKey(share);
         return new BlockAditStorage(manager, new DemoBlockAditConfig());
     }
 
@@ -46,6 +56,19 @@ public class DemoUser {
 
     public String getShareKey() {
         return shareKey;
+    }
+
+    public Address getOwnerAddress() {
+        ECKey key;
+        String privKey = this.ownerKey;
+        if (privKey.length() == 51 || privKey.length() == 52) {
+            DumpedPrivateKey dumpedPrivateKey = DumpedPrivateKey.fromBase58(params, privKey);
+            key = dumpedPrivateKey.getKey();
+        } else {
+            BigInteger privKeyNum= Base58.decodeToBigInteger(privKey);
+            key = ECKey.fromPrivate(privKeyNum);
+        }
+        return key.toAddress(params);
     }
 
     public String toString() {

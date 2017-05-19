@@ -38,6 +38,10 @@ import java.text.SimpleDateFormat;
 
 public class ActivitiesUtil {
 
+    static final int RESULT_OK = 1;
+    static final int RESULT_ERROR = 2;
+
+
     static final String DEMO_USER_KEY = "demo_user";
 
     static final String DATATYPE_KEY = "type";

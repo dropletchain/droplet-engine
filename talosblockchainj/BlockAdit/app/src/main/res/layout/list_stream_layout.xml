@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.daimajia.swipe.SwipeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="100dp" android:id="@+id/swipe">
+    <!-- Bottom View Start-->
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/bottom_layout"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/lightBG"
+        android:padding="6dip">
+
+        <LinearLayout
+            android:id="@+id/linSwipe"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/heavierBG"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imgDelete"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:padding="10dp"
+                android:src="@drawable/trash" />
+
+            <Button
+                android:id="@+id/deleteButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="fill_horizontal"
+                android:background="@color/lightBG"
+                android:text="DELETE"
+                android:textSize="25dp" />
+
+        </LinearLayout>
+    </RelativeLayout>
+    <!-- Bottom View End-->
+
+    <!-- Surface View Start -->
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:padding="6dip"
+        android:background="@color/lightBG"
+        android:id="@+id/streamRelLayout">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/heavierBG"
+            android:id="@+id/streamLinLayout">
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:id="@+id/imgStream"
+                android:src="@drawable/safecloud"
+                android:padding="10dp" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/streamName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Stream 1"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/dateFromList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="From: 18.06.2017"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="5dp">
+
+                    <ImageView
+                        android:id="@+id/listCalIcon"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:adjustViewBounds="false"
+                        android:cropToPadding="false"
+                        android:src="@drawable/calories" />
+
+                    <ImageView
+                        android:id="@+id/listStepIcon"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:adjustViewBounds="false"
+                        android:cropToPadding="false"
+                        android:src="@drawable/step" />
+
+                    <ImageView
+                        android:id="@+id/listFloorIcon"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:adjustViewBounds="false"
+                        android:cropToPadding="false"
+                        android:src="@drawable/floor" />
+
+                    <ImageView
+                        android:id="@+id/listDistIcon"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:adjustViewBounds="false"
+                        android:cropToPadding="false"
+                        android:src="@drawable/distance" />
+
+                    <ImageView
+                        android:id="@+id/listHeartIcon"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:adjustViewBounds="false"
+                        android:cropToPadding="false"
+                        android:src="@drawable/hrb" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:id="@+id/temporaryField"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginRight="10dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_weight="1"
+                            android:text="Temporary"
+                            android:textAlignment="viewEnd"
+                            android:textColor="@android:color/holo_red_dark" />
+                    </FrameLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </RelativeLayout>
+    <!-- Surface View End -->
+</com.daimajia.swipe.SwipeLayout>

@@ -115,7 +115,7 @@ public class FitbitSync extends AppCompatActivity {
             boolean auth = true;
             if(sharedPref.contains(ACCESS_TOKEN_KEY)) {
                 info = TokenInfo.fromJSON(sharedPref.getString(ACCESS_TOKEN_KEY, ""));
-                auth = !info.isValid();*
+                auth = !info.isValid();
                 if(auth) {
                     SharedPreferences.Editor editor = sharedPref.edit();
                     editor.remove(ACCESS_TOKEN_KEY);

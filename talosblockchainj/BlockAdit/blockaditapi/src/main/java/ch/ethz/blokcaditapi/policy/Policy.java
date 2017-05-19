@@ -35,6 +35,8 @@ public final class Policy {
     private List<IndexEntry> times = new ArrayList<>();
     private List<PolicyShare> shares = new ArrayList<>();
 
+    public boolean isTemporary = false;
+
     private boolean isInvalidated = false;
 
     Policy(String owner, int streamId, String nonce, String createTxid, String ownerPk, List<IndexEntry> times, List<PolicyShare> shares) {

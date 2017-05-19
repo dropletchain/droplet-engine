@@ -24,16 +24,17 @@ import static org.junit.Assert.assertEquals;
 public class TestAPI {
 
     private static String TEST_KEY = "cQ1HBRRvJ9DaV2UZsEf5w1uLAoXjSVpLYVH5dB5hZUWk5jeJ8KCL";
+    private static String TEST_KEY2 = "cMuRy6QaookV4sc42PJtAbTP52BjN3hTyiuDNvgcRruMqWtEi6Wt";
 
 
     @Test
     public void testBasic() throws Exception {
-        BlockAditStorageConfig config = DefaultConfig.get();
+        BlockAditStorageConfig config = new TestRemoteConfig();
         KeyManager manager = KeyManager.getNew(config.getNetworkParameters(), new BasicStreamKeyFactory());
-        ECKey key = Util.wifToKey(TEST_KEY, true);
+        ECKey key = Util.wifToKey(TEST_KEY2, true);
         manager.addKey(key);
         BlockAditStorage storage = new BlockAditStorage(manager, config);
-        IBlockAditStream stream = storage.createNewStream(775, 0, 10);
+        IBlockAditStream stream = storage.createNewStream(780, 0, 10);
 
     }
 

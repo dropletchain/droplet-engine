@@ -69,6 +69,8 @@ public class BlockAditStorage {
         StreamKey key = keyManager.createNewStreamKey(owner, id);
         Transaction transaction = policyManipulationClient.createPolicy(owner, id, startTime, interval);
         Policy temp = new Policy(owner.toString(), id, "", transaction.getHashAsString(), key.getSignKey().getPublicKeyAsHex());
+        temp.addTimeIndex(new Policy.IndexEntry(startTime, interval, ""));
+        temp.isTemporary = true;
         return new BlockAditStream(createStorageApi(), key, createStreamPolicy(owner, id, temp));
     }
 
@@ -147,5 +149,9 @@ public class BlockAditStorage {
         StreamKey key = keyManager.getShareStreamKey(owner, streamId);
         Policy temp = policyVcApiClient.getPolicy(owner.toString(), streamId);
         return new BlockAditStream(createStorageApi(), key, createStreamPolicy(owner, streamId, temp));
+    }
+
+    public void preLoadBlockchainState() {
+        this.policyManipulationClient.start();
     }
 }
