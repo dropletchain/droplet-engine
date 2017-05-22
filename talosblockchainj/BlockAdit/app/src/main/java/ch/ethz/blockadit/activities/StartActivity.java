@@ -1,21 +1,17 @@
 package ch.ethz.blockadit.activities;
 
+import android.app.Activity;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-import org.bitcoinj.store.BlockStoreException;
-
-import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import ch.ethz.blockadit.R;
-import ch.ethz.blockadit.util.BlockaditStorageState;
 import ch.ethz.blockadit.util.DemoUser;
-import ch.ethz.blokcaditapi.BlockAditStorage;
 
 
 /*
@@ -70,31 +66,25 @@ public class StartActivity extends AppCompatActivity  {
     }
 
     private void loadStorage() {
-        new AsyncTask<Void, Integer, Boolean>() {
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-            }
+        if(!loaded.get()) {
+            Intent i = new Intent(this, LoadingBlockchainActivity.class);
+            i.putExtra(ActivitiesUtil.DEMO_USER_KEY, user.toString());
+            startActivityForResult(i, 1);
+        }
+    }
 
-            @Override
-            protected Boolean doInBackground(Void... params) {
-                try {
-                    BlockAditStorage storage = BlockaditStorageState.getStorageForUser(user);
-                    if(storage != null)
-                        storage.preLoadBlockchainState();
-                } catch (UnknownHostException | BlockStoreException | InterruptedException e) {
-                    e.printStackTrace();
-                    return false;
-                }
-                return true;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean stream) {
-                super.onPostExecute(stream);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if(resultCode == Activity.RESULT_OK){
                 loaded.set(true);
             }
-        }.execute();
+            if (resultCode == Activity.RESULT_CANCELED) {
+                loaded.set(false);
+                Log.e("Streams", "Creation Failed :(");
+            }
+        }
     }
 
     public void onSyncData(View v) {

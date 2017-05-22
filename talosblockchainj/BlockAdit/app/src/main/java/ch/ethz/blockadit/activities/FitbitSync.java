@@ -8,23 +8,25 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.bitcoinj.store.BlockStoreException;
 
 import java.net.UnknownHostException;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +37,8 @@ import ch.ethz.blockadit.fitbitapi.TokenInfo;
 import ch.ethz.blockadit.util.BlockaditStorageState;
 import ch.ethz.blockadit.util.DemoDataLoader;
 import ch.ethz.blockadit.util.DemoUser;
+import ch.ethz.blockadit.util.StreamIDType;
+import ch.ethz.blockadit.util.Synchronizer;
 import ch.ethz.blokcaditapi.BlockAditStorage;
 import ch.ethz.blokcaditapi.BlockAditStreamException;
 import ch.ethz.blokcaditapi.IBlockAditStream;
@@ -82,13 +86,10 @@ public class FitbitSync extends AppCompatActivity {
     public static final String ACCESS_TOKEN_KEY = "ACC_KEY";
 
     private TokenInfo info = null;
-    private Button fromDate;
-    private Button toDate;
-    private boolean isFormDate = true;
 
     private ProgressBar bar;
+    private Spinner streamSelect;
     private TextView progressText;
-    private Spinner spinner;
 
     public int dateIndex = 0;
 
@@ -144,29 +145,22 @@ public class FitbitSync extends AppCompatActivity {
         }
         try {
             storage = BlockaditStorageState.getStorageForUser(user);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (BlockStoreException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (UnknownHostException | InterruptedException | BlockStoreException e) {
             e.printStackTrace();
         }
 
         DemoDataLoader loader = new DemoDataLoader(this);
-        spinner = (Spinner) findViewById(R.id.spinner);
-        fromDate = (Button) findViewById(R.id.fromDateSelect);
-        toDate = (Button) findViewById(R.id.toDateSelect);
         bar = (ProgressBar) findViewById(R.id.progressBar);
         progressText = (TextView) findViewById(R.id.progress);
+        streamSelect = (Spinner) findViewById(R.id.streamSelectSpinner);
 
-        fromDate.setText(ActivitiesUtil.titleFormat.format(loader.getCurDate()));
-        toDate.setText(ActivitiesUtil.titleFormat.format(loader.getCurDate()));
         bar.setVisibility(View.INVISIBLE);
         progressText.setVisibility(View.INVISIBLE);
+        setSpinnerData();
     }
 
     private void setSpinnerData() {
-        final Spinner spinner = this.spinner;
+        final Spinner spinner = this.streamSelect;
         new AsyncTask<Void, Integer, List<IBlockAditStream>>() {
             @Override
             protected List<IBlockAditStream> doInBackground(Void... params) {
@@ -189,215 +183,137 @@ public class FitbitSync extends AppCompatActivity {
                 for (int i=0; i<s.size(); i++)
                     streamsTemp.add(s.get(i));
                 streams = streamsTemp;
-                spinner.setAdapter(new StreamAdapter(getApplicationContext(), streamsTemp));
+                spinner.setAdapter(new BasicStreamAdapter(getApplicationContext(), streamsTemp, user));
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        curSelectIndex = position;
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                        curSelectIndex = -1;
+                    }
+                });
             }
         }.execute();
     }
 
-    public class StreamAdapter extends ArrayAdapter<IBlockAditStream> {
-
-        private ArrayList<IBlockAditStream> items;
-        public StreamAdapter(@NonNull Context context, ArrayList<IBlockAditStream> items) {
-            super(context, android.R.layout.simple_spinner_dropdown_item, items);
-            this.items = items;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_spinner_dropdown_item, parent, false);
-            }
-            if(convertView!= null && (convertView instanceof TextView)) {
-                TextView textView = (TextView) convertView;
-                textView.setText(String.format("Stream %d", items.get(position).getStreamId()));
-            }
-            return convertView;
-        }
-    }
-
-
-    private Date getFromDate() {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        if(sharedPref.contains(ActivitiesUtil.SHARED_PREF_LAST_DOWNLOAD_KEY)) {
-            try {
-                return ActivitiesUtil.titleFormat.parse(sharedPref.getString(ActivitiesUtil.SHARED_PREF_LAST_DOWNLOAD_KEY, ""));
-            } catch (ParseException e) {
-                return Calendar.getInstance().getTime();
-            }
-        }
-        return Calendar.getInstance().getTime();
-    }
-
-    private void storeToDate(Date date) {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor edit = sharedPref.edit();
-        edit.putString(ActivitiesUtil.SHARED_PREF_LAST_DOWNLOAD_KEY, ActivitiesUtil.titleFormat.format(date));
-        edit.apply();
-    }
-
-    public void onDataSet(Date date) {
-        if(isFormDate) {
-            fromDate.setText(ActivitiesUtil.titleFormat.format(date));
-        } else {
-            toDate.setText(ActivitiesUtil.titleFormat.format(date));
-        }
-    }
-
-    private static Date getDate(TextView dateView) {
-        String res = dateView.getText().toString();
-        try {
-            return ActivitiesUtil.titleFormat.parse(res);
-        } catch (ParseException e) {
-            return null;
-        }
-
-    }
-
-    public void onFromDateSelect(View v) {
-        //isFormDate = true;
-        //DialogFragment newFragment = new FitbitSyncDatePicker();
-        //newFragment.show(this.getFragmentManager(), "tag1");
-    }
-
-    public void onToDateSelect(View v) {
-        //isFormDate = false;
-        //DialogFragment newFragment = new FitbitSyncDatePicker();
-        //newFragment.show(this.getFragmentManager(), "tag2");
-    }
 
 
     public synchronized void onSyncPressed(View view) {
-        int numJobs = 5;
-        Date from = getDate(fromDate);
-        Date to = getDate(toDate);
-        final AtomicInteger curCount = new AtomicInteger(0);
-        AtomicInteger semCountIIn = new AtomicInteger(0);
-        AtomicInteger semCountOut = new AtomicInteger(numJobs);
-        /*
-        (new SyncTask(from, to, curCount, semCountIIn, semCountOut, new SnycJob() {
-            @Override
-            public void runSync(User u, Date date) throws TalosModuleException {
-                sync.transferDataStepFromDate(u, date);
-            }
-        })).execute();
-        (new SyncTask(from, to, curCount, semCountIIn, semCountOut, new SnycJob() {
-            @Override
-            public void runSync(User u, Date date) throws TalosModuleException {
-                sync.transferDataCaloriesFromDate(u, date);
-            }
-        })).execute();
-        (new SyncTask(from, to, curCount, semCountIIn, semCountOut, new SnycJob() {
-            @Override
-            public void runSync(User u, Date date) throws TalosModuleException {
-                sync.transferDataDistanceFromDate(u, date);
-            }
-        })).execute();
-        (new SyncTask(from, to, curCount, semCountIIn, semCountOut, new SnycJob() {
-            @Override
-            public void runSync(User u, Date date) throws TalosModuleException {
-                sync.transferDataFloorFromDate(u, date);
-            }
-        })).execute();
-        (new SyncTask(from, to, curCount, semCountIIn, semCountOut, new SnycJob() {
-            @Override
-            public void runSync(User u, Date date) throws TalosModuleException {
-                sync.transferDataHeartFromDate(u, date);
-            }
-        })).execute();*/
+        if(curSelectIndex == -1 || storage == null)
+            return;
+        IBlockAditStream stream = streams.get(curSelectIndex);
+        StreamIDType type = new StreamIDType(stream.getStreamId());
+        final Synchronizer synchronizer = new Synchronizer(stream, this.info, type.getDatatypeSet());
+
     }
 
-    public interface SnycJob {
-        //public void runSync(User u, Date date) throws TalosModuleException;
-    }
+    private class SyncTask extends AsyncTask<Void, Integer, String> {
+        private Synchronizer synchronizer;
+        private int numBlocks;
+        private Date date;
+        private AtomicInteger counter;
+        private int counterResult;
 
-    /*
-    public class SyncTask extends AsyncTask<Void,Integer,String> {
-
-        private int progressMax = 1;
-        private Date from;
-        private Date to;
-        private final AtomicInteger curCount;
-        private SnycJob task;
-        private AtomicInteger semCountIn;
-        private AtomicInteger semCountOut;
-
-        public SyncTask(Date from, Date to, AtomicInteger curCount, AtomicInteger semCountIn, AtomicInteger semCountOut, SnycJob task) {
-            this.from = from;
-            this.to = to;
-            this.curCount = curCount;
-            this.task = task;
-            this.semCountIn = semCountIn;
-            this.semCountOut = semCountOut;
+        public SyncTask(Synchronizer synchronizer, int numBlocks, AtomicInteger counter, int result) {
+            super();
         }
 
         @Override
         protected String doInBackground(Void... params) {
-            User user = StartActivity.getLoggedInUser();
-            int numDates = 0;
-            Calendar start = Calendar.getInstance();
-            start.setTime(from);
-            Calendar end = Calendar.getInstance();
-            end.setTime(to);
-            end.add(Calendar.DATE, 1);
-
-            for (; start.before(end); start.add(Calendar.DATE, 1)) {
-                numDates++;
-            }
-
-            if (numDates != 0)
-                progressMax = numDates * 5;
-
-            start.setTime(from);
-            end.setTime(to);
-            end.add(Calendar.DATE, 1);
-
-            for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
-                try {
-                    task.runSync(user, date);
-                    int curDates = curCount.incrementAndGet();
-                    reportProgress(curDates);
-                } catch (TalosModuleException e) {
-                    return "Failed";
-                }
-            }
-
-            return "Success";
-        }
-
-
-        private void reportProgress(int curVal) {
-            publishProgress((int) (((float) curVal / ((float) progressMax)) * 100));
-        }
-
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            if (semCountIn.getAndIncrement() == 0) {
-                bar.setVisibility(View.VISIBLE);
-                progressText.setText("Loading....");
-                progressText.setVisibility(View.VISIBLE);
-                bar.setProgress(0);
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            synchronized (curCount) {
-                bar.setProgress(values[0]);
-                bar.invalidate();
+            try {
+                synchronizer.transferDataForDate(date, numBlocks);
+                return "Success";
+            } catch (BlockAditStreamException e) {
+                e.printStackTrace();
+                return "Error occured :(";
             }
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            if (semCountOut.decrementAndGet() == 0) {
-                storeToDate(getDate(toDate));
-                bar.setVisibility(View.INVISIBLE);
-                progressText.setText(s);
+            int curCounter = counter.incrementAndGet();
+            if(curCounter == counterResult) {
+                //last do stuff
             }
+
         }
-    }*/
+    }
+
+
+    private class BasicStreamAdapter extends ArrayAdapter<IBlockAditStream> {
+
+        private ArrayList<IBlockAditStream> items;
+        private DemoUser user;
+
+        public BasicStreamAdapter(Context context, ArrayList<IBlockAditStream> items, DemoUser user) {
+            super(context, R.layout.list_basic_stream, items);
+            this.items = items;
+            this.user = user;
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            final IBlockAditStream item = items.get(position);
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_basic_stream, parent, false);
+            }
+            TextView streamName = (TextView) convertView.findViewById(R.id.streamName);
+            TextView dateFrom = (TextView) convertView.findViewById(R.id.dateFromList);
+
+            RelativeLayout layout = (RelativeLayout) convertView.findViewById(R.id.streamRelLayout);
+            LinearLayout linearLayout = (LinearLayout) convertView.findViewById(R.id.streamLinLayout);
+
+            ImageView stepsView = (ImageView) convertView.findViewById(R.id.listStepIcon);
+            ImageView calView = (ImageView) convertView.findViewById(R.id.listCalIcon);
+            ImageView floorView = (ImageView) convertView.findViewById(R.id.listFloorIcon);
+            ImageView distView = (ImageView) convertView.findViewById(R.id.listDistIcon);
+            ImageView heartView = (ImageView) convertView.findViewById(R.id.listHeartIcon);
+
+            StreamIDType typesStrem = new StreamIDType(item.getStreamId());
+
+            if (typesStrem.hasSteps())
+                stepsView.setVisibility(View.VISIBLE);
+            else
+                stepsView.setVisibility(View.INVISIBLE);
+            if (typesStrem.hasCalories())
+                calView.setVisibility(View.VISIBLE);
+            else
+                calView.setVisibility(View.INVISIBLE);
+            if (typesStrem.hasFloor())
+                floorView.setVisibility(View.VISIBLE);
+            else
+                floorView.setVisibility(View.INVISIBLE);
+            if (typesStrem.hasDist())
+                distView.setVisibility(View.VISIBLE);
+            else
+                distView.setVisibility(View.INVISIBLE);
+            if (typesStrem.hasHeart())
+                heartView.setVisibility(View.VISIBLE);
+            else
+                heartView.setVisibility(View.INVISIBLE);
+
+
+            layout.setBackgroundColor(getContext().getResources().getColor(R.color.lightBG));
+            linearLayout.setBackgroundColor(getContext().getResources().getColor(R.color.heavierBG));
+
+            Date startDate = new Date(item.getStartTimestamp() * 1000);
+
+            streamName.setText(String.format("Stream %d", item.getStreamId()));
+            dateFrom.setText(String.format("From: %s", ActivitiesUtil.titleFormat.format(startDate)));
+            //imgView.setImageBitmap(AppUtil.createQRCode(item.getOwner().toString() + item.getStreamId()));
+            streamName.setTextColor(Color.BLACK);
+            dateFrom.setTextColor(Color.BLACK);
+
+            return convertView;
+        }
+
+        @Override
+        public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            return getView(position, convertView, parent);
+        }
+    }
 }

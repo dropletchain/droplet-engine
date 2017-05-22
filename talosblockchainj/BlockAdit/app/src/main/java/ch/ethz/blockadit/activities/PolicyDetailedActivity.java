@@ -12,14 +12,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.daimajia.swipe.adapters.ArraySwipeAdapter;
+
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.store.BlockStoreException;
 
 import java.net.UnknownHostException;
@@ -44,6 +48,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
     private TextView tsFrom;
     private TextView tsInterval;
     private ImageView qrView;
+    private ProgressBar progress;
     private DemoUser user;
 
     private ListView sharesView;
@@ -89,6 +94,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
         sharesView = (ListView) findViewById(R.id.shareItems);
         tsFrom = (TextView) findViewById(R.id.startTimestamp);
         tsInterval = (TextView) findViewById(R.id.intervalTimestamp);
+        progress = (ProgressBar) findViewById(R.id.progressLoadDetailed);
 
         DemoDataLoader loader = new DemoDataLoader(this);
         users = loader.loadDemoUsers();
@@ -121,6 +127,12 @@ public class PolicyDetailedActivity extends AppCompatActivity {
 
     private void loadStream(final Address owner, final int streamID) {
         new AsyncTask<Void, Integer, IBlockAditStream>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progress.setVisibility(View.VISIBLE);
+            }
+
             @Override
             protected IBlockAditStream doInBackground(Void... params) {
                 try {
@@ -175,12 +187,19 @@ public class PolicyDetailedActivity extends AppCompatActivity {
                         heartView.setVisibility(View.INVISIBLE);
                 }
 
+                progress.setVisibility(View.INVISIBLE);
             }
         }.execute();
     }
 
     private void loadShares(final IBlockAditStream streamIn, final boolean doLocal) {
         new AsyncTask<Void, Integer, List<Address>>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progress.setVisibility(View.VISIBLE);
+            }
+
             @Override
             protected List<Address> doInBackground(Void... params) {
                 try {
@@ -210,8 +229,9 @@ public class PolicyDetailedActivity extends AppCompatActivity {
                 }
 
                 ShareUserAdapter adapter = new ShareUserAdapter(getApplicationContext(),
-                        shares, dates, new DemoDataLoader(getApplicationContext()));
+                        shares, dates, new DemoDataLoader(getApplicationContext()), streamIn);
                 sharesView.setAdapter(adapter);
+                progress.setVisibility(View.INVISIBLE);
             }
         }.execute();
     }
@@ -239,22 +259,50 @@ public class PolicyDetailedActivity extends AppCompatActivity {
         }
     }
 
-    public static class ShareUserAdapter extends ArrayAdapter<DemoUser> {
+    private void erasejob(DemoUser user) {
+
+    }
+
+
+    public static class ShareUserAdapter extends ArraySwipeAdapter<DemoUser> {
 
         private ArrayList<DemoUser> items;
         private ArrayList<Date> fromDates;
         private DemoDataLoader loader;
+        private IBlockAditStream stream;
 
-        public ShareUserAdapter(Context context, ArrayList<DemoUser> items, ArrayList<Date> fromDates, DemoDataLoader loader) {
+        public ShareUserAdapter(Context context, ArrayList<DemoUser> items, ArrayList<Date> fromDates, DemoDataLoader loader, IBlockAditStream stream) {
             super(context, R.layout.list_share_user_layout, items);
             this.items = items;
             this.loader = loader;
             this.fromDates = fromDates;
+            this.stream = stream;
+        }
+
+        private void removeShare(final Address share) {
+            new AsyncTask<Void, Integer, Boolean>() {
+                @Override
+                protected Boolean doInBackground(Void... params) {
+                    try {
+                        stream.getPolicyManipulator().removeShare(share);
+                    } catch (InsufficientMoneyException | PolicyClientException e) {
+                        e.printStackTrace();
+                        return false;
+                    }
+                    return true;
+                }
+
+                @Override
+                protected void onPostExecute(Boolean ok) {
+                    super.onPostExecute(ok);
+                }
+            }.execute();
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            DemoUser item = items.get(position);
+            final int positionTemp = position;
+            final DemoUser item = items.get(positionTemp);
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_share_user_layout, parent, false);
             }
@@ -270,6 +318,16 @@ public class PolicyDetailedActivity extends AppCompatActivity {
             layout.setBackgroundColor(getContext().getResources().getColor(R.color.lightBG));
             linearLayout.setBackgroundColor(getContext().getResources().getColor(R.color.heavierBG));
 
+            Button button = (Button) convertView.findViewById(R.id.deleteButton);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    removeShare(item.getShareAddress());
+                    items.remove(positionTemp);
+                    notifyDataSetChanged();
+                }
+            });
+
 
             shareUserNameView.setText(item.getName());
             shareUseAddressView.setText(loader.getAddressForUser(item));
@@ -281,6 +339,11 @@ public class PolicyDetailedActivity extends AppCompatActivity {
             TextView fromDateView = (TextView) convertView.findViewById(R.id.shareUserFromDate);
             fromDateView.setText(String.format("From: %s", ActivitiesUtil.titleFormat.format(cur)));
             return convertView;
+        }
+
+        @Override
+        public int getSwipeLayoutResourceId(int position) {
+            return R.id.swipeSharedUser;
         }
     }
 }

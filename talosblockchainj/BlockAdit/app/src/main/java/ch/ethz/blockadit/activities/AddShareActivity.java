@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -57,6 +58,7 @@ public class AddShareActivity extends AppCompatActivity {
     private IBlockAditStream stream = null;
     private DemoUser selectedUser = null;
     private Date selectedDate = null;
+    private Date before = new Date(0);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +108,8 @@ public class AddShareActivity extends AppCompatActivity {
                 if(streamRes != null) {
                     stream = streamRes;
                     loadShares(streamRes);
-                    onFromDateSet(new Date(streamRes.getStartTimestamp() * 1000));
+                    before = new Date(streamRes.getStartTimestamp() * 1000);
+                    onFromDateSet(before);
                 }
 
             }
@@ -140,8 +143,7 @@ public class AddShareActivity extends AppCompatActivity {
                         new ShareUserListAdapter(getApplicationContext(),
                                 shareOptions, new DemoDataLoader(getApplicationContext()));
                 shareSpinner.setAdapter(adapter);
-                if(!shareOptions.isEmpty())
-                    selectedUser = shareOptions.get(0);
+                shareSpinner.setOnItemSelectedListener(adapter);
             }
         }.execute();
     }
@@ -221,11 +223,16 @@ public class AddShareActivity extends AppCompatActivity {
     }
 
     private void onFromDateSet(Date date) {
-        this.selectedDate = date;
-        fromSelectButton.setText(ActivitiesUtil.titleFormat.format(date));
+        if(date.before(before)) {
+            this.selectedDate = before;
+            fromSelectButton.setText(ActivitiesUtil.titleFormat.format(before));
+        } else {
+            this.selectedDate = date;
+            fromSelectButton.setText(ActivitiesUtil.titleFormat.format(date));
+        }
     }
 
-    public static class ShareUserListAdapter extends ArrayAdapter<DemoUser> {
+    public class ShareUserListAdapter extends ArrayAdapter<DemoUser> implements  AdapterView.OnItemSelectedListener {
 
         private ArrayList<DemoUser> items;
         private DemoDataLoader loader;
@@ -267,6 +274,17 @@ public class AddShareActivity extends AppCompatActivity {
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
             return getView(position, convertView, parent);
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            selectedUser = items.get(position);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+            if(!items.isEmpty())
+                selectedUser = items.get(0);
         }
     }
 }

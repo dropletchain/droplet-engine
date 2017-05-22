@@ -1,6 +1,10 @@
 package ch.ethz.blockadit.util;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
+
+import ch.ethz.blockadit.blockadit.Datatype;
 
 /**
  * Created by lukas on 19.05.17.
@@ -58,5 +62,20 @@ public class StreamIDType {
         res = (res<<1) | (types[3] ? 1 : 0);
         res = (res<<1) | (types[4] ? 1 : 0);
         return res;
+     }
+
+     public Set<Datatype> getDatatypeSet() {
+         Set<Datatype> res = new HashSet<>();
+         if(this.hasSteps())
+             res.add(Datatype.STEPS);
+         if(this.hasFloor())
+             res.add(Datatype.FLOORS);
+         if(this.hasDist())
+             res.add(Datatype.DISTANCE);
+         if(this.hasHeart())
+             res.add(Datatype.HEARTRATE);
+         if(this.hasCalories())
+             res.add(Datatype.CALORIES);
+         return res;
      }
 }
