@@ -115,6 +115,16 @@ public class BlockAditStream implements IBlockAditStream {
     }
 
     @Override
+    public List<Address> getSharesLocal() throws PolicyClientException {
+        Policy curPolicy = policyForStream.getLocalPolicy();
+        List<Address> addresses = new ArrayList<>();
+        for (Policy.PolicyShare share : curPolicy.getShares()) {
+            addresses.add(Address.fromBase58(policyForStream.getNeworkParams(), share.address));
+        }
+        return addresses;
+    }
+
+    @Override
     public boolean storeChunk(int id, ChunkData data) throws BlockAditStreamException {
         checkOrThrow();
         this.toSend.add(new ChunkJobStoreJob(id, data));

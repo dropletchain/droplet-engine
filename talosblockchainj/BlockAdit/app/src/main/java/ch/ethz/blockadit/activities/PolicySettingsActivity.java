@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,14 +22,17 @@ import android.widget.TextView;
 
 import com.daimajia.swipe.adapters.ArraySwipeAdapter;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.store.BlockStoreException;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import ch.ethz.blockadit.R;
 import ch.ethz.blockadit.util.BlockaditStorageState;
@@ -47,9 +51,12 @@ public class PolicySettingsActivity extends AppCompatActivity {
     public  ArrayList<IBlockAditStream> streams = new ArrayList<>();
     private ListView listView;
     private SwipeRefreshLayout refreshLayout;
+    private TextView ownerView;
+    private TextView balanceView;
 
 
-    public static ArrayList<IBlockAditStream> temporaryStreams = new ArrayList<>();
+
+    public static Map<String, ArrayList<IBlockAditStream>> temporaryStreams = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +73,10 @@ public class PolicySettingsActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        ownerView = (TextView) findViewById(R.id.ownerSetting);
+        ownerView.setText(String.format("Owner: %s", user.getOwnerAddress().toString()));
+
+        balanceView = (TextView) findViewById(R.id.BalanceSetting);
         listView = (ListView) findViewById(R.id.streamSelectView);
         refreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         refreshLayout.setOnRefreshListener(
@@ -77,8 +88,8 @@ public class PolicySettingsActivity extends AppCompatActivity {
                     }
                 }
         );
-
         loadStreams();
+        loadBalance();
     }
 
     private void loadStreams() {
@@ -103,11 +114,13 @@ public class PolicySettingsActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(List<IBlockAditStream> s) {
                 super.onPostExecute(s);
+                if(!temporaryStreams.containsKey(user.getName()))
+                    temporaryStreams.put(user.getName(), new ArrayList<IBlockAditStream>());
 
                 ArrayList<IBlockAditStream> streamsTemp = new ArrayList<>();
                 for (int i=0; i<s.size(); i++)
                     streamsTemp.add(s.get(i));
-                Iterator<IBlockAditStream> iter = temporaryStreams.iterator();
+                Iterator<IBlockAditStream> iter = temporaryStreams.get(user.getName()).iterator();
                 while (iter.hasNext()) {
                     IBlockAditStream cur = iter.next();
                     if(checkInList(s, cur)) {
@@ -117,7 +130,9 @@ public class PolicySettingsActivity extends AppCompatActivity {
                     }
                 }
                 streams = streamsTemp;
-                listView.setAdapter(new StreamAdapter(getApplicationContext(), streamsTemp));
+                StreamAdapter adapter = new StreamAdapter(getApplicationContext(), streamsTemp, user);
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener(adapter);
             }
         }.execute();
     }
@@ -128,12 +143,31 @@ public class PolicySettingsActivity extends AppCompatActivity {
         startActivityForResult(i, 1);
     }
 
+    public void loadBalance() {
+        new AsyncTask<Void, Integer, Coin>() {
+            @Override
+            protected Coin doInBackground(Void... params) {
+                return storage.getBalance();
+            }
+
+            @Override
+            protected void onPostExecute(Coin ok) {
+                super.onPostExecute(ok);
+
+                if(ok != null ) {
+                    balanceView.setText(ok.toFriendlyString());
+                }
+            }
+        }.execute();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
             if(resultCode == Activity.RESULT_OK){
                 loadStreams();
+                loadBalance();
             }
             if (resultCode == Activity.RESULT_CANCELED) {
                 Log.e("Streams", "Creation Failed :(");
@@ -142,13 +176,15 @@ public class PolicySettingsActivity extends AppCompatActivity {
     }
 
 
-    public static class StreamAdapter extends ArraySwipeAdapter<IBlockAditStream> {
+    private class StreamAdapter extends ArraySwipeAdapter<IBlockAditStream> implements AdapterView.OnItemClickListener {
 
         private ArrayList<IBlockAditStream> items;
+        private DemoUser user;
 
-        public StreamAdapter(Context context, ArrayList<IBlockAditStream> items) {
+        public StreamAdapter(Context context, ArrayList<IBlockAditStream> items, DemoUser user) {
             super(context, R.layout.list_stream_layout, items);
             this.items = items;
+            this.user = user;
         }
 
         private void erasejob(final IBlockAditStream item) {
@@ -167,6 +203,18 @@ public class PolicySettingsActivity extends AppCompatActivity {
                 @Override
                 protected void onPostExecute(Boolean ok) {
                     super.onPostExecute(ok);
+                    if(!temporaryStreams.containsKey(user.getName()))
+                        temporaryStreams.put(user.getName(), new ArrayList<IBlockAditStream>());
+                    Iterator<IBlockAditStream> iter = temporaryStreams.get(user.getName()).iterator();
+                    while (iter.hasNext()) {
+                        IBlockAditStream cur = iter.next();
+                        if(cur.getOwner().equals(item.getOwner())
+                                && cur.getStreamId() == item.getStreamId()) {
+                            iter.remove();
+                            break;
+                        }
+
+                    }
                 }
             }.execute();
         }
@@ -249,6 +297,18 @@ public class PolicySettingsActivity extends AppCompatActivity {
         @Override
         public int getSwipeLayoutResourceId(int position) {
             return R.id.swipe;
+        }
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            final IBlockAditStream item = items.get(position);
+            if(!item.isTemporary()) {
+                Intent intent = new Intent(getApplicationContext(), PolicyDetailedActivity.class);
+                intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
+                intent.putExtra(ActivitiesUtil.STREAM_OWNER_KEY, item.getOwner().toString());
+                intent.putExtra(ActivitiesUtil.STREAM_ID_KEY, item.getStreamId());
+                startActivity(intent);
+            }
         }
     }
 

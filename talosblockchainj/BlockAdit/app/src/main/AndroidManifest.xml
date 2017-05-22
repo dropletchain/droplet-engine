@@ -57,7 +57,9 @@
         <activity
             android:name=".activities.PolicySettingsActivity"
             android:label="@string/title_activity_policy_settings" />
-        <activity android:name=".activities.CreateStream"></activity>
+        <activity android:name=".activities.CreateStream" />
+        <activity android:name=".activities.PolicyDetailedActivity" />
+        <activity android:name=".activities.AddShareActivity"></activity>
     </application>
 
 </manifest>

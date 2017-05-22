@@ -50,6 +50,7 @@ public class DemoSelectActivity extends AppCompatActivity {
 
     }
 
+
     public static class DemoUserListAdapter extends ArrayAdapter<DemoUser> {
 
         private ArrayList<DemoUser> items;

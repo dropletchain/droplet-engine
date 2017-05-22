@@ -22,13 +22,16 @@ import ch.ethz.blokcaditapi.storage.Util;
 
 public class DemoUser {
 
-    private static final NetworkParameters params = RegTestParams.get();
+    public static final NetworkParameters params = RegTestParams.get();
 
     private String name;
 
     private String ownerKey;
 
     private String shareKey;
+
+    private Address ownerAddrCache = null;
+    private Address shareAddrCache = null;
 
     public DemoUser(String name, String ownerKey, String shareKey) {
         this.name = name;
@@ -59,6 +62,9 @@ public class DemoUser {
     }
 
     public Address getOwnerAddress() {
+        if(ownerAddrCache != null)
+            return ownerAddrCache;
+
         ECKey key;
         String privKey = this.ownerKey;
         if (privKey.length() == 51 || privKey.length() == 52) {
@@ -68,7 +74,25 @@ public class DemoUser {
             BigInteger privKeyNum= Base58.decodeToBigInteger(privKey);
             key = ECKey.fromPrivate(privKeyNum);
         }
-        return key.toAddress(params);
+        ownerAddrCache = key.toAddress(params);
+        return ownerAddrCache;
+    }
+
+    public Address getShareAddress() {
+        if(shareAddrCache != null)
+            return shareAddrCache;
+
+        ECKey key;
+        String privKey = this.shareKey;
+        if (privKey.length() == 51 || privKey.length() == 52) {
+            DumpedPrivateKey dumpedPrivateKey = DumpedPrivateKey.fromBase58(params, privKey);
+            key = dumpedPrivateKey.getKey();
+        } else {
+            BigInteger privKeyNum= Base58.decodeToBigInteger(privKey);
+            key = ECKey.fromPrivate(privKeyNum);
+        }
+        shareAddrCache = key.toAddress(params);
+        return shareAddrCache;
     }
 
     public String toString() {

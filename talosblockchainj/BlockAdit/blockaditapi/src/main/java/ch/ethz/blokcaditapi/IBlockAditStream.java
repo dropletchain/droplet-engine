@@ -21,6 +21,8 @@ public interface IBlockAditStream {
 
     List<Address> getShares() throws PolicyClientException;
 
+    public List<Address> getSharesLocal() throws PolicyClientException;
+
     boolean storeChunk(int id, ChunkData data) throws BlockAditStreamException;
 
     boolean appendToStream(Entry entry) throws BlockAditStreamException;

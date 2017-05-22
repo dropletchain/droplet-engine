@@ -21,6 +21,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.store.BlockStoreException;
 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -52,6 +53,7 @@ public class CreateStream extends AppCompatActivity {
     private DemoUser user;
     private BlockAditStorage storage;
     private ProgressBar bar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,7 +154,9 @@ public class CreateStream extends AppCompatActivity {
                     setResult(Activity.RESULT_CANCELED,returnIntent);
                     finish();
                 } else {
-                    temporaryStreams.add(stream);
+                    if(!temporaryStreams.containsKey(user.getName()))
+                        temporaryStreams.put(user.getName(), new ArrayList<IBlockAditStream>());
+                    temporaryStreams.get(user.getName()).add(stream);
                     Intent returnIntent = new Intent();
                     setResult(Activity.RESULT_OK,returnIntent);
                     finish();

@@ -46,6 +46,10 @@ public class PolicyManipulationClient {
         this.address = address;
     }
 
+    public Coin getBalance() {
+        return wallet.getBalance();
+    }
+
     public void start() {
         this.peerGroup = new PeerGroup(wallet.getNetworkParameters(), this.chain);
         this.peerGroup.addAddress(this.address);

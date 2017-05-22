@@ -1,6 +1,7 @@
 package ch.ethz.blokcaditapi;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
@@ -124,6 +125,10 @@ public class BlockAditStorage {
             }
         }
         return streams;
+    }
+
+    public Coin getBalance() {
+        return this.policyManipulationClient.getBalance();
     }
 
     public List<IBlockAditStream> getAccessableStreams() throws PolicyClientException, BlockAditStreamException {
