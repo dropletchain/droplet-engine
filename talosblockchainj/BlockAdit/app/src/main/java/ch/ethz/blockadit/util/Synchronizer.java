@@ -85,7 +85,7 @@ public class Synchronizer {
         for(Dataset dataSet : datasets) {
             Time time = Time.valueOf(dataSet.getTime());
             long timeMs = transformDates(dateSql, time).getTime() - dateSql.getTime();
-            int id =(int) ((timeMs *1000) / interval);
+            int id =(int) ((timeMs/1000) / interval);
             chunks[id].addEntry(new IntegerEntry(timeMs * 1000, type.getDisplayRep(), dataSet.getValue()));
         }
     }

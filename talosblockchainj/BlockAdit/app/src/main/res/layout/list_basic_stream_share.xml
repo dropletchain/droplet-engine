@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="100dp"
+    android:padding="6dip"
+    android:background="@color/lightBG"
+    android:id="@+id/streamRelLayout">
+
+    <LinearLayout
+        android:id="@+id/streamLinLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/heavierBG"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingLeft="10dp"
+            android:paddingTop="2dp">
+
+            <TextView
+                android:id="@+id/streamName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stream 1"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/dateFromList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="From: 18.06.2017"
+                android:textSize="18sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="5dp">
+
+                <ImageView
+                    android:id="@+id/listCalIcon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:adjustViewBounds="false"
+                    android:cropToPadding="false"
+                    android:src="@drawable/calories" />
+
+                <ImageView
+                    android:id="@+id/listStepIcon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:adjustViewBounds="false"
+                    android:cropToPadding="false"
+                    android:src="@drawable/step" />
+
+                <ImageView
+                    android:id="@+id/listFloorIcon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:adjustViewBounds="false"
+                    android:cropToPadding="false"
+                    android:src="@drawable/floor" />
+
+                <ImageView
+                    android:id="@+id/listDistIcon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:adjustViewBounds="false"
+                    android:cropToPadding="false"
+                    android:src="@drawable/distance" />
+
+                <ImageView
+                    android:id="@+id/listHeartIcon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:adjustViewBounds="false"
+                    android:cropToPadding="false"
+                    android:src="@drawable/hrb" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/sharePersonImage"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_alignParentTop="false"
+        android:layout_alignRight="@+id/streamLinLayout"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_weight="1" />
+
+</RelativeLayout>

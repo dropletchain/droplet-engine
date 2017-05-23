@@ -24,7 +24,6 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".activities.FitbitSync"
-            android:parentActivityName=".activities.StartActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -43,8 +42,7 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".activities.CloudSelectActivity"
-            android:parentActivityName=".activities.StartActivity"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.DataDailyActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -58,16 +56,20 @@
         <activity
             android:name=".activities.PolicySettingsActivity"
             android:label="@string/title_activity_policy_settings"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".activities.CreateStream"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".activities.PolicyDetailedActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".activities.AddShareActivity"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activities.CreateStream"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activities.PolicyDetailedActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activities.AddShareActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activities.LoadingBlockchainActivity"
             android:screenOrientation="portrait" />
+        <activity android:name=".activities.StreamViewActivity"></activity>
     </application>
 
 </manifest>

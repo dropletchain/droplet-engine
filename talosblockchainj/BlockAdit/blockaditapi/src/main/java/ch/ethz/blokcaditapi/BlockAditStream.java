@@ -96,7 +96,7 @@ public class BlockAditStream implements IBlockAditStream {
 
     @Override
     public Address getOwner() {
-        return this.streamKey.getSignAddress();
+        return this.streamKey.getOwnerAddress();
     }
 
     @Override

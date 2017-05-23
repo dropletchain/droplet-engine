@@ -98,7 +98,8 @@ public class StartActivity extends AppCompatActivity  {
     public void onMyCloud(View v) {
         if(!loaded.get())
             return;
-        Intent intent = new Intent(this, CloudSelectActivity.class);
+        Intent intent = new Intent(this, StreamViewActivity.class);
+        intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
         startActivity(intent);
     }
 

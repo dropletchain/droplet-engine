@@ -26,7 +26,9 @@ import android.widget.TextView;
 import org.bitcoinj.store.BlockStoreException;
 
 import java.net.UnknownHostException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -87,9 +89,11 @@ public class FitbitSync extends AppCompatActivity {
 
     private TokenInfo info = null;
 
-    private ProgressBar bar;
     private Spinner streamSelect;
     private TextView progressText;
+    private ProgressBar progressBar;
+
+    private Date demoEndDate;
 
     public int dateIndex = 0;
 
@@ -110,6 +114,12 @@ public class FitbitSync extends AppCompatActivity {
         if(creator!=null && creator.getExtras().containsKey(ActivitiesUtil.DEMO_USER_KEY)) {
             String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
             user = DemoUser.fromString(userData);
+        }
+
+        try {
+            demoEndDate = ActivitiesUtil.titleFormat.parse("31.04.2016");
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
 
         if(data==null || !data.contains(CALLBACK)) {
@@ -150,11 +160,12 @@ public class FitbitSync extends AppCompatActivity {
         }
 
         DemoDataLoader loader = new DemoDataLoader(this);
-        bar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressText = (TextView) findViewById(R.id.progress);
         streamSelect = (Spinner) findViewById(R.id.streamSelectSpinner);
 
-        bar.setVisibility(View.INVISIBLE);
+
+        progressBar.setVisibility(View.INVISIBLE);
         progressText.setVisibility(View.INVISIBLE);
         setSpinnerData();
     }
@@ -207,37 +218,99 @@ public class FitbitSync extends AppCompatActivity {
         IBlockAditStream stream = streams.get(curSelectIndex);
         StreamIDType type = new StreamIDType(stream.getStreamId());
         final Synchronizer synchronizer = new Synchronizer(stream, this.info, type.getDatatypeSet());
+        int numBlocks = (int) (86400 / stream.getInterval());
+
+        Date startDate = new Date(stream.getStartTimestamp() * 1000);
+        Calendar start = Calendar.getInstance();
+        start.setTime(startDate);
+        Calendar end = Calendar.getInstance();
+        end.setTime(demoEndDate);
+
+        List<Date> toProcess = new ArrayList<>();
+        for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
+            toProcess.add(date);
+        }
+
+        if(toProcess.isEmpty())
+            return;
+
+        SyncTask[] tasks = new SyncTask[toProcess.size()];
+        SyncState state = new SyncState(tasks.length);
+        for(int iter=0; iter<tasks.length; iter++) {
+            tasks[iter] = new SyncTask(iter, toProcess.get(iter), synchronizer, numBlocks, state);
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+        // start Tasks (executed on internal Thread pool)
+        for(int iter=0; iter<tasks.length; iter++) {
+            tasks[iter].execute();
+        }
 
     }
 
+    private class SyncState {
+        AtomicInteger counter = new AtomicInteger(0);
+        boolean[] result;
+
+        public SyncState(int numResults) {
+            this.result = new boolean[numResults];
+        }
+    }
+
     private class SyncTask extends AsyncTask<Void, Integer, String> {
+
+        private int taskID;
         private Synchronizer synchronizer;
         private int numBlocks;
         private Date date;
-        private AtomicInteger counter;
-        private int counterResult;
+        private SyncState state;
 
-        public SyncTask(Synchronizer synchronizer, int numBlocks, AtomicInteger counter, int result) {
+        public SyncTask(int taskID, Date date, Synchronizer synchronizer, int numBlocks, SyncState state) {
             super();
+            this.taskID = taskID;
+            this.synchronizer = synchronizer;
+            this.date = date;
+            this.numBlocks = numBlocks;
+            this.state = state;
         }
 
         @Override
         protected String doInBackground(Void... params) {
             try {
                 synchronizer.transferDataForDate(date, numBlocks);
+                state.result[taskID] = true;
                 return "Success";
             } catch (BlockAditStreamException e) {
                 e.printStackTrace();
+                state.result[taskID] = false;
                 return "Error occured :(";
+            } finally {
+                state.counter.incrementAndGet();
             }
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            int curCounter = counter.incrementAndGet();
-            if(curCounter == counterResult) {
-                //last do stuff
+            int curCounter = state.counter.get();
+            double length = (100.0 / state.result.length) * curCounter;
+            progressBar.setProgress((int) length);
+            if (curCounter == state.result.length) {
+                boolean ok = true;
+                for (boolean x : state.result) {
+                    if(!x) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (ok) {
+                    progressText.setText("Success");
+                    progressText.setVisibility(View.VISIBLE);
+                } else {
+                    progressText.setText("Failure");
+                    progressText.setVisibility(View.VISIBLE);
+                }
+                progressBar.setVisibility(View.INVISIBLE);
             }
 
         }
