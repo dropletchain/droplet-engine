@@ -112,7 +112,7 @@ def check_access_allowed(hex_pubkey, policy):
     addr = get_bitcoin_address_for_pubkey(str(hex_pubkey))
     if addr == policy.owner:
         return True
-    if addr in policy.shares:
+    if policy.check_has_share(addr):
         return True
     return False
 

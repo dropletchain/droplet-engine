@@ -330,7 +330,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
 
 
             shareUserNameView.setText(item.getName());
-            shareUseAddressView.setText(loader.getAddressForUser(item));
+            shareUseAddressView.setText(item.getShareAddress().toString());
             shareUseAddressView.setTextColor(Color.BLACK);
             shareUserNameView.setTextColor(Color.BLACK);
             imgView.setBackgroundResource(imgId);

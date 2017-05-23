@@ -46,6 +46,7 @@ public class ActivitiesUtil {
     static final String STREAM_OWNER_KEY = "stream_owner_key";
     static final String STREAM_ID_KEY = "stream_id_key";
     static final String TRANSACTION_ID_KEY = "transaction";
+    static final String IS_SHARED_KEY = "is_shared";
 
     static final String DATATYPE_KEY = "type";
     static final String DETAIL_DATE_KEY = "detail_date";

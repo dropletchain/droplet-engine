@@ -7,8 +7,6 @@
     <!--Fitbit api developer id: see https://dev.fitbit.com/-->
     <string name="fitbit_client_id">227KLR</string>
 
-    <string name="demo_cur_date">10.05.2017</string>
-
     <string name="title_activity_data_daily">DataDailyActivity</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
@@ -17,6 +15,8 @@
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="title_activity_demo_select">DemoSelectActivity</string>
 
+
+    <string name="demo_cur_date">31.04.2016</string>
 
     <string-array name="user_names">
         <item>Hossein</item>

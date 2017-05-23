@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ch.ethz.blockadit.activities.CloudSelectActivity;
 import ch.ethz.blockadit.blockadit.model.DataEntry;
@@ -104,7 +105,7 @@ public class BlockAditFitbitAPI {
         return data;
     }
 
-    public ArrayList<CloudSelectActivity.CloudListItem> getCloudListItems(Date today) throws BlockAditStreamException {
+    public ArrayList<CloudSelectActivity.CloudListItem> getCloudListItems(Date today, Set<Datatype> types) throws BlockAditStreamException {
         ArrayList<CloudSelectActivity.CloudListItem> items = new ArrayList<>();
         HashMap<Datatype, CloudSelectActivity.CloudListItem> mappings = new HashMap<>();
         long fromUnix = blockIDComp.dateToUnix(today);
@@ -120,10 +121,12 @@ public class BlockAditFitbitAPI {
             mappings.put(type, new CloudSelectActivity.CloudListItem(type, type.formatValue(aggrData[0])));
         }
         for(Datatype in : Datatype.values()) {
-            if(mappings.containsKey(in)) {
-                items.add(mappings.get(in));
-            } else {
-                items.add(new CloudSelectActivity.CloudListItem(in, in.formatValue(0)));
+            if (types.contains(in)) {
+                if (mappings.containsKey(in)) {
+                    items.add(mappings.get(in));
+                } else {
+                    items.add(new CloudSelectActivity.CloudListItem(in, in.formatValue(0)));
+                }
             }
         }
         return items;

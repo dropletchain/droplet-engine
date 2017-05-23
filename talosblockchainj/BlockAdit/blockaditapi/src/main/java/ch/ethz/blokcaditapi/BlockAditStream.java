@@ -200,7 +200,10 @@ public class BlockAditStream implements IBlockAditStream {
     private ChunkData[] dataFromChunks(CloudChunk[] chunks) {
         ChunkData[] data = new ChunkData[chunks.length];
         for (int idx=0; idx<chunks.length; idx ++)
-            data[idx] = dataFromChunk(chunks[idx]);
+            if(chunks[idx]!=null)
+                data[idx] = dataFromChunk(chunks[idx]);
+            else
+                data[idx] = new ChunkData();
         return data;
     }
 

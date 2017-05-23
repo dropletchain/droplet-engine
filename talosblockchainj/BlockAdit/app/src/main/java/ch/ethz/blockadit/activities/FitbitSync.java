@@ -117,7 +117,7 @@ public class FitbitSync extends AppCompatActivity {
         }
 
         try {
-            demoEndDate = ActivitiesUtil.titleFormat.parse("31.04.2016");
+            demoEndDate = ActivitiesUtil.titleFormat.parse(getString(R.string.demo_cur_date));
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -203,7 +203,11 @@ public class FitbitSync extends AppCompatActivity {
 
                     @Override
                     public void onNothingSelected(AdapterView<?> parent) {
-                        curSelectIndex = -1;
+                        if(streams != null && !streams.isEmpty()) {
+                            curSelectIndex = 0;
+                        } else {
+                            curSelectIndex = -1;
+                        }
                     }
                 });
             }

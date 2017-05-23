@@ -4,11 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
-import android.support.annotation.LayoutRes;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +25,6 @@ import org.bitcoinj.store.BlockStoreException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import ch.ethz.blockadit.R;
@@ -95,7 +93,7 @@ public class StreamViewActivity extends AppCompatActivity {
                     streamsTemp.add(s.get(i));
                 BasicStreamAdapter adapter = new BasicStreamAdapter(getApplicationContext(), streamsTemp, user);
                 myStreams.setAdapter(adapter);
-                //myStreams.setOnItemClickListener(adapter);
+                myStreams.setOnItemClickListener(new ItemSelectionListener(streamsTemp, false));
             }
         }.execute();
     }
@@ -121,9 +119,31 @@ public class StreamViewActivity extends AppCompatActivity {
                     streamsTemp.add(s.get(i));
                 BasicStreamAdapterShare adapter = new BasicStreamAdapterShare(getApplicationContext(), streamsTemp, user);
                 streamsSharedWithMe.setAdapter(adapter);
-                //streamsSharedWithMe.setOnItemClickListener(adapter);
+                streamsSharedWithMe.setOnItemClickListener(new ItemSelectionListener(streamsTemp, true));
             }
         }.execute();
+    }
+
+    private class ItemSelectionListener implements AdapterView.OnItemClickListener {
+
+        private List<IBlockAditStream> streams;
+        private boolean isShared;
+
+        public ItemSelectionListener(List<IBlockAditStream> streams, boolean isShared) {
+            this.streams = streams;
+            this.isShared = isShared;
+        }
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            IBlockAditStream selectedItem = streams.get(position);
+            Intent intent = new Intent(getApplicationContext(), CloudSelectActivity.class);
+            intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, user.toString());
+            intent.putExtra(ActivitiesUtil.STREAM_OWNER_KEY, selectedItem.getOwner().toString());
+            intent.putExtra(ActivitiesUtil.STREAM_ID_KEY, selectedItem.getStreamId());
+            intent.putExtra(ActivitiesUtil.IS_SHARED_KEY, isShared);
+            startActivity(intent);
+        }
     }
 
     private class BasicStreamAdapter extends ArrayAdapter<IBlockAditStream> {
@@ -228,7 +248,7 @@ public class StreamViewActivity extends AppCompatActivity {
             View temp = super.getView(position, convertView, parent);
             ImageView sharePersonImage = (ImageView) temp.findViewById(R.id.sharePersonImage);
             int imgId = this.getResourceForImage(item.getOwner());
-            imgId = imgId == -1 ?  R.mipmap.ic_launcher : imgId;
+            imgId = imgId <= 0 ?  R.mipmap.ic_launcher : imgId;
             sharePersonImage.setBackgroundResource(imgId);
             return temp;
         }

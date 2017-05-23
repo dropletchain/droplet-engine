@@ -84,9 +84,10 @@ public class Synchronizer {
         int interval = DAILY_SECONDS / chunks.length;
         for(Dataset dataSet : datasets) {
             Time time = Time.valueOf(dataSet.getTime());
-            long timeMs = transformDates(dateSql, time).getTime() - dateSql.getTime();
+            Date timestamp = transformDates(dateSql, time);
+            long timeMs = timestamp.getTime() - dateSql.getTime();
             int id =(int) ((timeMs/1000) / interval);
-            chunks[id].addEntry(new IntegerEntry(timeMs * 1000, type.getDisplayRep(), dataSet.getValue()));
+            chunks[id].addEntry(new IntegerEntry(timestamp.getTime()/1000, type.getDisplayRep(), dataSet.getValue()));
         }
     }
 
@@ -94,9 +95,10 @@ public class Synchronizer {
         int interval = DAILY_SECONDS / chunks.length;
         for(DoubleDataSet dataSet : datasets) {
             Time time = Time.valueOf(dataSet.getTime());
-            long timeMs = transformDates(dateSql, time).getTime() - dateSql.getTime();
-            int id =(int) ((timeMs *1000) / interval);
-            chunks[id].addEntry(new DoubleEntry(timeMs * 1000, type.getDisplayRep(), dataSet.getValue()));
+            Date timestamp = transformDates(dateSql, time);
+            long timeMs = timestamp.getTime() - dateSql.getTime();
+            int id =(int) ((timeMs/1000) / interval);
+            chunks[id].addEntry(new DoubleEntry(timestamp.getTime()/1000, type.getDisplayRep(), dataSet.getValue()));
         }
     }
 

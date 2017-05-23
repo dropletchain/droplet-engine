@@ -1,10 +1,44 @@
 package ch.ethz.blockadit.activities;
 
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.store.BlockStoreException;
 
 import java.io.Serializable;
+import java.net.UnknownHostException;
+import java.sql.Date;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import ch.ethz.blockadit.R;
+import ch.ethz.blockadit.blockadit.BlockAditFitbitAPI;
 import ch.ethz.blockadit.blockadit.Datatype;
+import ch.ethz.blockadit.util.BlockaditStorageState;
+import ch.ethz.blockadit.util.DemoUser;
+import ch.ethz.blockadit.util.StreamIDType;
+import ch.ethz.blokcaditapi.BlockAditStorage;
+import ch.ethz.blokcaditapi.BlockAditStreamException;
+import ch.ethz.blokcaditapi.IBlockAditStream;
+import ch.ethz.blokcaditapi.policy.PolicyClientException;
 /*
  * Copyright (c) 2016, Institute for Pervasive Computing, ETH Zurich.
  * All rights reserved.
@@ -40,7 +74,7 @@ import ch.ethz.blockadit.blockadit.Datatype;
  */
 
 public class CloudSelectActivity extends AppCompatActivity {
-    /*
+
     private ListView list;
     private ArrayList<CloudListItem> itemsList = new ArrayList<>();
 
@@ -54,6 +88,11 @@ public class CloudSelectActivity extends AppCompatActivity {
     private ImageButton leftButton;
     private ImageButton rightButton;
 
+    private DemoUser user;
+    private BlockAditStorage storage;
+    private boolean isShare;
+    private IBlockAditStream stream = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +101,31 @@ public class CloudSelectActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(getString(R.string.title_cloud));
 
         dateTitle = (TextView) findViewById(R.id.selectedDate);
-        today = Calendar.getInstance().getTime();
+
+        try {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(ActivitiesUtil.titleFormat.parse(getString(R.string.demo_cur_date)));
+            cal.add(Calendar.DATE, -1);
+            today = new Date(cal.getTime().getTime());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        Intent creator = getIntent();
+        String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
+        String owner = creator.getExtras().getString(ActivitiesUtil.STREAM_OWNER_KEY);
+        final int streamID = creator.getExtras().getInt(ActivitiesUtil.STREAM_ID_KEY);
+        isShare = creator.getExtras().getBoolean(ActivitiesUtil.IS_SHARED_KEY);
+
+        this.user = DemoUser.fromString(userData);
+
+        try {
+            storage = BlockaditStorageState.getStorageForUser(this.user);
+        } catch (UnknownHostException | BlockStoreException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
         curDate = today;
         dateTitle.setText(ActivitiesUtil.titleFormat.format(curDate));
 
@@ -80,6 +143,10 @@ public class CloudSelectActivity extends AppCompatActivity {
                     Intent intent = new Intent(getApplicationContext(), DataWeeklyActivity.class);
                     intent.putExtra(ActivitiesUtil.DETAIL_DATE_KEY, ActivitiesUtil.titleFormat.format(curDate));
                     intent.putExtra(ActivitiesUtil.DATATYPE_KEY, item.type.name());
+                    intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, user.toString());
+                    intent.putExtra(ActivitiesUtil.STREAM_OWNER_KEY, stream.getOwner().toString());
+                    intent.putExtra(ActivitiesUtil.STREAM_ID_KEY, stream.getStreamId());
+                    intent.putExtra(ActivitiesUtil.IS_SHARED_KEY, isShare);
                     startActivity(intent);
                 }
 
@@ -89,64 +156,69 @@ public class CloudSelectActivity extends AppCompatActivity {
             list.setAdapter(new CloudListAdapter(this, cachedOld));
             itemsList = cachedOld;
         }
-        loadActualDate();
+        loadStream(Address.fromBase58(DemoUser.params, owner), streamID, isShare);
     }
 
-    private synchronized void loadActualDate() {
-        final BlockAditFitbitAPI api = TalosAPIFactory.createAPI(this);
-        (new AsyncTask<Void, Void, Date>() {
+    private void loadStream(final Address owner, final int streamID, final boolean isShare) {
+        new AsyncTask<Void, Integer, IBlockAditStream>() {
             @Override
-            protected Date doInBackground(Void... params) {
+            protected IBlockAditStream doInBackground(Void... params) {
                 try {
-                    return api.getMostActualDate(u);
-                } catch (TalosModuleException e) {
+                    if(isShare) {
+                        return storage.getAccessStreamForID(owner, streamID);
+                    } else {
+                        return storage.getStreamForID(owner, streamID);
+                    }
+                } catch (PolicyClientException | BlockAditStreamException e) {
                     e.printStackTrace();
                     return null;
                 }
             }
 
             @Override
-            protected void onPostExecute(Date date) {
-                super.onPostExecute(date);
-                curDate = date;
-                dateTitle.setText(ActivitiesUtil.titleFormat.format(curDate));
-                loadCloudItems();
+            protected void onPostExecute(IBlockAditStream streamRes) {
+                super.onPostExecute(streamRes);
+                if (streamRes != null) {
+                    stream = streamRes;
+                    loadCloudItems();
+                }
             }
-        }).execute();
+        }.execute();
     }
-
 
     private synchronized void loadCloudItems() {
-        final BlockAditFitbitAPI api = TalosAPIFactory.createAPI(this);
+        if(stream == null)
+            return;
+        final BlockAditFitbitAPI api = new BlockAditFitbitAPI(stream);
         final Date fixedDate = new Date(curDate.getTime());
-            (new AsyncTask<Void, Void, ArrayList<CloudListItem>>() {
-                @Override
-                protected ArrayList<CloudListItem> doInBackground(Void... params) {
-                    User u = StartActivity.getLoggedInUser();
-                    try {
-                        return api.getCloudListItems(u, new java.sql.Date(fixedDate.getTime()));
-                    } catch (TalosModuleException e) {
-                        e.printStackTrace();
-                        return null;
-                    }
+        new AsyncTask<Void, Void, ArrayList<CloudListItem>>() {
+            @Override
+            protected ArrayList<CloudListItem> doInBackground(Void... params) {
+                try {
+                    StreamIDType types = new StreamIDType(stream.getStreamId());
+                    return api.getCloudListItems(fixedDate, types.getDatatypeSet());
+                } catch (BlockAditStreamException e) {
+                    e.printStackTrace();
+                    return new ArrayList<CloudListItem>();
                 }
+            }
 
-                @Override
-                protected void onPostExecute(ArrayList<CloudListItem> items) {
-                    super.onPostExecute(items);
-                    if(items==null)
-                        return;
-                    itemsList = items;
-                    if(0==loadCount.getAndIncrement())
-                        cachedOld = items;
-                    CloudListAdapter adapter = new CloudListAdapter(getApplicationContext(), items);
-                    list.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
-                    list.invalidateViews();
-                }
-            }).execute();
+            @Override
+            protected void onPostExecute(ArrayList<CloudListItem> items) {
+                super.onPostExecute(items);
+                if(items==null)
+                    return;
+                itemsList = items;
+                if(0==loadCount.getAndIncrement())
+                    cachedOld = items;
+                CloudListAdapter adapter = new CloudListAdapter(getApplicationContext(), items);
+                list.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
+                list.invalidateViews();
+            }
+        }.execute();
     }
-    */
+
     public static class CloudListItem implements Serializable {
         private Datatype type;
         private String content;
@@ -157,12 +229,12 @@ public class CloudSelectActivity extends AppCompatActivity {
     }
 
 
-    /*
+
     public synchronized void onRightClick(View v) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(curDate);
         cal.add(Calendar.DATE, 1);
-        curDate=cal.getTime();
+        curDate= new Date(cal.getTime().getTime());
         if(curDate.compareTo(today)>=0) {
             rightButton.setVisibility(View.INVISIBLE);
         }
@@ -180,7 +252,7 @@ public class CloudSelectActivity extends AppCompatActivity {
         Calendar cal = Calendar.getInstance();
         cal.setTime(curDate);
         cal.add(Calendar.DATE, -1);
-        curDate=cal.getTime();
+        curDate= new Date(cal.getTime().getTime());
         dateTitle.setText(ActivitiesUtil.titleFormat.format(curDate));
         if(rightButton.getVisibility() == View.INVISIBLE) {
             rightButton.setVisibility(View.VISIBLE);
@@ -226,5 +298,5 @@ public class CloudSelectActivity extends AppCompatActivity {
 
             return convertView;
         }
-    }*/
+    }
 }

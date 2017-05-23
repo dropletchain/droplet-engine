@@ -90,12 +90,12 @@
 
     <ImageView
         android:id="@+id/sharePersonImage"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
         android:layout_alignParentTop="false"
         android:layout_alignRight="@+id/streamLinLayout"
-        android:layout_marginRight="5dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
         android:layout_weight="1" />
 
 </RelativeLayout>

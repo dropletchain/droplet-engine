@@ -34,6 +34,12 @@ class Policy:
     def remove_share(self, share):
         self.shares = [(a, b) for (a, b) in self.shares if a != share]
 
+    def check_has_share(self, share):
+        for (a, b) in self.shares:
+            if a == share:
+                return True
+        return False
+
     def add_time_tuple(self, time):
         if isinstance(time, list):
             self.times += time

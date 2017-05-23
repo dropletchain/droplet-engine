@@ -167,8 +167,9 @@ public class CreateStream extends AppCompatActivity {
     }
 
     public void onFromDateSet(Date date) {
-        curDate = date;
-        fromDate.setText(ActivitiesUtil.titleFormat.format(date));
+        //Hack
+        curDate = new Date((new java.sql.Date(date.getTime())).getTime());
+        fromDate.setText(ActivitiesUtil.titleFormat.format(curDate));
     }
 
     public static class CreateStreamDatePicker extends DialogFragment implements DatePickerDialog.OnDateSetListener {
@@ -195,6 +196,10 @@ public class CreateStream extends AppCompatActivity {
         public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
             Calendar cur = Calendar.getInstance();
             cur.set(year, monthOfYear, dayOfMonth);
+            cur.set(Calendar.HOUR_OF_DAY, 0);
+            cur.set(Calendar.HOUR, 0);
+            cur.set(Calendar.MINUTE, 0);
+            cur.set(Calendar.SECOND, 0);
             Date date = cur.getTime();
             attached.onFromDateSet(date);
         }
