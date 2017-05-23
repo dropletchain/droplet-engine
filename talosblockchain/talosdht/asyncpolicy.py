@@ -15,7 +15,7 @@ class AsyncPolicyApiClient(TalosVCRestClient):
     using twisted.
     """
 
-    def __init__(self, ip='127.0.0.1', port=5000, max_cache_size=1000, ttl_policy=300):
+    def __init__(self, ip='127.0.0.1', port=5000, max_cache_size=1000, ttl_policy=30):
         TalosVCRestClient.__init__(self, ip, port)
         self.pool = HTTPConnectionPool(reactor)
         self.agent = Agent(reactor, pool=self.pool)
