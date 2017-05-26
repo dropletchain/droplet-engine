@@ -44,10 +44,17 @@ import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 public class AppUtil {
 
     public static final boolean MEASURE_CLOUD_ACCESS = false;
+    private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+    private static SimpleDateFormat sqlFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+    public static java.sql.Date utilDateToSqlDate(java.util.Date in) {
+       return java.sql.Date.valueOf(sqlFormat.format(in));
+    }
 
     public static int transformToInt(double data, int radix) {
         double temp = data * (Math.pow(10.0,radix));
@@ -62,14 +69,11 @@ public class AppUtil {
 
     public static java.util.Date transformDates(java.sql.Date date, java.sql.Time time) {
         //Hack :S Why are dates so stupidly handled in Java
-        SimpleDateFormat combinedformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-        try {
-            return combinedformat.parse(dateFormat.format(date) + " " + timeFormat.format(time));
-        } catch (ParseException e) {
-            return new java.util.Date();
-        }
+        String[] parsed = timeFormat.format(time).split(":");
+        int hours = Integer.valueOf(parsed[0]);
+        int min = Integer.valueOf(parsed[1]);
+        int sec = Integer.valueOf(parsed[2]);
+        return new java.util.Date(date.getTime() + hours * 3600 + min * 60 + sec);
     }
 
     public static Bitmap createQRCode(String content, int size) {
