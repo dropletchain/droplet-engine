@@ -41,7 +41,8 @@ public class ActivitiesUtil {
     static final int RESULT_OK = 1;
     static final int RESULT_ERROR = 2;
 
-
+    static final String QR_SELECT_STRING_KEY = "selected_qr_string";
+    static final String SELECTED_USER_KEY = "selectedUser";
     static final String DEMO_USER_KEY = "demo_user";
     static final String STREAM_OWNER_KEY = "stream_owner_key";
     static final String STREAM_ID_KEY = "stream_id_key";

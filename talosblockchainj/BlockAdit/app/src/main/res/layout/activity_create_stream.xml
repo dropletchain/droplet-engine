@@ -38,7 +38,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_marginTop="20dp"
-                    android:text="From "
+                    android:text="From    "
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </FrameLayout>
@@ -47,7 +47,7 @@
                 android:id="@+id/fromDateSelect"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.6"
+                android:layout_weight="0.15"
                 android:background="@color/heavierBG"
                 android:onClick="selectedFromDate"
                 android:padding="10dp"
@@ -64,14 +64,16 @@
             <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="1">
+                android:layout_weight="0.08">
 
                 <TextView
                     android:id="@+id/imtervalText"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
                     android:layout_weight="1"
                     android:text="Interval"
+                    android:textAlignment="viewStart"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </FrameLayout>
@@ -79,8 +81,9 @@
             <Spinner
                 android:id="@+id/spinnerInterval"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_height="45dp"
+                android:layout_weight="1.13"
+                android:background="@color/heavierBG" />
         </LinearLayout>
 
         <LinearLayout
@@ -89,31 +92,31 @@
             android:layout_marginTop="30dp"
             android:orientation="vertical">
 
-            <RadioButton
+            <CheckBox
                 android:id="@+id/radioSteps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Steps" />
 
-            <RadioButton
+            <CheckBox
                 android:id="@+id/radioFloors"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Floors" />
 
-            <RadioButton
+            <CheckBox
                 android:id="@+id/radioDistance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Distance" />
 
-            <RadioButton
+            <CheckBox
                 android:id="@+id/radioCalendar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Calendar" />
 
-            <RadioButton
+            <CheckBox
                 android:id="@+id/radioHeart"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

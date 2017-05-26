@@ -23,6 +23,20 @@ import java.util.ArrayList;
  */
 
 public class BitcoinExperiment {
+    @Test
+    public void getAddresSend() throws Exception {
+        RegTestParams params = RegTestParams.get();
+        String privKey = "cT3GKi6SbCwKEG2o9BJCtrmaCDSkAFfvF6nwS3GDb4xbCNBiUoy6";
+        ECKey key;
+        if (privKey.length() == 51 || privKey.length() == 52) {
+            DumpedPrivateKey dumpedPrivateKey = DumpedPrivateKey.fromBase58(params, privKey);
+            key = dumpedPrivateKey.getKey();
+        } else {
+            BigInteger privKeyNum= Base58.decodeToBigInteger(privKey);
+            key = ECKey.fromPrivate(privKeyNum);
+        }
+        System.out.println(key.toAddress(params));
+    }
 
     @Test
     public void runExperimentSend() throws Exception {

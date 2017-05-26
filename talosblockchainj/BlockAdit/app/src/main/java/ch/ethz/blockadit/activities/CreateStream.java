@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -38,11 +39,11 @@ import static ch.ethz.blockadit.activities.PolicySettingsActivity.temporaryStrea
 
 public class CreateStream extends AppCompatActivity {
 
-    private RadioButton stepsRadio;
-    private RadioButton floorRadio;
-    private RadioButton distRadio;
-    private RadioButton calRadio;
-    private RadioButton heartRadio;
+    private CheckBox stepsRadio;
+    private CheckBox floorRadio;
+    private CheckBox distRadio;
+    private CheckBox calRadio;
+    private CheckBox heartRadio;
 
     private Button fromDate;
     private Spinner interval;
@@ -70,11 +71,11 @@ public class CreateStream extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        stepsRadio = (RadioButton) findViewById(R.id.radioSteps);
-        floorRadio = (RadioButton) findViewById(R.id.radioFloors);
-        distRadio = (RadioButton) findViewById(R.id.radioDistance);
-        calRadio = (RadioButton) findViewById(R.id.radioCalendar);
-        heartRadio = (RadioButton) findViewById(R.id.radioHeart);
+        stepsRadio = (CheckBox) findViewById(R.id.radioSteps);
+        floorRadio = (CheckBox) findViewById(R.id.radioFloors);
+        distRadio = (CheckBox) findViewById(R.id.radioDistance);
+        calRadio = (CheckBox) findViewById(R.id.radioCalendar);
+        heartRadio = (CheckBox) findViewById(R.id.radioHeart);
 
         fromDate = (Button) findViewById(R.id.fromDateSelect);
         interval = (Spinner) findViewById(R.id.spinnerInterval);

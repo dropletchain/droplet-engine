@@ -69,7 +69,8 @@
         <activity
             android:name=".activities.LoadingBlockchainActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".activities.StreamViewActivity"></activity>
+        <activity android:name=".activities.StreamViewActivity" />
+        <activity android:name=".activities.QRCodeActivity"></activity>
     </application>
 
 </manifest>

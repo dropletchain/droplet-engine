@@ -57,6 +57,7 @@ public class AddShareActivity extends AppCompatActivity {
 
     private IBlockAditStream stream = null;
     private DemoUser selectedUser = null;
+    private DemoUser startSelectedUser = null;
     private Date selectedDate = null;
     private Date before = new Date(0);
 
@@ -69,6 +70,11 @@ public class AddShareActivity extends AppCompatActivity {
         String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
         String ownerString = creator.getExtras().getString(ActivitiesUtil.STREAM_OWNER_KEY);
         int streamID = creator.getExtras().getInt(ActivitiesUtil.STREAM_ID_KEY);
+
+        if(creator.getExtras().containsKey(ActivitiesUtil.SELECTED_USER_KEY)) {
+            startSelectedUser = DemoUser.fromString(creator.getExtras()
+                    .getString(ActivitiesUtil.SELECTED_USER_KEY));
+        }
 
         this.user = DemoUser.fromString(userData);
 
@@ -144,6 +150,10 @@ public class AddShareActivity extends AppCompatActivity {
                                 shareOptions, new DemoDataLoader(getApplicationContext()));
                 shareSpinner.setAdapter(adapter);
                 shareSpinner.setOnItemSelectedListener(adapter);
+
+                if (startSelectedUser != null) {
+                    shareSpinner.setSelection(shareOptions.indexOf(startSelectedUser));
+                }
             }
         }.execute();
     }

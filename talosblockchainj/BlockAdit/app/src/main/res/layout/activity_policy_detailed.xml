@@ -172,6 +172,17 @@
                     android:textStyle="bold" />
 
                 <Button
+                    android:id="@+id/addShareQRButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_gravity="fill_horizontal"
+                    android:layout_margin="5dp"
+                    android:background="@color/heavierBG"
+                    android:onClick="onAddQRShare"
+                    android:text="QR +"
+                    android:textSize="25dp" />
+
+                <Button
                     android:id="@+id/addShareButton"
                     android:layout_width="wrap_content"
                     android:layout_height="35dp"

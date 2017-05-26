@@ -103,4 +103,17 @@ public class DemoUser {
         String[] splits = user.split(",");
         return new DemoUser(splits[0], splits[1], splits[2]);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if(!(o instanceof  DemoUser))
+            return false;
+        DemoUser user = (DemoUser) o;
+        return this.name.equals(user.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.name.hashCode();
+    }
 }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -239,6 +240,28 @@ public class PolicyDetailedActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 0) {
+
+            if (resultCode == RESULT_OK) {
+                String userShareAddress = data.getStringExtra("SCAN_RESULT");
+                Address shareAddr = Address.fromBase58(DemoUser.params, userShareAddress);
+                for (DemoUser user : users) {
+                    if(user.getShareAddress().equals(shareAddr)) {
+                        Intent i = new Intent(this, AddShareActivity.class);
+                        i.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
+                        i.putExtra(ActivitiesUtil.SELECTED_USER_KEY, user.toString());
+                        i.putExtra(ActivitiesUtil.STREAM_OWNER_KEY, stream.getOwner().toString());
+                        i.putExtra(ActivitiesUtil.STREAM_ID_KEY, stream.getStreamId());
+                        startActivityForResult(i, 1);
+                    }
+                }
+            }
+
+            if(resultCode == RESULT_CANCELED){
+                Log.e("Add Share Qr Scan", "Scan Failed :(");
+            }
+        }
+
         if (requestCode == 1) {
             if(resultCode == Activity.RESULT_OK){
                 loadShares(stream, true);
@@ -256,6 +279,20 @@ public class PolicyDetailedActivity extends AppCompatActivity {
             i.putExtra(ActivitiesUtil.STREAM_OWNER_KEY, stream.getOwner().toString());
             i.putExtra(ActivitiesUtil.STREAM_ID_KEY, stream.getStreamId());
             startActivityForResult(i, 1);
+        }
+    }
+
+    public void onAddQRShare(View v) {
+        if(stream != null) {
+            try {
+                Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+                intent.putExtra("SCAN_MODE", "QR_CODE_MODE"); // "PRODUCT_MODE for bar codes
+                startActivityForResult(intent, 0);
+            } catch (Exception e) {
+                Uri marketUri = Uri.parse("market://details?id=com.google.zxing.client.android");
+                Intent marketIntent = new Intent(Intent.ACTION_VIEW, marketUri);
+                startActivity(marketIntent);
+            }
         }
     }
 

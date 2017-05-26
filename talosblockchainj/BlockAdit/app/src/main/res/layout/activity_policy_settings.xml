@@ -23,29 +23,52 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/ownerSetting"
-                        android:layout_width="match_parent"
+                    <Button
+                        android:id="@+id/QR"
+                        android:layout_width="50dp"
                         android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:text="Owner: -"
-                        android:textAlignment="center"
-                        android:textSize="14sp"
-                        android:textStyle="italic" />
+                        android:layout_gravity="fill_horizontal"
+                        android:background="@color/heavierBG"
+                        android:onClick="onQR"
+                        android:padding="5dp"
+                        android:text="QR"
+                        android:textSize="18dp" />
 
-                    <TextView
-                        android:id="@+id/BalanceSetting"
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
-                        android:layout_marginTop="5dp"
-                        android:paddingLeft="10dp"
-                        android:text="Balance: -"
-                        android:textAlignment="center"
-                        android:textSize="18sp" />
+                        android:layout_height="match_parent">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/ownerSetting"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:paddingLeft="10dp"
+                                android:text="Owner: -"
+                                android:textAlignment="center"
+                                android:textSize="14sp"
+                                android:textStyle="italic" />
+
+                            <TextView
+                                android:id="@+id/BalanceSetting"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="10dp"
+                                android:layout_marginTop="5dp"
+                                android:paddingLeft="10dp"
+                                android:text="Balance: -"
+                                android:textAlignment="center"
+                                android:textSize="18sp" />
+
+                        </LinearLayout>
+                    </FrameLayout>
 
                 </LinearLayout>
 
@@ -64,7 +87,6 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_alignParentTop="true"
-                    android:layout_marginBottom="5dp"
                     android:layout_weight="0.88" />
 
                 <Button

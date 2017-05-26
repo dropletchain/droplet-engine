@@ -161,6 +161,12 @@ public class PolicySettingsActivity extends AppCompatActivity {
         }.execute();
     }
 
+    public void onQR(View v) {
+        Intent i = new Intent(this, QRCodeActivity.class);
+        i.putExtra(ActivitiesUtil.QR_SELECT_STRING_KEY, this.user.getShareAddress().toString());
+        startActivityForResult(i, 0);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
