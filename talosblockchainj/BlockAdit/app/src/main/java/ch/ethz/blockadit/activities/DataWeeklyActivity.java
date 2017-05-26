@@ -1,6 +1,47 @@
 package ch.ethz.blockadit.activities;
 
+import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.DatePicker;
+import android.widget.TextView;
+
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.formatter.YAxisValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.store.BlockStoreException;
+
+import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+
+import ch.ethz.blockadit.R;
+import ch.ethz.blockadit.blockadit.BlockAditFitbitAPI;
+import ch.ethz.blockadit.blockadit.Datatype;
+import ch.ethz.blockadit.blockadit.model.DataEntryAgrDate;
+import ch.ethz.blockadit.util.BlockaditStorageState;
+import ch.ethz.blockadit.util.DemoUser;
+import ch.ethz.blokcaditapi.BlockAditStorage;
+import ch.ethz.blokcaditapi.BlockAditStreamException;
+import ch.ethz.blokcaditapi.IBlockAditStream;
+import ch.ethz.blokcaditapi.policy.PolicyClientException;
 
 
 /*
@@ -39,7 +80,7 @@ import android.support.v7.app.AppCompatActivity;
 
 public class DataWeeklyActivity extends AppCompatActivity {
 
-    /*private BarChart mChart;
+    private BarChart mChart;
     private Calendar currentCalendar;
 
     private TextView fromDate;
@@ -48,6 +89,11 @@ public class DataWeeklyActivity extends AppCompatActivity {
     private Datatype type;
 
     private ArrayList<Date> dates = new ArrayList<>();
+
+    private DemoUser user;
+    private BlockAditStorage storage;
+    private boolean isShare;
+    private IBlockAditStream stream = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +110,19 @@ public class DataWeeklyActivity extends AppCompatActivity {
             }
         } else {
             fixDate = Calendar.getInstance().getTime();
+        }
+
+        String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
+        String owner = creator.getExtras().getString(ActivitiesUtil.STREAM_OWNER_KEY);
+        final int streamID = creator.getExtras().getInt(ActivitiesUtil.STREAM_ID_KEY);
+        isShare = creator.getExtras().getBoolean(ActivitiesUtil.IS_SHARED_KEY);
+
+        this.user = DemoUser.fromString(userData);
+
+        try {
+            storage = BlockaditStorageState.getStorageForUser(this.user);
+        } catch (UnknownHostException | BlockStoreException | InterruptedException e) {
+            e.printStackTrace();
         }
 
 
@@ -91,6 +150,10 @@ public class DataWeeklyActivity extends AppCompatActivity {
                     Intent intent = new Intent(getApplicationContext(), DataDailyActivity.class);
                     intent.putExtra(ActivitiesUtil.DETAIL_DATE_KEY, ActivitiesUtil.titleFormat.format(selectedDate));
                     intent.putExtra(ActivitiesUtil.DATATYPE_KEY, type.name());
+                    intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, user.toString());
+                    intent.putExtra(ActivitiesUtil.STREAM_OWNER_KEY, stream.getOwner().toString());
+                    intent.putExtra(ActivitiesUtil.STREAM_ID_KEY, stream.getStreamId());
+                    intent.putExtra(ActivitiesUtil.IS_SHARED_KEY, isShare);
                     startActivity(intent);
                 }
 
@@ -115,7 +178,34 @@ public class DataWeeklyActivity extends AppCompatActivity {
         fromDate.setText(ActivitiesUtil.titleFormat.format(from));
         toDate.setText(ActivitiesUtil.titleFormat.format(to));
 
-        loadData();
+        loadStream(Address.fromBase58(DemoUser.params, owner), streamID, isShare);
+    }
+
+    private void loadStream(final Address owner, final int streamID, final boolean isShare) {
+        new AsyncTask<Void, Integer, IBlockAditStream>() {
+            @Override
+            protected IBlockAditStream doInBackground(Void... params) {
+                try {
+                    if (isShare) {
+                        return storage.getAccessStreamForID(owner, streamID);
+                    } else {
+                        return storage.getStreamForID(owner, streamID);
+                    }
+                } catch (PolicyClientException | BlockAditStreamException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(IBlockAditStream streamRes) {
+                super.onPostExecute(streamRes);
+                if (streamRes != null) {
+                    stream = streamRes;
+                    loadData();
+                }
+            }
+        }.execute();
     }
 
     private void setDataEmpty(Date from, Date to) {
@@ -211,22 +301,22 @@ public class DataWeeklyActivity extends AppCompatActivity {
         Calendar cal = Calendar.getInstance();
         final Date dateCurMedian = currentCalendar.getTime();
         cal.setTime(dateCurMedian);
-        cal.add(Calendar.DATE, 3);
+        cal.add(Calendar.DATE, 4);
+        final Date toDateExcluded= cal.getTime();
+        cal.add(Calendar.DATE, -1);
         final Date to = cal.getTime();
         cal.setTime(dateCurMedian);
         cal.add(Calendar.DATE, -3);
         final Date from = cal.getTime();
-        final BlockAditFitbitAPI api = TalosAPIFactory.createAPI(this);
-
+        final BlockAditFitbitAPI api = new BlockAditFitbitAPI(stream);
         (new AsyncTask<Void, Void, ArrayList<DataEntryAgrDate>>() {
             @Override
             protected ArrayList<DataEntryAgrDate> doInBackground(Void... params) {
-                User u = StartActivity.getLoggedInUser();
                 try {
-                    return api.getAgrDataPerDate(u, new java.sql.Date(from.getTime()), new java.sql.Date(to.getTime()), type);
-                } catch (TalosModuleException e) {
+                    return api.getAgrDataPerDate(new java.sql.Date(from.getTime()), new java.sql.Date(toDateExcluded.getTime()), type);
+                } catch (BlockAditStreamException e) {
                     e.printStackTrace();
-                   return null;
+                    return null;
                 }
             }
 
@@ -283,5 +373,5 @@ public class DataWeeklyActivity extends AppCompatActivity {
             Date date = cur.getTime();
             attached.onDataSet(date);
         }
-    }*/
+    }
 }

@@ -1,6 +1,46 @@
 package ch.ethz.blockadit.activities;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.TextView;
+
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.store.BlockStoreException;
+
+import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+
+import ch.ethz.blockadit.R;
+import ch.ethz.blockadit.blockadit.BlockAditFitbitAPI;
+import ch.ethz.blockadit.blockadit.Datatype;
+import ch.ethz.blockadit.blockadit.TalosAPIFactory;
+import ch.ethz.blockadit.blockadit.model.DataEntryAgrTime;
+import ch.ethz.blockadit.util.BlockaditStorageState;
+import ch.ethz.blockadit.util.DemoUser;
+import ch.ethz.blokcaditapi.BlockAditStorage;
+import ch.ethz.blokcaditapi.BlockAditStreamException;
+import ch.ethz.blokcaditapi.IBlockAditStream;
+import ch.ethz.blokcaditapi.policy.PolicyClientException;
 
 
 /*
@@ -38,7 +78,7 @@ import android.support.v7.app.AppCompatActivity;
  */
 
 public class DataDailyActivity extends AppCompatActivity {
-    /*
+
     private static final boolean AUTO_HIDE = true;
 
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
@@ -99,6 +139,11 @@ public class DataDailyActivity extends AppCompatActivity {
     private Datatype type;
     private TextView title;
 
+    private DemoUser user;
+    private BlockAditStorage storage;
+    private boolean isShare;
+    private IBlockAditStream stream = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,6 +157,20 @@ public class DataDailyActivity extends AppCompatActivity {
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
+
+        Intent creator = getIntent();
+        String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
+        String owner = creator.getExtras().getString(ActivitiesUtil.STREAM_OWNER_KEY);
+        final int streamID = creator.getExtras().getInt(ActivitiesUtil.STREAM_ID_KEY);
+        isShare = creator.getExtras().getBoolean(ActivitiesUtil.IS_SHARED_KEY);
+
+        this.user = DemoUser.fromString(userData);
+
+        try {
+            storage = BlockaditStorageState.getStorageForUser(this.user);
+        } catch (UnknownHostException | BlockStoreException | InterruptedException e) {
+            e.printStackTrace();
+        }
 
 
         // Set up the user interaction to manually show or hide the system UI.
@@ -155,7 +214,34 @@ public class DataDailyActivity extends AppCompatActivity {
         mChart.setGridBackgroundColor(getResources().getColor(R.color.lightBG));
         setEmptyData();
 
-        loadData();
+        loadStream(Address.fromBase58(DemoUser.params, owner), streamID, isShare);
+    }
+
+    private void loadStream(final Address owner, final int streamID, final boolean isShare) {
+        new AsyncTask<Void, Integer, IBlockAditStream>() {
+            @Override
+            protected IBlockAditStream doInBackground(Void... params) {
+                try {
+                    if (isShare) {
+                        return storage.getAccessStreamForID(owner, streamID);
+                    } else {
+                        return storage.getStreamForID(owner, streamID);
+                    }
+                } catch (PolicyClientException | BlockAditStreamException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(IBlockAditStream streamRes) {
+                super.onPostExecute(streamRes);
+                if (streamRes != null) {
+                    stream = streamRes;
+                    loadData();
+                }
+            }
+        }.execute();
     }
 
     private String getTitle(Datatype titleType, Date titleDate) {
@@ -244,15 +330,14 @@ public class DataDailyActivity extends AppCompatActivity {
     }
 
     private void loadData() {
-        final BlockAditFitbitAPI api = TalosAPIFactory.createAPI(this);
+        final BlockAditFitbitAPI api = TalosAPIFactory.createAPI(stream);
         final Date dstDate = new Date(detailDate.getTime());
         (new AsyncTask<Void, Void, ArrayList<DataEntryAgrTime>>() {
             @Override
             protected ArrayList<DataEntryAgrTime> doInBackground(Void... params) {
-                User u = StartActivity.getLoggedInUser();
                 try {
-                    return api.getAgrDataForDate(u, new java.sql.Date(dstDate.getTime()), type);
-                } catch (TalosModuleException e) {
+                    return api.getAgrDataForDate(new java.sql.Date(dstDate.getTime()), type);
+                } catch (BlockAditStreamException e) {
                     e.printStackTrace();
                     return null;
                 }
@@ -329,6 +414,6 @@ public class DataDailyActivity extends AppCompatActivity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
-    }*/
+    }
 
 }

@@ -47,7 +47,6 @@
             android:name=".activities.DataDailyActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_data_daily"
-            android:parentActivityName=".activities.DataWeeklyActivity"
             android:theme="@style/FullscreenTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
