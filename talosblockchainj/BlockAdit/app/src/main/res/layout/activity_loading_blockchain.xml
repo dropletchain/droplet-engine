@@ -35,6 +35,6 @@
         android:layout_below="@+id/progressBar2"
         android:layout_centerHorizontal="true"
         android:padding="30dp"
-        app:srcCompat="@drawable/intro" />
+        app:srcCompat="@drawable/droplet" />
 
 </RelativeLayout>

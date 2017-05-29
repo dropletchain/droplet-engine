@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.15"
-                android:background="@color/heavierBG"
+                android:background="@color/lightBG"
                 android:onClick="selectedFromDate"
                 android:padding="10dp"
                 android:text="12.05.2015" />
@@ -114,7 +114,7 @@
                 android:id="@+id/radioCalendar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Calendar" />
+                android:text="Calories" />
 
             <CheckBox
                 android:id="@+id/radioHeart"

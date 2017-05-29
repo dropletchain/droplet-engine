@@ -82,7 +82,7 @@ public class Aggregator {
 
     public static List<DateTimeSummary> splitByGranularity(List<Entry> entries, java.sql.Date date, long granularity, Datatype type) {
         List<DateTimeSummary> result = new ArrayList<>();
-        long start = date.getTime();
+        long start = date.getTime() / 1000;
         long cur = start;
         int idx = 0;
         List<Entry> temp = new ArrayList<>();

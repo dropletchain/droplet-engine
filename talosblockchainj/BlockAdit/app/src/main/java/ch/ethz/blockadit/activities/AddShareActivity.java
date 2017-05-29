@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.List;
 
 import ch.ethz.blockadit.R;
+import ch.ethz.blockadit.util.AppUtil;
 import ch.ethz.blockadit.util.BlockaditStorageState;
 import ch.ethz.blockadit.util.DemoDataLoader;
 import ch.ethz.blockadit.util.DemoUser;
@@ -228,7 +229,7 @@ public class AddShareActivity extends AppCompatActivity {
             Calendar cur = Calendar.getInstance();
             cur.set(year, monthOfYear, dayOfMonth);
             Date date = cur.getTime();
-            attached.onFromDateSet(date);
+            attached.onFromDateSet(AppUtil.eraseTime(date));
         }
     }
 

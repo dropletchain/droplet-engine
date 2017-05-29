@@ -15,7 +15,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.ProgressBar;
-import android.widget.RadioButton;
 import android.widget.Spinner;
 
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -27,6 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import ch.ethz.blockadit.R;
+import ch.ethz.blockadit.util.AppUtil;
 import ch.ethz.blockadit.util.BlockaditStorageState;
 import ch.ethz.blockadit.util.DemoUser;
 import ch.ethz.blockadit.util.StreamIDType;
@@ -197,12 +197,8 @@ public class CreateStream extends AppCompatActivity {
         public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
             Calendar cur = Calendar.getInstance();
             cur.set(year, monthOfYear, dayOfMonth);
-            cur.set(Calendar.HOUR_OF_DAY, 0);
-            cur.set(Calendar.HOUR, 0);
-            cur.set(Calendar.MINUTE, 0);
-            cur.set(Calendar.SECOND, 0);
             Date date = cur.getTime();
-            attached.onFromDateSet(date);
+            attached.onFromDateSet(AppUtil.eraseTime(date));
         }
     }
 }

@@ -1,19 +1,19 @@
 <resources>
-    <string name="app_name">BlockAditum Fitbit App</string>
-    <string name="title_activity_fitbit_data_loader">FitbitDataLoader</string>
-    <string name="title_sync">Fitbit to Talos Sync</string>
+    <string name="app_name">Droplet Fitbit App</string>
+    <string name="title_activity_fitbit_data_loader">Droplet Data Loader</string>
+    <string name="title_sync">Fitbit to Droplet Sync</string>
     <string name="title_cloud">Secure Cloud</string>
 
     <!--Fitbit api developer id: see https://dev.fitbit.com/-->
     <string name="fitbit_client_id">227KLR</string>
 
-    <string name="title_activity_data_daily">DataDailyActivity</string>
+    <string name="title_activity_data_daily">Droplet Daily Activity</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_test_swipe">TestSwipe</string>
-    <string name="action_settings">Settings</string>
-    <string name="section_format">Hello World from section: %1$d</string>
-    <string name="title_activity_demo_select">DemoSelectActivity</string>
+    <string name="action_settings">Droplet Settings</string>
+     <string name="section_format">Hello World from section: %1$d</string>
+    <string name="title_activity_demo_select">Droplet Login</string>
 
 
     <string name="demo_cur_date">31.04.2016</string>

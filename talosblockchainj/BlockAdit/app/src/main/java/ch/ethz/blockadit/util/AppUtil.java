@@ -42,9 +42,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.TimeZone;
 
 public class AppUtil {
 
@@ -54,6 +52,10 @@ public class AppUtil {
 
     public static java.sql.Date utilDateToSqlDate(java.util.Date in) {
        return java.sql.Date.valueOf(sqlFormat.format(in));
+    }
+
+    public static java.util.Date eraseTime(java.util.Date in) {
+        return new java.util.Date(utilDateToSqlDate(in).getTime());
     }
 
     public static int transformToInt(double data, int radix) {
@@ -73,7 +75,7 @@ public class AppUtil {
         int hours = Integer.valueOf(parsed[0]);
         int min = Integer.valueOf(parsed[1]);
         int sec = Integer.valueOf(parsed[2]);
-        return new java.util.Date(date.getTime() + hours * 3600 + min * 60 + sec);
+        return new java.util.Date(((date.getTime()/1000) + hours * 3600 + min * 60 + sec) * 1000);
     }
 
     public static Bitmap createQRCode(String content, int size) {

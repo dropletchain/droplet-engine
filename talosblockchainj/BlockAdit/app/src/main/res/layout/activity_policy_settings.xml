@@ -43,7 +43,7 @@
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:orientation="vertical">
 
                             <TextView
@@ -56,23 +56,23 @@
                                 android:textSize="14sp"
                                 android:textStyle="italic" />
 
-                            <TextView
-                                android:id="@+id/BalanceSetting"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="10dp"
-                                android:layout_marginTop="5dp"
-                                android:paddingLeft="10dp"
-                                android:text="Balance: -"
-                                android:textAlignment="center"
-                                android:textSize="18sp" />
-
                         </LinearLayout>
                     </FrameLayout>
 
                 </LinearLayout>
 
             </FrameLayout>
+
+            <TextView
+                android:id="@+id/BalanceSetting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="5dp"
+                android:paddingLeft="10dp"
+                android:text="Balance: -"
+                android:textAlignment="center"
+                android:textSize="18sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -90,17 +90,6 @@
                     android:layout_marginTop="10dp"
                     android:layout_weight="0.88" />
 
-                <Button
-                    android:id="@+id/addPolicyButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:layout_gravity="fill_horizontal"
-                    android:layout_margin="5dp"
-                    android:background="@color/heavierBG"
-                    android:onClick="onAddStream"
-                    android:text="Add Stream"
-                    android:textSize="25dp" />
-
             </LinearLayout>
 
         </LinearLayout>
@@ -108,7 +97,17 @@
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
-
+    <Button
+        android:id="@+id/addPolicyButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="fill_horizontal"
+        android:layout_margin="5dp"
+        android:background="@color/heavierBG"
+        android:onClick="onAddStream"
+        android:layout_alignParentBottom="true"
+        android:text="Add Stream"
+        android:textSize="25dp" />
 
 
 </RelativeLayout>
