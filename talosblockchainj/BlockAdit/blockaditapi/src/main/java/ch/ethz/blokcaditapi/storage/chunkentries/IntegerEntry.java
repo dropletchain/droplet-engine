@@ -47,7 +47,7 @@ public class IntegerEntry implements Entry {
 
     @Override
     public int getEncodedSize() {
-        return Long.SIZE/8 + Integer.SIZE/8 + metadata.getBytes().length + Integer.SIZE/8 + 1;
+        return Long.SIZE / 8 + Integer.SIZE / 8 + metadata.getBytes().length + Integer.SIZE / 8 + 1;
     }
 
     @Override

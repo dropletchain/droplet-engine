@@ -48,12 +48,11 @@ public class PolicySettingsActivity extends AppCompatActivity {
     private DemoUser user;
     private BlockAditStorage storage;
 
-    public  ArrayList<IBlockAditStream> streams = new ArrayList<>();
+    public ArrayList<IBlockAditStream> streams = new ArrayList<>();
     private ListView listView;
     private SwipeRefreshLayout refreshLayout;
     private TextView ownerView;
     private TextView balanceView;
-
 
 
     public static Map<String, ArrayList<IBlockAditStream>> temporaryStreams = new HashMap<>();
@@ -106,7 +105,7 @@ public class PolicySettingsActivity extends AppCompatActivity {
 
             private boolean checkInList(List<IBlockAditStream> streams, IBlockAditStream stream) {
                 for (IBlockAditStream cur : streams)
-                    if(cur.getOwner().equals(stream.getOwner()) && cur.getStreamId() == stream.getStreamId())
+                    if (cur.getOwner().equals(stream.getOwner()) && cur.getStreamId() == stream.getStreamId())
                         return true;
                 return false;
             }
@@ -114,16 +113,16 @@ public class PolicySettingsActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(List<IBlockAditStream> s) {
                 super.onPostExecute(s);
-                if(!temporaryStreams.containsKey(user.getName()))
+                if (!temporaryStreams.containsKey(user.getName()))
                     temporaryStreams.put(user.getName(), new ArrayList<IBlockAditStream>());
 
                 ArrayList<IBlockAditStream> streamsTemp = new ArrayList<>();
-                for (int i=0; i<s.size(); i++)
+                for (int i = 0; i < s.size(); i++)
                     streamsTemp.add(s.get(i));
                 Iterator<IBlockAditStream> iter = temporaryStreams.get(user.getName()).iterator();
                 while (iter.hasNext()) {
                     IBlockAditStream cur = iter.next();
-                    if(checkInList(s, cur)) {
+                    if (checkInList(s, cur)) {
                         iter.remove();
                     } else {
                         streamsTemp.add(cur);
@@ -154,7 +153,7 @@ public class PolicySettingsActivity extends AppCompatActivity {
             protected void onPostExecute(Coin ok) {
                 super.onPostExecute(ok);
 
-                if(ok != null ) {
+                if (ok != null) {
                     balanceView.setText(ok.toFriendlyString());
                 }
             }
@@ -171,7 +170,7 @@ public class PolicySettingsActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
-            if(resultCode == Activity.RESULT_OK){
+            if (resultCode == Activity.RESULT_OK) {
                 loadStreams();
                 loadBalance();
             }
@@ -209,12 +208,12 @@ public class PolicySettingsActivity extends AppCompatActivity {
                 @Override
                 protected void onPostExecute(Boolean ok) {
                     super.onPostExecute(ok);
-                    if(!temporaryStreams.containsKey(user.getName()))
+                    if (!temporaryStreams.containsKey(user.getName()))
                         temporaryStreams.put(user.getName(), new ArrayList<IBlockAditStream>());
                     Iterator<IBlockAditStream> iter = temporaryStreams.get(user.getName()).iterator();
                     while (iter.hasNext()) {
                         IBlockAditStream cur = iter.next();
-                        if(cur.getOwner().equals(item.getOwner())
+                        if (cur.getOwner().equals(item.getOwner())
                                 && cur.getStreamId() == item.getStreamId()) {
                             iter.remove();
                             break;
@@ -280,7 +279,7 @@ public class PolicySettingsActivity extends AppCompatActivity {
                 heartView.setVisibility(View.INVISIBLE);
 
 
-            if(item.isTemporary())
+            if (item.isTemporary())
                 temporaryField.setVisibility(View.VISIBLE);
             else
                 temporaryField.setVisibility(View.INVISIBLE);
@@ -308,7 +307,7 @@ public class PolicySettingsActivity extends AppCompatActivity {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             final IBlockAditStream item = items.get(position);
-            if(!item.isTemporary()) {
+            if (!item.isTemporary()) {
                 Intent intent = new Intent(getApplicationContext(), PolicyDetailedActivity.class);
                 intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
                 intent.putExtra(ActivitiesUtil.STREAM_OWNER_KEY, item.getOwner().toString());

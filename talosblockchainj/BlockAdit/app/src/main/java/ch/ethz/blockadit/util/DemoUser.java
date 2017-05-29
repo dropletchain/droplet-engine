@@ -62,7 +62,7 @@ public class DemoUser {
     }
 
     public Address getOwnerAddress() {
-        if(ownerAddrCache != null)
+        if (ownerAddrCache != null)
             return ownerAddrCache;
 
         ECKey key;
@@ -71,7 +71,7 @@ public class DemoUser {
             DumpedPrivateKey dumpedPrivateKey = DumpedPrivateKey.fromBase58(params, privKey);
             key = dumpedPrivateKey.getKey();
         } else {
-            BigInteger privKeyNum= Base58.decodeToBigInteger(privKey);
+            BigInteger privKeyNum = Base58.decodeToBigInteger(privKey);
             key = ECKey.fromPrivate(privKeyNum);
         }
         ownerAddrCache = key.toAddress(params);
@@ -79,7 +79,7 @@ public class DemoUser {
     }
 
     public Address getShareAddress() {
-        if(shareAddrCache != null)
+        if (shareAddrCache != null)
             return shareAddrCache;
 
         ECKey key;
@@ -88,7 +88,7 @@ public class DemoUser {
             DumpedPrivateKey dumpedPrivateKey = DumpedPrivateKey.fromBase58(params, privKey);
             key = dumpedPrivateKey.getKey();
         } else {
-            BigInteger privKeyNum= Base58.decodeToBigInteger(privKey);
+            BigInteger privKeyNum = Base58.decodeToBigInteger(privKey);
             key = ECKey.fromPrivate(privKeyNum);
         }
         shareAddrCache = key.toAddress(params);
@@ -106,7 +106,7 @@ public class DemoUser {
 
     @Override
     public boolean equals(Object o) {
-        if(!(o instanceof  DemoUser))
+        if (!(o instanceof DemoUser))
             return false;
         DemoUser user = (DemoUser) o;
         return this.name.equals(user.name);

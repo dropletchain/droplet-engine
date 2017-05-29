@@ -76,17 +76,17 @@ public class TokenInfo implements Serializable {
         String frag = in.getFragment();
         String[] splits = frag.split("&");
         HashMap<String, String> map = new HashMap<>();
-        for(String temp : splits) {
+        for (String temp : splits) {
             String[] mapping = temp.split("=");
-            if(mapping.length!=2)
+            if (mapping.length != 2)
                 throw new IllegalArgumentException("Wrong Format");
             map.put(mapping[0], mapping[1]);
         }
 
         return new TokenInfo(map.get("access_token"),
-                    Integer.valueOf(map.get("expires_in")),
-                    map.get("scope"),
-                    map.get("token_type"),
+                Integer.valueOf(map.get("expires_in")),
+                map.get("scope"),
+                map.get("token_type"),
                 map.get("user_id"));
     }
 

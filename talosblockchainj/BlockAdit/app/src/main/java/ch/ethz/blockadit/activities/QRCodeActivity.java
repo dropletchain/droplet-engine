@@ -3,11 +3,9 @@ package ch.ethz.blockadit.activities;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.ImageView;
-
-import org.bitcoinj.core.Address;
 
 import ch.ethz.blockadit.R;
 import ch.ethz.blockadit.util.AppUtil;
@@ -38,7 +36,7 @@ public class QRCodeActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(Bitmap qrImage) {
                 super.onPostExecute(qrImage);
-                if(qrImage != null ) {
+                if (qrImage != null) {
                     qrCodeView.setImageBitmap(qrImage);
                 }
             }

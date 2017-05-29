@@ -51,7 +51,7 @@ public class AppUtil {
     private static SimpleDateFormat sqlFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public static java.sql.Date utilDateToSqlDate(java.util.Date in) {
-       return java.sql.Date.valueOf(sqlFormat.format(in));
+        return java.sql.Date.valueOf(sqlFormat.format(in));
     }
 
     public static java.util.Date eraseTime(java.util.Date in) {
@@ -59,13 +59,13 @@ public class AppUtil {
     }
 
     public static int transformToInt(double data, int radix) {
-        double temp = data * (Math.pow(10.0,radix));
+        double temp = data * (Math.pow(10.0, radix));
         return (int) temp;
     }
 
     public static double transfromToDouble(int data, int radix) {
         double temp = (double) data;
-        temp = temp / Math.pow(10.0,radix);
+        temp = temp / Math.pow(10.0, radix);
         return temp;
     }
 
@@ -75,7 +75,7 @@ public class AppUtil {
         int hours = Integer.valueOf(parsed[0]);
         int min = Integer.valueOf(parsed[1]);
         int sec = Integer.valueOf(parsed[2]);
-        return new java.util.Date(((date.getTime()/1000) + hours * 3600 + min * 60 + sec) * 1000);
+        return new java.util.Date(((date.getTime() / 1000) + hours * 3600 + min * 60 + sec) * 1000);
     }
 
     public static Bitmap createQRCode(String content, int size) {
@@ -90,13 +90,12 @@ public class AppUtil {
                     bmp.setPixel(x, y, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
                 }
             }
-           return bmp;
+            return bmp;
         } catch (WriterException e) {
             e.printStackTrace();
             return null;
         }
     }
-
 
 
 }

@@ -29,7 +29,7 @@ public class PolicyWallet extends Wallet {
 
     @Override
     public boolean importKey(ECKey key) {
-        if(!policyKeys.contains(key)) {
+        if (!policyKeys.contains(key)) {
             policyKeys.add(key);
             return super.importKey(key);
         }
@@ -46,7 +46,7 @@ public class PolicyWallet extends Wallet {
 
     public List<Address> getOwnerAddresses() {
         List<Address> addresses = new ArrayList<>();
-        for (ECKey key: policyKeys)
+        for (ECKey key : policyKeys)
             addresses.add(key.toAddress(params));
         return addresses;
     }
@@ -97,13 +97,13 @@ public class PolicyWallet extends Wallet {
         Coin amount = Coin.ZERO, amountOut;
 
         for (TransactionOutput cand : candidates) {
-            Address outAddr =  cand.getAddressFromP2PKHScript(params);
-            if (!(outAddr==null) && outAddr.equals(owner)) {
+            Address outAddr = cand.getAddressFromP2PKHScript(params);
+            if (!(outAddr == null) && outAddr.equals(owner)) {
                 tx.addInput(cand);
-                amount =  amount.add(cand.getValue());
+                amount = amount.add(cand.getValue());
             }
-            outAddr =  cand.getAddressFromP2SH(params);
-            if (!(outAddr==null) && outAddr.equals(owner)) {
+            outAddr = cand.getAddressFromP2SH(params);
+            if (!(outAddr == null) && outAddr.equals(owner)) {
                 tx.addInput(cand);
                 amount = amount.add(cand.getValue());
             }

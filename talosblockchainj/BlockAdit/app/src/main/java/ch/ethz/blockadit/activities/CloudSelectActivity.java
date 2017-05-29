@@ -152,7 +152,7 @@ public class CloudSelectActivity extends AppCompatActivity {
 
             }
         });
-        if(cachedOld!=null) {
+        if (cachedOld != null) {
             list.setAdapter(new CloudListAdapter(this, cachedOld));
             itemsList = cachedOld;
         }
@@ -164,7 +164,7 @@ public class CloudSelectActivity extends AppCompatActivity {
             @Override
             protected IBlockAditStream doInBackground(Void... params) {
                 try {
-                    if(isShare) {
+                    if (isShare) {
                         return storage.getAccessStreamForID(owner, streamID);
                     } else {
                         return storage.getStreamForID(owner, streamID);
@@ -187,7 +187,7 @@ public class CloudSelectActivity extends AppCompatActivity {
     }
 
     private synchronized void loadCloudItems() {
-        if(stream == null)
+        if (stream == null)
             return;
         final BlockAditFitbitAPI api = new BlockAditFitbitAPI(stream);
         final Date fixedDate = new Date(curDate.getTime());
@@ -206,10 +206,10 @@ public class CloudSelectActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(ArrayList<CloudListItem> items) {
                 super.onPostExecute(items);
-                if(items==null)
+                if (items == null)
                     return;
                 itemsList = items;
-                if(0==loadCount.getAndIncrement())
+                if (0 == loadCount.getAndIncrement())
                     cachedOld = items;
                 CloudListAdapter adapter = new CloudListAdapter(getApplicationContext(), items);
                 list.setAdapter(adapter);
@@ -222,6 +222,7 @@ public class CloudSelectActivity extends AppCompatActivity {
     public static class CloudListItem implements Serializable {
         private Datatype type;
         private String content;
+
         public CloudListItem(Datatype type, String content) {
             this.type = type;
             this.content = content;
@@ -229,13 +230,12 @@ public class CloudSelectActivity extends AppCompatActivity {
     }
 
 
-
     public synchronized void onRightClick(View v) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(curDate);
         cal.add(Calendar.DATE, 1);
-        curDate= new Date(cal.getTime().getTime());
-        if(curDate.compareTo(today)>=0) {
+        curDate = new Date(cal.getTime().getTime());
+        if (curDate.compareTo(today) >= 0) {
             rightButton.setVisibility(View.INVISIBLE);
         }
         dateTitle.setText(ActivitiesUtil.titleFormat.format(curDate));
@@ -252,9 +252,9 @@ public class CloudSelectActivity extends AppCompatActivity {
         Calendar cal = Calendar.getInstance();
         cal.setTime(curDate);
         cal.add(Calendar.DATE, -1);
-        curDate= new Date(cal.getTime().getTime());
+        curDate = new Date(cal.getTime().getTime());
         dateTitle.setText(ActivitiesUtil.titleFormat.format(curDate));
-        if(rightButton.getVisibility() == View.INVISIBLE) {
+        if (rightButton.getVisibility() == View.INVISIBLE) {
             rightButton.setVisibility(View.VISIBLE);
         }
         this.runOnUiThread(new Runnable() {
@@ -291,7 +291,7 @@ public class CloudSelectActivity extends AppCompatActivity {
 
 
             type.setText(item.type.getDisplayRep());
-            content.setText(item.content + " "+ item.type.getUnit());
+            content.setText(item.content + " " + item.type.getUnit());
             content.setTextColor(Color.BLACK);
             type.setTextColor(Color.BLACK);
             imgView.setBackgroundResource(item.type.getImgResource());

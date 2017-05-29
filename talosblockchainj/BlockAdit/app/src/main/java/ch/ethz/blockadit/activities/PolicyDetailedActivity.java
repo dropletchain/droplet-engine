@@ -86,7 +86,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
 
         intervalValues = getResources().getStringArray(R.array.intervals);
 
-        Address ownerAddr =  Address.fromBase58(DemoUser.params, ownerString);
+        Address ownerAddr = Address.fromBase58(DemoUser.params, ownerString);
         loadQR(ownerAddr);
 
         ownerView = (TextView) findViewById(R.id.ownerNearQr);
@@ -119,7 +119,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(Bitmap qrImage) {
                 super.onPostExecute(qrImage);
-                if(qrImage != null ) {
+                if (qrImage != null) {
                     qrView.setImageBitmap(qrImage);
                 }
             }
@@ -145,12 +145,12 @@ public class PolicyDetailedActivity extends AppCompatActivity {
             }
 
             private String intervalToString(long interval) {
-                int id = (int) (interval/3600);
-                if(id == 24)
+                int id = (int) (interval / 3600);
+                if (id == 24)
                     return intervalValues[0];
-                if(id == 12)
+                if (id == 12)
                     return intervalValues[1];
-                if(id == 6)
+                if (id == 6)
                     return intervalValues[2];
                 return String.valueOf(id);
             }
@@ -158,7 +158,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(IBlockAditStream streamRes) {
                 super.onPostExecute(streamRes);
-                if(streamRes != null) {
+                if (streamRes != null) {
                     stream = streamRes;
                     Date dateFrom = new Date(stream.getStartTimestamp() * 1000);
                     tsFrom.setText(String.format("Start: %s", ActivitiesUtil.titleFormat.format(dateFrom)));
@@ -204,22 +204,23 @@ public class PolicyDetailedActivity extends AppCompatActivity {
             @Override
             protected List<Address> doInBackground(Void... params) {
                 try {
-                    if(doLocal)
+                    if (doLocal)
                         return streamIn.getSharesLocal();
                     else
                         return streamIn.getShares();
-                } catch (PolicyClientException  e) {
+                } catch (PolicyClientException e) {
                     e.printStackTrace();
                     return new ArrayList<>();
                 }
             }
+
             @Override
             protected void onPostExecute(List<Address> streamRes) {
                 super.onPostExecute(streamRes);
                 ArrayList<DemoUser> shares = new ArrayList<>();
                 ArrayList<Date> dates = new ArrayList<>();
                 Date defaultDate = new Date(streamIn.getStartTimestamp() * 1000);
-                for(Address addr : streamRes) {
+                for (Address addr : streamRes) {
                     for (DemoUser user : users) {
                         if (user.getShareAddress().equals(addr)) {
                             shares.add(user);
@@ -246,7 +247,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
                 String userShareAddress = data.getStringExtra("SCAN_RESULT");
                 Address shareAddr = Address.fromBase58(DemoUser.params, userShareAddress);
                 for (DemoUser user : users) {
-                    if(user.getShareAddress().equals(shareAddr)) {
+                    if (user.getShareAddress().equals(shareAddr)) {
                         Intent i = new Intent(this, AddShareActivity.class);
                         i.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
                         i.putExtra(ActivitiesUtil.SELECTED_USER_KEY, user.toString());
@@ -257,13 +258,13 @@ public class PolicyDetailedActivity extends AppCompatActivity {
                 }
             }
 
-            if(resultCode == RESULT_CANCELED){
+            if (resultCode == RESULT_CANCELED) {
                 Log.e("Add Share Qr Scan", "Scan Failed :(");
             }
         }
 
         if (requestCode == 1) {
-            if(resultCode == Activity.RESULT_OK){
+            if (resultCode == Activity.RESULT_OK) {
                 loadShares(stream, true);
             }
             if (resultCode == Activity.RESULT_CANCELED) {
@@ -273,7 +274,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
     }
 
     public void onAddShare(View v) {
-        if(stream != null) {
+        if (stream != null) {
             Intent i = new Intent(this, AddShareActivity.class);
             i.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
             i.putExtra(ActivitiesUtil.STREAM_OWNER_KEY, stream.getOwner().toString());
@@ -283,7 +284,7 @@ public class PolicyDetailedActivity extends AppCompatActivity {
     }
 
     public void onAddQRShare(View v) {
-        if(stream != null) {
+        if (stream != null) {
             try {
                 Intent intent = new Intent("com.google.zxing.client.android.SCAN");
                 intent.putExtra("SCAN_MODE", "QR_CODE_MODE"); // "PRODUCT_MODE for bar codes

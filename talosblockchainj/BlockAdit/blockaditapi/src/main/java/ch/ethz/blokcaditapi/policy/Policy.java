@@ -158,13 +158,13 @@ public final class Policy {
 
         ArrayList<PolicyShare> shares = new ArrayList<>();
         JSONArray sharesArr = object.getJSONArray("shares");
-        for (int idx=0; idx < sharesArr.length(); idx ++) {
+        for (int idx = 0; idx < sharesArr.length(); idx++) {
             shares.add(PolicyShare.fromJSON(sharesArr.getJSONObject(idx)));
         }
 
         ArrayList<IndexEntry> times = new ArrayList<>();
         JSONArray indexArr = object.getJSONArray("times");
-        for (int idx=0; idx < indexArr.length(); idx ++) {
+        for (int idx = 0; idx < indexArr.length(); idx++) {
             times.add(IndexEntry.fromJSON(indexArr.getJSONObject(idx)));
         }
 
@@ -274,7 +274,7 @@ public final class Policy {
         if (!(this.isInvalidated == other.isInvalidated))
             return false;
 
-        if(!(this.times.equals(other.times)))
+        if (!(this.times.equals(other.times)))
             return false;
 
         return this.shares.equals(other.shares);

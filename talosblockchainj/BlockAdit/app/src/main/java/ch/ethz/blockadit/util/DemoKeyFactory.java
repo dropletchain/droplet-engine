@@ -20,18 +20,18 @@ public class DemoKeyFactory implements StreamKeyFactory {
     public StreamKey createStreamKey(NetworkParameters params, ECKey owner, int streamId) {
         ByteBuffer buff = ByteBuffer.allocate(16);
         buff.putInt(streamId);
-        return new BasicStreamKey(streamId, owner.toAddress(params), owner, 0,  buff.array());
+        return new BasicStreamKey(streamId, owner.toAddress(params), owner, 0, buff.array());
     }
 
     @Override
     public StreamKey createStreamKey(NetworkParameters params, ECKey owner, byte[] key, int streamId) {
-        return new BasicStreamKey(streamId, owner.toAddress(params), owner, 0,  key);
+        return new BasicStreamKey(streamId, owner.toAddress(params), owner, 0, key);
     }
 
     @Override
     public StreamKey createShareStreamKey(Address owner, ECKey share, byte[] input, int streamId) {
         ByteBuffer buff = ByteBuffer.allocate(16);
         buff.putInt(streamId);
-        return new BasicStreamKey(streamId, owner, share, 0,  buff.array());
+        return new BasicStreamKey(streamId, owner, share, 0, buff.array());
     }
 }

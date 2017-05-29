@@ -27,7 +27,7 @@ public class DemoDataLoader {
         String[] userNames = res.getStringArray(R.array.user_names);
         String[] userKeys = res.getStringArray(R.array.user_keys);
         String[] shareKeys = res.getStringArray(R.array.user_share_keys);
-        for (int i=0; i< userNames.length; i++)
+        for (int i = 0; i < userNames.length; i++)
             users.add(new DemoUser(userNames[i], userKeys[i], shareKeys[i]));
         return users;
     }

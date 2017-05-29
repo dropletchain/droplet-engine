@@ -43,7 +43,7 @@ public class BlockAditStream implements IBlockAditStream {
 
     private IBlockAditStreamPolicy policyForStream;
     private List<ChunkJobStoreJob> toSend = new ArrayList<>();
-    private  ChunkData curWriteChunk;
+    private ChunkData curWriteChunk;
     private int currentBlockID = -1;
     private BlockAditStorageAPI storageAPI;
 
@@ -57,14 +57,14 @@ public class BlockAditStream implements IBlockAditStream {
         this.streamKey = streamKey;
         this.policyForStream = policyForStream;
         Policy policy = policyForStream.getLocalPolicy();
-        if(policy == null)
+        if (policy == null)
             throw new BlockAditStreamException("No local Policy for the stream");
 
         //hack
         Policy.IndexEntry entry = policy.getTimes().get(policy.getTimes().size() - 1);
         startTimestamp = entry.timestampStart;
         interval = entry.timestampInterval;
-        if(policy.isTemporary) {
+        if (policy.isTemporary) {
             isTemporary = true;
             identifier = new StreamIdentifier(policy.getOwner(), policy.getStreamId(), new byte[1], policy.getCreateTxid());
             isWriteable = false;
@@ -76,7 +76,7 @@ public class BlockAditStream implements IBlockAditStream {
     }
 
     private void checkOrThrow() throws BlockAditStreamException {
-        if(this.isTemporary)
+        if (this.isTemporary)
             throw new BlockAditStreamException("This stream is not yet accepted");
     }
 
@@ -86,7 +86,7 @@ public class BlockAditStream implements IBlockAditStream {
 
     private void pushChunksToCloud() throws PolicyClientException, InvalidKeyException, IOException {
         Policy curPolicy = policyForStream.getActualPolicy();
-        for (ChunkJobStoreJob job: toSend) {
+        for (ChunkJobStoreJob job : toSend) {
             CloudChunk chunk = CloudChunk.createCloudChunk(curPolicy.getStreamidentifier(), job.blockId,
                     streamKey.getSignKey(), streamKey.getCurVersion(),
                     streamKey.getCurSymKey(), job.data, true);
@@ -142,15 +142,15 @@ public class BlockAditStream implements IBlockAditStream {
         if (!isWriteable)
             throw new BlockAditStreamException("Stream is not writable");
         int entryId = (int) calulateBlockId(entry.getTimestamp());
-        if(currentBlockID == -1) {
+        if (currentBlockID == -1) {
             currentBlockID = entryId;
             curWriteChunk.addEntry(entry);
-        } else if (currentBlockID == entryId)  {
+        } else if (currentBlockID == entryId) {
             curWriteChunk.addEntry(entry);
         } else if (currentBlockID + 1 == entryId) {
             toSend.add(new ChunkJobStoreJob(currentBlockID, curWriteChunk));
             curWriteChunk = new ChunkData();
-            currentBlockID ++;
+            currentBlockID++;
             curWriteChunk.addEntry(entry);
 
             try {
@@ -175,7 +175,7 @@ public class BlockAditStream implements IBlockAditStream {
     @Override
     public void flushWriteChunk() throws BlockAditStreamException {
         checkOrThrow();
-        if(!curWriteChunk.getEntries().isEmpty()) {
+        if (!curWriteChunk.getEntries().isEmpty()) {
             toSend.add(new ChunkJobStoreJob(currentBlockID, curWriteChunk));
             curWriteChunk = new ChunkData();
             currentBlockID++;
@@ -199,8 +199,8 @@ public class BlockAditStream implements IBlockAditStream {
 
     private ChunkData[] dataFromChunks(CloudChunk[] chunks) {
         ChunkData[] data = new ChunkData[chunks.length];
-        for (int idx=0; idx<chunks.length; idx ++)
-            if(chunks[idx]!=null)
+        for (int idx = 0; idx < chunks.length; idx++)
+            if (chunks[idx] != null)
                 data[idx] = dataFromChunk(chunks[idx]);
             else
                 data[idx] = new ChunkData();
@@ -232,9 +232,9 @@ public class BlockAditStream implements IBlockAditStream {
         checkOrThrow();
         List<Entry> result = new ArrayList<>();
         CloudChunk[] chunks = fetchRange(from, to);
-        for (ChunkData data: dataFromChunks(chunks)) {
+        for (ChunkData data : dataFromChunks(chunks)) {
             for (Entry entry : data) {
-                if (entry.getTimestamp() >= from && entry.getTimestamp()< to)
+                if (entry.getTimestamp() >= from && entry.getTimestamp() < to)
                     result.add(entry);
             }
         }
@@ -246,7 +246,7 @@ public class BlockAditStream implements IBlockAditStream {
         checkOrThrow();
         List<List<Entry>> result = new ArrayList<>();
         CloudChunk[] chunks = fetchRange(from, to);
-        for (ChunkData data: dataFromChunks(chunks)) {
+        for (ChunkData data : dataFromChunks(chunks)) {
             result.add(data.getEntries());
         }
         return result;

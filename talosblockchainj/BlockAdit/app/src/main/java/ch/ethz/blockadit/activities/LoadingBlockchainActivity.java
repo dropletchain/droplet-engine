@@ -41,7 +41,7 @@ public class LoadingBlockchainActivity extends AppCompatActivity {
             protected Boolean doInBackground(Void... params) {
                 try {
                     BlockAditStorage storage = BlockaditStorageState.getStorageForUser(user);
-                    if(storage != null)
+                    if (storage != null)
                         storage.preLoadBlockchainState();
                 } catch (UnknownHostException | BlockStoreException | InterruptedException e) {
                     e.printStackTrace();
@@ -54,7 +54,7 @@ public class LoadingBlockchainActivity extends AppCompatActivity {
             protected void onPostExecute(Boolean stream) {
                 super.onPostExecute(stream);
                 Intent returnIntent = new Intent();
-                setResult(Activity.RESULT_OK,returnIntent);
+                setResult(Activity.RESULT_OK, returnIntent);
                 finish();
             }
         }.execute();

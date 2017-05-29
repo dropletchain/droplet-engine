@@ -71,7 +71,7 @@ public class BlockAditFitbitAPI {
         if (blockIds.length != data.length)
             throw new IllegalArgumentException("Arrays do not have the same size");
 
-        for (int idx=0; idx < blockIds.length; idx++) {
+        for (int idx = 0; idx < blockIds.length; idx++) {
             this.stream.storeChunk(blockIds[idx], data[idx]);
         }
     }
@@ -94,7 +94,7 @@ public class BlockAditFitbitAPI {
         Calendar c = Calendar.getInstance();
         c.setTime(curDate);
         c.add(Calendar.DATE, 1);
-        long toUnix =  blockIDComp.dateToUnix(c.getTime());
+        long toUnix = blockIDComp.dateToUnix(c.getTime());
         List<Entry> entries = stream.getRange(fromUnix, toUnix);
         ArrayList<DataEntryAgrTime> data = new ArrayList<>();
         List<Aggregator.DateTimeSummary> byDate = Aggregator.splitByGranularity(entries, curDate, 15 * 60, type);
@@ -112,15 +112,15 @@ public class BlockAditFitbitAPI {
         Calendar c = Calendar.getInstance();
         c.setTime(today);
         c.add(Calendar.DATE, 1);
-        long toUnix =  blockIDComp.dateToUnix(c.getTime());
+        long toUnix = blockIDComp.dateToUnix(c.getTime());
         List<Entry> entries = stream.getRange(fromUnix, toUnix);
         Map<Datatype, List<Entry>> dataTypeToEntry = Aggregator.splitByDatype(entries);
-        for (Map.Entry<Datatype, List<Entry>> mapping :dataTypeToEntry.entrySet()) {
+        for (Map.Entry<Datatype, List<Entry>> mapping : dataTypeToEntry.entrySet()) {
             double[] aggrData = Aggregator.aggregateDataForType(mapping.getValue(), mapping.getKey());
             Datatype type = mapping.getKey();
             mappings.put(type, new CloudSelectActivity.CloudListItem(type, type.formatValue(aggrData[0])));
         }
-        for(Datatype in : Datatype.values()) {
+        for (Datatype in : Datatype.values()) {
             if (types.contains(in)) {
                 if (mappings.containsKey(in)) {
                     items.add(mappings.get(in));

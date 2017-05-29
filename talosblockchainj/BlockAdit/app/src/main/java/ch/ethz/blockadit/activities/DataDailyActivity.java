@@ -193,7 +193,7 @@ public class DataDailyActivity extends AppCompatActivity {
         type = Datatype.valueOf(getIntent().getExtras().getString(ActivitiesUtil.DATATYPE_KEY));
 
         title = (TextView) findViewById(R.id.titlelinechart);
-        title.setText(getTitle(type,detailDate));
+        title.setText(getTitle(type, detailDate));
 
         mChart = (LineChart) findViewById(R.id.linechart);
         mChart.getAxisRight().setEnabled(false);
@@ -258,11 +258,11 @@ public class DataDailyActivity extends AppCompatActivity {
         from.setTime(detailDate);
         Calendar to = Calendar.getInstance();
         to.setTime(detailDate);
-        to.add(Calendar.DATE,1);
+        to.add(Calendar.DATE, 1);
 
         ArrayList<String> xVals = new ArrayList<String>();
         ArrayList<Entry> yVals = new ArrayList<Entry>();
-        for(;from.getTime().before(to.getTime()); from.add(Calendar.MINUTE, 30)) {
+        for (; from.getTime().before(to.getTime()); from.add(Calendar.MINUTE, 30)) {
             Date date = from.getTime();
             Log.d("Date", from.toString());
             Log.d("Date", ActivitiesUtil.timeFormat.format(date));
@@ -275,7 +275,6 @@ public class DataDailyActivity extends AppCompatActivity {
         setLineLayout(set1);
 
 
-
         ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
         dataSets.add(set1);
         LineData data = new LineData(xVals, dataSets);
@@ -284,24 +283,24 @@ public class DataDailyActivity extends AppCompatActivity {
 
     private void setData(ArrayList<DataEntryAgrTime> times) {
         int index = 0;
-        HashMap<String,DataEntryAgrTime> mappings = new HashMap<>(times.size());
+        HashMap<String, DataEntryAgrTime> mappings = new HashMap<>(times.size());
         Calendar from = Calendar.getInstance();
         from.setTime(detailDate);
         Calendar to = Calendar.getInstance();
         to.setTime(detailDate);
-        to.add(Calendar.DATE,1);
+        to.add(Calendar.DATE, 1);
 
-        for(DataEntryAgrTime time : times) {
-            mappings.put(ActivitiesUtil.keyFormat.format(new Date(time.getTime().getTime())),time);
+        for (DataEntryAgrTime time : times) {
+            mappings.put(ActivitiesUtil.keyFormat.format(new Date(time.getTime().getTime())), time);
         }
 
         ArrayList<String> xVals = new ArrayList<String>();
         ArrayList<Entry> yVals = new ArrayList<Entry>();
-        for(;from.getTime().before(to.getTime()); from.add(Calendar.MINUTE, 30)) {
+        for (; from.getTime().before(to.getTime()); from.add(Calendar.MINUTE, 30)) {
             Date time = from.getTime();
             xVals.add(ActivitiesUtil.timeFormat.format(time));
             String key = ActivitiesUtil.keyFormat.format(time);
-            if(mappings.containsKey(key)) {
+            if (mappings.containsKey(key)) {
                 DataEntryAgrTime container = mappings.get(key);
                 yVals.add(new Entry(Float.valueOf(type.formatValue(container.getValue())), index));
             } else {
@@ -346,7 +345,7 @@ public class DataDailyActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(ArrayList<DataEntryAgrTime> s) {
                 super.onPostExecute(s);
-                if(s!=null) {
+                if (s != null) {
                     setData(s);
                 }
             }

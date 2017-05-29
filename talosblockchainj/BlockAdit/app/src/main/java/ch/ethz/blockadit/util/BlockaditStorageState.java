@@ -15,7 +15,7 @@ import ch.ethz.blokcaditapi.BlockAditStorage;
 
 public class BlockaditStorageState {
 
-    private static Map<String,BlockAditStorage> storages = new HashMap<>();
+    private static Map<String, BlockAditStorage> storages = new HashMap<>();
 
     private static Semaphore lock = new Semaphore(1);
 

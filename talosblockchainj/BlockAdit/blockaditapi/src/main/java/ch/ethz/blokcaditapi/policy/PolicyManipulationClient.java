@@ -38,7 +38,7 @@ public class PolicyManipulationClient {
 
     private Lock lock = new ReentrantLock();
 
-    public PolicyManipulationClient(PolicyWallet wallet,  Coin fee, InetAddress address) throws BlockStoreException {
+    public PolicyManipulationClient(PolicyWallet wallet, Coin fee, InetAddress address) throws BlockStoreException {
         MemoryBlockStore store = new MemoryBlockStore(wallet.getNetworkParameters());
         this.chain = new BlockChain(wallet.getNetworkParameters(), wallet, store);
         this.wallet = wallet;

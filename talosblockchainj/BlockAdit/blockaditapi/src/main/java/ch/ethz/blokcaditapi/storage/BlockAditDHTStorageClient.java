@@ -39,6 +39,7 @@ public class BlockAditDHTStorageClient implements BlockAditStorageAPI {
             this.code = code;
             this.message = message;
         }
+
         public int code;
         public String message;
     }
@@ -48,6 +49,7 @@ public class BlockAditDHTStorageClient implements BlockAditStorageAPI {
             this.code = code;
             this.message = message;
         }
+
         public int code;
         public byte[] message;
     }
@@ -70,7 +72,7 @@ public class BlockAditDHTStorageClient implements BlockAditStorageAPI {
             out.close();
 
             ok = urlConnection.getResponseCode();
-            try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(urlConnection.getInputStream()), Charsets.UTF_8)){
+            try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(urlConnection.getInputStream()), Charsets.UTF_8)) {
                 result = CharStreams.toString(reader);
 
             }
@@ -99,7 +101,7 @@ public class BlockAditDHTStorageClient implements BlockAditStorageAPI {
             out.close();
 
             ok = urlConnection.getResponseCode();
-            try (BufferedInputStream reader = new BufferedInputStream(urlConnection.getInputStream())){
+            try (BufferedInputStream reader = new BufferedInputStream(urlConnection.getInputStream())) {
                 result = ByteStreams.toByteArray(reader);
 
             }
@@ -149,7 +151,7 @@ public class BlockAditDHTStorageClient implements BlockAditStorageAPI {
     @Override
     public boolean storeChunk(CloudChunk chunk) throws IOException, PolicyClientException {
         String url = String.format("http://%s:%d/store_chunk", ip, port);
-        ResultObject obj =  performStoreRequest(url, chunk.encode());
+        ResultObject obj = performStoreRequest(url, chunk.encode());
         if (obj.code == 200)
             return true;
         else
@@ -235,7 +237,7 @@ public class BlockAditDHTStorageClient implements BlockAditStorageAPI {
             int idx = 0;
             for (int blockId : blockIds) {
                 pool.execute(new FetchTask(this, idx, results, sem, identityKey, blockId, identifier));
-                idx ++;
+                idx++;
             }
             sem.acquire();
         } catch (InterruptedException e) {
@@ -249,9 +251,9 @@ public class BlockAditDHTStorageClient implements BlockAditStorageAPI {
     @Override
     public CloudChunk[] getRangeChunks(ECKey identityKey, int fromId, int toId,
                                        StreamIdentifier identifier, int numThreads) {
-        int[] listIdx = new int[toId-fromId];
-        for(int i=fromId; i<toId; i++) {
-            listIdx[i-fromId] = i;
+        int[] listIdx = new int[toId - fromId];
+        for (int i = fromId; i < toId; i++) {
+            listIdx[i - fromId] = i;
         }
         return getRangeChunks(identityKey, listIdx, identifier, numThreads);
     }

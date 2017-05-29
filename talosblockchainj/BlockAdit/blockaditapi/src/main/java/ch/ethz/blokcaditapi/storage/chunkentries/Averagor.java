@@ -10,14 +10,14 @@ public class Averagor implements EntryProcessor {
     private double[] tempResult;
 
     public Averagor(int numResults) {
-        assert numResults>0;
+        assert numResults > 0;
         tempResult = new double[numResults];
     }
 
     @Override
     public double[] getResult() {
         double[] result = new double[tempResult.length];
-        for (int iter=0; iter<result.length; iter++) {
+        for (int iter = 0; iter < result.length; iter++) {
             result[iter] = tempResult[iter] / count;
         }
         return result;
@@ -33,7 +33,7 @@ public class Averagor implements EntryProcessor {
     public void process(MultiDoubleEntry doubleEntry) {
         count++;
         double[] values = doubleEntry.getDataValues();
-        for (int i=0; i<tempResult.length && i<values.length; i++) {
+        for (int i = 0; i < tempResult.length && i < values.length; i++) {
             tempResult[i] += values[i];
         }
     }

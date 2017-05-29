@@ -102,7 +102,7 @@ public class DataWeeklyActivity extends AppCompatActivity {
         Intent creator = getIntent();
         type = Datatype.valueOf(creator.getStringExtra(ActivitiesUtil.DATATYPE_KEY));
         Date fixDate;
-        if(creator.getExtras().containsKey(ActivitiesUtil.DETAIL_DATE_KEY)) {
+        if (creator.getExtras().containsKey(ActivitiesUtil.DETAIL_DATE_KEY)) {
             try {
                 fixDate = ActivitiesUtil.titleFormat.parse(creator.getStringExtra(ActivitiesUtil.DETAIL_DATE_KEY));
             } catch (ParseException e) {
@@ -145,7 +145,7 @@ public class DataWeeklyActivity extends AppCompatActivity {
         mChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
-                if(!dates.isEmpty()) {
+                if (!dates.isEmpty()) {
                     Date selectedDate = dates.get(e.getXIndex());
                     Intent intent = new Intent(getApplicationContext(), DataDailyActivity.class);
                     intent.putExtra(ActivitiesUtil.DETAIL_DATE_KEY, ActivitiesUtil.titleFormat.format(selectedDate));
@@ -220,7 +220,7 @@ public class DataWeeklyActivity extends AppCompatActivity {
 
 
         int index = 0;
-        for (fromCal.setTime(from);fromCal.getTime().before(toCal.getTime());fromCal.add(Calendar.DATE,1)) {
+        for (fromCal.setTime(from); fromCal.getTime().before(toCal.getTime()); fromCal.add(Calendar.DATE, 1)) {
             xVals.add(ActivitiesUtil.dateFormat.format(fromCal.getTime()));
             yVals1.add(new BarEntry(0, index));
             index++;
@@ -267,13 +267,13 @@ public class DataWeeklyActivity extends AppCompatActivity {
 
         dates = new ArrayList<>();
         int index = 0;
-        for (fromCal.setTime(from); fromCal.getTime().before(toCal.getTime()); fromCal.add(Calendar.DATE,1)) {
+        for (fromCal.setTime(from); fromCal.getTime().before(toCal.getTime()); fromCal.add(Calendar.DATE, 1)) {
             String key = ActivitiesUtil.titleFormat.format(fromCal.getTime());
-            if(entries.containsKey(key)) {
+            if (entries.containsKey(key)) {
                 xVals.add(ActivitiesUtil.dateFormat.format(entries.get(key).getDate()));
                 String val = type.formatValue(entries.get(key).getValue());
                 yVals1.add(new BarEntry(Float.valueOf(val), index));
-            } else  {
+            } else {
                 xVals.add(ActivitiesUtil.dateFormat.format(fromCal.getTime()));
                 yVals1.add(new BarEntry(0, index));
             }
@@ -302,7 +302,7 @@ public class DataWeeklyActivity extends AppCompatActivity {
         final Date dateCurMedian = currentCalendar.getTime();
         cal.setTime(dateCurMedian);
         cal.add(Calendar.DATE, 4);
-        final Date toDateExcluded= cal.getTime();
+        final Date toDateExcluded = cal.getTime();
         cal.add(Calendar.DATE, -1);
         final Date to = cal.getTime();
         cal.setTime(dateCurMedian);
@@ -323,7 +323,7 @@ public class DataWeeklyActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(ArrayList<DataEntryAgrDate> s) {
                 super.onPostExecute(s);
-                if(s!=null) {
+                if (s != null) {
                     setData(s, from, to);
                     fromDate.setText(ActivitiesUtil.titleFormat.format(from));
                     toDate.setText(ActivitiesUtil.titleFormat.format(to));
@@ -363,7 +363,7 @@ public class DataWeeklyActivity extends AppCompatActivity {
             int day = c.get(Calendar.DAY_OF_MONTH);
             int year = c.get(Calendar.YEAR);
 
-            return new DatePickerDialog(getActivity(),this,year,month,day);
+            return new DatePickerDialog(getActivity(), this, year, month, day);
         }
 
         @Override

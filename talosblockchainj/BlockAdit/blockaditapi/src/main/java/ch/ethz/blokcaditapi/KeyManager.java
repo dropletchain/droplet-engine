@@ -28,7 +28,8 @@ public class KeyManager {
     protected PolicyWallet wallet;
     protected StreamKeyFactory streamKeyFactory;
 
-    protected KeyManager() {}
+    protected KeyManager() {
+    }
 
     public static KeyManager fromFile(String password, File file) {
         return null;
@@ -81,7 +82,7 @@ public class KeyManager {
 
     public List<Address> getShareAddresses() {
         List<Address> addresses = new ArrayList<>();
-        for(ECKey key: shareKeys) {
+        for (ECKey key : shareKeys) {
             addresses.add(wallet.getAddressForKey(key));
         }
         return addresses;
@@ -90,7 +91,7 @@ public class KeyManager {
     private ECKey getKeyForShareAddress(Address shareAddress) {
         for (ECKey key : shareKeys) {
             Address temp = this.wallet.getAddressForKey(key);
-            if(temp.equals(shareAddress))
+            if (temp.equals(shareAddress))
                 return key;
         }
         return null;
@@ -116,14 +117,14 @@ public class KeyManager {
 
     public StreamKey getStreamKey(Address owner, int streamId) {
         for (StreamKey key : myStreamKeys)
-            if (key.getOwnerAddress().equals(owner) && key.getStreamId()==streamId)
+            if (key.getOwnerAddress().equals(owner) && key.getStreamId() == streamId)
                 return key;
         return null;
     }
 
     public StreamKey getShareStreamKey(Address owner, int streamId) {
         for (StreamKey key : shareStreamKeys)
-            if (key.getOwnerAddress().equals(owner) && key.getStreamId()==streamId)
+            if (key.getOwnerAddress().equals(owner) && key.getStreamId() == streamId)
                 return key;
         return null;
     }

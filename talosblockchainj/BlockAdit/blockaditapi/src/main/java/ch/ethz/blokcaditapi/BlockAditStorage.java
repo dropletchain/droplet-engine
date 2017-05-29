@@ -34,7 +34,7 @@ public class BlockAditStorage {
 
     private BlockAditStorageConfig config;
 
-    private  Random rand = new Random();
+    private Random rand = new Random();
 
     public BlockAditStorage(String password, File keyManagerFile, BlockAditStorageConfig config) throws UnknownHostException, BlockStoreException {
         //TODO
@@ -93,7 +93,7 @@ public class BlockAditStorage {
 
     public IBlockAditStream createNewStream(int id, long startTime, long interval)
             throws PolicyClientException, InsufficientMoneyException, BlockAditStreamException {
-        Address owner =  getOwner();
+        Address owner = getOwner();
         return createNewStream(owner, id, startTime, interval);
     }
 

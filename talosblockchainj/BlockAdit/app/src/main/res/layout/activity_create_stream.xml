@@ -37,8 +37,8 @@
                     android:id="@+id/textView4"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="20dp"
-                    android:text="From    "
+                    android:layout_marginTop="12dp"
+                    android:text="From:"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </FrameLayout>
@@ -51,7 +51,9 @@
                 android:background="@color/lightBG"
                 android:onClick="selectedFromDate"
                 android:padding="10dp"
-                android:text="12.05.2015" />
+                android:text="12.05.2015"
+                android:textAlignment="textStart"
+                style="?android:attr/borderlessButtonStyle"/>
 
         </LinearLayout>
 
@@ -63,27 +65,43 @@
 
             <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="0.08">
+                android:layout_height="match_parent">
 
                 <TextView
                     android:id="@+id/imtervalText"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="12dp"
                     android:layout_weight="1"
-                    android:text="Interval"
+                    android:text="Interval:"
                     android:textAlignment="viewStart"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </FrameLayout>
 
-            <Spinner
-                android:id="@+id/spinnerInterval"
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp">
+
+                <TextView
+                    android:id="@+id/selectedInterval"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="1d"
+                    android:textAlignment="center"
+                    android:textAllCaps="false"
+                    android:textSize="18sp" />
+            </FrameLayout>
+
+            <SeekBar
+                android:id="@+id/seekBarInterval"
                 android:layout_width="wrap_content"
                 android:layout_height="45dp"
-                android:layout_weight="1.13"
-                android:background="@color/heavierBG" />
+                android:layout_weight="0.16" />
+
         </LinearLayout>
 
         <LinearLayout

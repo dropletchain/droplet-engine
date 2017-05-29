@@ -48,7 +48,7 @@ import ch.ethz.blockadit.util.DemoUser;
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-public class StartActivity extends AppCompatActivity  {
+public class StartActivity extends AppCompatActivity {
 
     private Button logoutButton = null;
     private DemoUser user;
@@ -66,7 +66,7 @@ public class StartActivity extends AppCompatActivity  {
     }
 
     private void loadStorage() {
-        if(!loaded.get()) {
+        if (!loaded.get()) {
             Intent i = new Intent(this, LoadingBlockchainActivity.class);
             i.putExtra(ActivitiesUtil.DEMO_USER_KEY, user.toString());
             startActivityForResult(i, 1);
@@ -77,7 +77,7 @@ public class StartActivity extends AppCompatActivity  {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
-            if(resultCode == Activity.RESULT_OK){
+            if (resultCode == Activity.RESULT_OK) {
                 loaded.set(true);
             }
             if (resultCode == Activity.RESULT_CANCELED) {
@@ -88,7 +88,7 @@ public class StartActivity extends AppCompatActivity  {
     }
 
     public void onSyncData(View v) {
-        if(!loaded.get())
+        if (!loaded.get())
             return;
         Intent intent = new Intent(this, FitbitSync.class);
         intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
@@ -96,7 +96,7 @@ public class StartActivity extends AppCompatActivity  {
     }
 
     public void onMyCloud(View v) {
-        if(!loaded.get())
+        if (!loaded.get())
             return;
         Intent intent = new Intent(this, StreamViewActivity.class);
         intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());
@@ -104,7 +104,7 @@ public class StartActivity extends AppCompatActivity  {
     }
 
     public void onLogButton(View v) {
-        if(!loaded.get())
+        if (!loaded.get())
             return;
         Intent intent = new Intent(getApplicationContext(), PolicySettingsActivity.class);
         intent.putExtra(ActivitiesUtil.DEMO_USER_KEY, this.user.toString());

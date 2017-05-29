@@ -72,7 +72,7 @@ public class AddShareActivity extends AppCompatActivity {
         String ownerString = creator.getExtras().getString(ActivitiesUtil.STREAM_OWNER_KEY);
         int streamID = creator.getExtras().getInt(ActivitiesUtil.STREAM_ID_KEY);
 
-        if(creator.getExtras().containsKey(ActivitiesUtil.SELECTED_USER_KEY)) {
+        if (creator.getExtras().containsKey(ActivitiesUtil.SELECTED_USER_KEY)) {
             startSelectedUser = DemoUser.fromString(creator.getExtras()
                     .getString(ActivitiesUtil.SELECTED_USER_KEY));
         }
@@ -89,7 +89,7 @@ public class AddShareActivity extends AppCompatActivity {
         shareSpinner = (Spinner) findViewById(R.id.spinnerShares);
 
 
-        Address ownerAddr =  Address.fromBase58(DemoUser.params, ownerString);
+        Address ownerAddr = Address.fromBase58(DemoUser.params, ownerString);
 
         DemoDataLoader loader = new DemoDataLoader(this);
         users = loader.loadDemoUsers();
@@ -112,7 +112,7 @@ public class AddShareActivity extends AppCompatActivity {
             @Override
             protected void onPostExecute(IBlockAditStream streamRes) {
                 super.onPostExecute(streamRes);
-                if(streamRes != null) {
+                if (streamRes != null) {
                     stream = streamRes;
                     loadShares(streamRes);
                     before = new Date(streamRes.getStartTimestamp() * 1000);
@@ -140,8 +140,8 @@ public class AddShareActivity extends AppCompatActivity {
                 super.onPostExecute(streamRes);
                 ArrayList<DemoUser> shareOptions = new ArrayList<DemoUser>();
                 Address owner = streamIn.getOwner();
-                for(DemoUser user : users) {
-                    if(!streamRes.contains(user.getShareAddress())
+                for (DemoUser user : users) {
+                    if (!streamRes.contains(user.getShareAddress())
                             && !user.getOwnerAddress().equals(owner))
                         shareOptions.add(user);
                 }
@@ -182,7 +182,7 @@ public class AddShareActivity extends AppCompatActivity {
                     Bundle resData = new Bundle();
                     temporaryStreams.get(user.getName()).add(stream);
                     Intent returnIntent = new Intent();
-                    setResult(Activity.RESULT_OK,returnIntent);
+                    setResult(Activity.RESULT_OK, returnIntent);
                     resData.putString(TRANSACTION_ID_KEY, streamRes.getHashAsString());
                     returnIntent.putExtras(resData);
                     finish();
@@ -193,7 +193,7 @@ public class AddShareActivity extends AppCompatActivity {
     }
 
     public void onAddShare(View v) {
-        if(selectedUser == null || selectedDate == null || stream == null)
+        if (selectedUser == null || selectedDate == null || stream == null)
             return;
         addShareBlockchain(selectedUser.getShareAddress());
 
@@ -221,7 +221,7 @@ public class AddShareActivity extends AppCompatActivity {
             int day = c.get(Calendar.DAY_OF_MONTH);
             int year = c.get(Calendar.YEAR);
 
-            return new DatePickerDialog(getActivity(),this,year,month,day);
+            return new DatePickerDialog(getActivity(), this, year, month, day);
         }
 
         @Override
@@ -234,7 +234,7 @@ public class AddShareActivity extends AppCompatActivity {
     }
 
     private void onFromDateSet(Date date) {
-        if(date.before(before)) {
+        if (date.before(before)) {
             this.selectedDate = before;
             fromSelectButton.setText(ActivitiesUtil.titleFormat.format(before));
         } else {
@@ -243,7 +243,7 @@ public class AddShareActivity extends AppCompatActivity {
         }
     }
 
-    public class ShareUserListAdapter extends ArrayAdapter<DemoUser> implements  AdapterView.OnItemSelectedListener {
+    public class ShareUserListAdapter extends ArrayAdapter<DemoUser> implements AdapterView.OnItemSelectedListener {
 
         private ArrayList<DemoUser> items;
         private DemoDataLoader loader;
@@ -294,7 +294,7 @@ public class AddShareActivity extends AppCompatActivity {
 
         @Override
         public void onNothingSelected(AdapterView<?> parent) {
-            if(!items.isEmpty())
+            if (!items.isEmpty())
                 selectedUser = items.get(0);
         }
     }

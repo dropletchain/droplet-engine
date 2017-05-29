@@ -1,8 +1,5 @@
 package ch.ethz.blockadit.blockadit;
 
-import android.content.Context;
-
-import ch.ethz.blockadit.util.AppUtil;
 import ch.ethz.blokcaditapi.IBlockAditStream;
 
 /*

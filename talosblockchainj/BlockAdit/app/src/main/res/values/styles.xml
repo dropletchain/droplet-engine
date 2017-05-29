@@ -29,4 +29,8 @@
         <item name="android:background">@color/black_overlay</item>
     </style>
 
+    <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="colorAccent">@color/heavierBG</item>
+    </style>
+
 </resources>

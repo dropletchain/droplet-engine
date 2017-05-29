@@ -89,7 +89,7 @@ public class StreamViewActivity extends AppCompatActivity {
                 super.onPostExecute(s);
 
                 ArrayList<IBlockAditStream> streamsTemp = new ArrayList<>();
-                for (int i=0; i<s.size(); i++)
+                for (int i = 0; i < s.size(); i++)
                     streamsTemp.add(s.get(i));
                 BasicStreamAdapter adapter = new BasicStreamAdapter(getApplicationContext(), streamsTemp, user);
                 myStreams.setAdapter(adapter);
@@ -115,7 +115,7 @@ public class StreamViewActivity extends AppCompatActivity {
                 super.onPostExecute(s);
 
                 ArrayList<IBlockAditStream> streamsTemp = new ArrayList<>();
-                for (int i=0; i<s.size(); i++)
+                for (int i = 0; i < s.size(); i++)
                     streamsTemp.add(s.get(i));
                 BasicStreamAdapterShare adapter = new BasicStreamAdapterShare(getApplicationContext(), streamsTemp, user);
                 streamsSharedWithMe.setAdapter(adapter);
@@ -248,7 +248,7 @@ public class StreamViewActivity extends AppCompatActivity {
             View temp = super.getView(position, convertView, parent);
             ImageView sharePersonImage = (ImageView) temp.findViewById(R.id.sharePersonImage);
             int imgId = this.getResourceForImage(item.getOwner());
-            imgId = imgId <= 0 ?  R.mipmap.ic_launcher : imgId;
+            imgId = imgId <= 0 ? R.mipmap.ic_launcher : imgId;
             sharePersonImage.setBackgroundResource(imgId);
             return temp;
         }

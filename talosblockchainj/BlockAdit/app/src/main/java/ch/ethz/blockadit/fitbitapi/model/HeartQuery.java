@@ -1,9 +1,6 @@
 
 package ch.ethz.blockadit.fitbitapi.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -11,6 +8,9 @@ import com.google.gson.annotations.SerializedName;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HeartQuery {
 
@@ -35,36 +35,28 @@ public class HeartQuery {
     }
 
     /**
-     * 
-     * @return
-     *     The activitiesHeart
+     * @return The activitiesHeart
      */
     public List<ActivitiesHeart> getActivitiesHeart() {
         return activitiesHeart;
     }
 
     /**
-     * 
-     * @param activitiesHeart
-     *     The activities-heart
+     * @param activitiesHeart The activities-heart
      */
     public void setActivitiesHeart(List<ActivitiesHeart> activitiesHeart) {
         this.activitiesHeart = activitiesHeart;
     }
 
     /**
-     * 
-     * @return
-     *     The activitiesHeartIntraday
+     * @return The activitiesHeartIntraday
      */
     public ActivitiesHeartIntraday getActivitiesHeartIntraday() {
         return activitiesHeartIntraday;
     }
 
     /**
-     * 
-     * @param activitiesHeartIntraday
-     *     The activities-heart-intraday
+     * @param activitiesHeartIntraday The activities-heart-intraday
      */
     public void setActivitiesHeartIntraday(ActivitiesHeartIntraday activitiesHeartIntraday) {
         this.activitiesHeartIntraday = activitiesHeartIntraday;

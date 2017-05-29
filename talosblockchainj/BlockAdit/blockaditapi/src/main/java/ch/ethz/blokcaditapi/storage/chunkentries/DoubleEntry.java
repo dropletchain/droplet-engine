@@ -48,7 +48,7 @@ public final class DoubleEntry implements Entry {
 
     @Override
     public int getEncodedSize() {
-        return Long.SIZE/8 + Integer.SIZE/8 + metadata.getBytes().length + Double.SIZE/8 + 1;
+        return Long.SIZE / 8 + Integer.SIZE / 8 + metadata.getBytes().length + Double.SIZE / 8 + 1;
     }
 
     @Override
@@ -69,7 +69,7 @@ public final class DoubleEntry implements Entry {
             int len = buffer.getInt();
             buffer.get();
             long timestamp = buffer.getLong();
-            lenMeta = len - Long.SIZE/8 - Integer.SIZE/8 - Double.SIZE/8 - 1;
+            lenMeta = len - Long.SIZE / 8 - Integer.SIZE / 8 - Double.SIZE / 8 - 1;
             byte[] metaDataBytes = new byte[lenMeta];
             buffer.get(metaDataBytes);
             double value = buffer.getDouble();

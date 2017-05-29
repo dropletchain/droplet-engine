@@ -111,7 +111,7 @@ public class FitbitSync extends AppCompatActivity {
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         getSupportActionBar().setTitle(getResources().getString(R.string.title_sync));
         Intent creator = getIntent();
-        if(creator!=null && creator.getExtras().containsKey(ActivitiesUtil.DEMO_USER_KEY)) {
+        if (creator != null && creator.getExtras().containsKey(ActivitiesUtil.DEMO_USER_KEY)) {
             String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
             user = DemoUser.fromString(userData);
         }
@@ -122,19 +122,19 @@ public class FitbitSync extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        if(data==null || !data.contains(CALLBACK)) {
+        if (data == null || !data.contains(CALLBACK)) {
             boolean auth = true;
-            if(sharedPref.contains(ACCESS_TOKEN_KEY)) {
+            if (sharedPref.contains(ACCESS_TOKEN_KEY)) {
                 info = TokenInfo.fromJSON(sharedPref.getString(ACCESS_TOKEN_KEY, ""));
                 auth = !info.isValid();
-                if(auth) {
+                if (auth) {
                     SharedPreferences.Editor editor = sharedPref.edit();
                     editor.remove(ACCESS_TOKEN_KEY);
                     editor.apply();
                 }
             }
 
-            if(auth) {
+            if (auth) {
                 Uri uri = FitbitAPI.getAccessTokenURI(getString(R.string.fitbit_client_id), SCOPE, CALLBACK);
                 CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder().setToolbarColor(Color.GREEN).build();
                 customTabsIntent.launchUrl(FitbitSync.this, uri);
@@ -191,7 +191,7 @@ public class FitbitSync extends AppCompatActivity {
                 super.onPostExecute(s);
 
                 ArrayList<IBlockAditStream> streamsTemp = new ArrayList<>();
-                for (int i=0; i<s.size(); i++)
+                for (int i = 0; i < s.size(); i++)
                     streamsTemp.add(s.get(i));
                 streams = streamsTemp;
                 spinner.setAdapter(new BasicStreamAdapter(getApplicationContext(), streamsTemp, user));
@@ -203,7 +203,7 @@ public class FitbitSync extends AppCompatActivity {
 
                     @Override
                     public void onNothingSelected(AdapterView<?> parent) {
-                        if(streams != null && !streams.isEmpty()) {
+                        if (streams != null && !streams.isEmpty()) {
                             curSelectIndex = 0;
                         } else {
                             curSelectIndex = -1;
@@ -215,9 +215,8 @@ public class FitbitSync extends AppCompatActivity {
     }
 
 
-
     public synchronized void onSyncPressed(View view) {
-        if(curSelectIndex == -1 || storage == null)
+        if (curSelectIndex == -1 || storage == null)
             return;
         IBlockAditStream stream = streams.get(curSelectIndex);
         StreamIDType type = new StreamIDType(stream.getStreamId());
@@ -235,18 +234,18 @@ public class FitbitSync extends AppCompatActivity {
             toProcess.add(date);
         }
 
-        if(toProcess.isEmpty())
+        if (toProcess.isEmpty())
             return;
 
         SyncTask[] tasks = new SyncTask[toProcess.size()];
         SyncState state = new SyncState(tasks.length);
-        for(int iter=0; iter<tasks.length; iter++) {
+        for (int iter = 0; iter < tasks.length; iter++) {
             tasks[iter] = new SyncTask(iter, toProcess.get(iter), synchronizer, numBlocks, state);
         }
 
         progressBar.setVisibility(View.VISIBLE);
         // start Tasks (executed on internal Thread pool)
-        for(int iter=0; iter<tasks.length; iter++) {
+        for (int iter = 0; iter < tasks.length; iter++) {
             tasks[iter].execute();
         }
 
@@ -302,7 +301,7 @@ public class FitbitSync extends AppCompatActivity {
             if (curCounter == state.result.length) {
                 boolean ok = true;
                 for (boolean x : state.result) {
-                    if(!x) {
+                    if (!x) {
                         ok = false;
                         break;
                     }

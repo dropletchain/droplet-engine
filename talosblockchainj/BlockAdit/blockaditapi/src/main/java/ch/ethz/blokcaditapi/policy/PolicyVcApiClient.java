@@ -59,7 +59,7 @@ public class PolicyVcApiClient {
         HttpURLConnection c = (HttpURLConnection) url.openConnection();
         c.setRequestMethod("GET");
         String result = null;
-        try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(c.getInputStream()), Charsets.UTF_8)){
+        try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(c.getInputStream()), Charsets.UTF_8)) {
             result = CharStreams.toString(reader);
         } finally {
             c.disconnect();
@@ -102,7 +102,7 @@ public class PolicyVcApiClient {
             JSONObject obj = new JSONObject(result);
             List<String> owners = new ArrayList<>();
             JSONArray array = obj.getJSONArray("owners");
-            for (int idx=0; idx<array.length(); idx++) {
+            for (int idx = 0; idx < array.length(); idx++) {
                 owners.add(array.getString(idx));
             }
             return owners;
@@ -118,7 +118,7 @@ public class PolicyVcApiClient {
             JSONObject obj = new JSONObject(result);
             List<Integer> streamIds = new ArrayList<>();
             JSONArray array = obj.getJSONArray("stream-ids");
-            for (int idx=0; idx<array.length(); idx++) {
+            for (int idx = 0; idx < array.length(); idx++) {
                 streamIds.add(array.getInt(idx));
             }
             return streamIds;
@@ -134,7 +134,7 @@ public class PolicyVcApiClient {
             JSONObject obj = new JSONObject(result);
             List<AccessableStream> streamIds = new ArrayList<>();
             JSONArray array = obj.getJSONArray("has_access");
-            for (int idx=0; idx<array.length(); idx++) {
+            for (int idx = 0; idx < array.length(); idx++) {
                 JSONObject cur = array.getJSONObject(idx);
                 streamIds.add(new AccessableStream(cur.getInt("streamid"), cur.getString("owner")));
             }

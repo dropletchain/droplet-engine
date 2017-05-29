@@ -135,9 +135,9 @@ public enum Datatype {
             case STEPS:
                 return "steps";
             case FLOORS:
-                return  "floors";
+                return "floors";
             case HEARTRATE:
-                return  "bpm";
+                return "bpm";
             default:
                 return "";
         }

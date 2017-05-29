@@ -29,7 +29,8 @@ public class QueryToken {
     private byte[] signature;
     private String pubkeyHex;
 
-    private QueryToken() {}
+    private QueryToken() {
+    }
 
     public static byte[] getBytesSignature(String owner, int streamId, byte[] nonce, byte[] chunkKey) {
         String strStream = String.valueOf(streamId);
@@ -78,7 +79,7 @@ public class QueryToken {
         obj.put(JSON_NONCE, Base64.toBase64String(nonce));
         obj.put(JSON_CHUNK_IDENT, Base64.toBase64String(chunkKey));
         obj.put(JSON_PUB_KEY, pubkeyHex);
-        obj.put(JSON_SIGNATURE,  Base64.toBase64String(signature));
+        obj.put(JSON_SIGNATURE, Base64.toBase64String(signature));
         return obj.toString();
     }
 

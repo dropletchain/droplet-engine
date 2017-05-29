@@ -60,7 +60,7 @@ public class BlockAditStreamPolicy implements IBlockAditStreamPolicy {
 
     @Override
     public Transaction addShare(Address address) throws InsufficientMoneyException, PolicyClientException {
-        Transaction trans = policyClient.addShares(owner, streamId, new Address[] {address});
+        Transaction trans = policyClient.addShares(owner, streamId, new Address[]{address});
         localPolicy.addShare(new Policy.PolicyShare(address.toString(), trans.getHashAsString()));
         return trans;
     }
@@ -68,7 +68,7 @@ public class BlockAditStreamPolicy implements IBlockAditStreamPolicy {
     @Override
     public Transaction removeShare(Address address) throws InsufficientMoneyException, PolicyClientException {
         //TODO: add check if remove is valid
-        Transaction trans = policyClient.removeShares(owner, streamId, new Address[] {address});
+        Transaction trans = policyClient.removeShares(owner, streamId, new Address[]{address});
         localPolicy.removeShare(address.toBase58());
         return trans;
     }

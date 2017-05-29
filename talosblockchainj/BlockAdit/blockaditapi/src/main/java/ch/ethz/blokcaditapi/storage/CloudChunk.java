@@ -26,7 +26,8 @@ public class CloudChunk {
     byte[] gcmTag;
     byte[] signature;
 
-    private CloudChunk() {}
+    private CloudChunk() {
+    }
 
     CloudChunk(byte[] key, int keyVersion, byte[] policyTag, byte[] encData, byte[] gcmTag, byte[] signature) {
         this.key = key;
@@ -47,7 +48,7 @@ public class CloudChunk {
     }
 
     private void addPublicPart(ByteBuffer buffer, boolean withKey) {
-        if(withKey)
+        if (withKey)
             buffer.put(this.key);
         buffer.putInt(this.keyVersion);
         buffer.put(this.policyTag);
@@ -114,14 +115,14 @@ public class CloudChunk {
     }
 
     public byte[] encodePublicPart() {
-        ByteBuffer result = ByteBuffer.allocate(HASH_BYTES * 2 + (Integer.SIZE/8));
+        ByteBuffer result = ByteBuffer.allocate(HASH_BYTES * 2 + (Integer.SIZE / 8));
         result.order(ByteOrder.LITTLE_ENDIAN);
         addPublicPart(result, true);
         return result.array();
     }
 
     public byte[] encodeWithoutSignature() {
-        ByteBuffer result = ByteBuffer.allocate(HASH_BYTES * 2 + (Integer.SIZE/8) * 2 +
+        ByteBuffer result = ByteBuffer.allocate(HASH_BYTES * 2 + (Integer.SIZE / 8) * 2 +
                 MAC_BYTES + this.encData.length);
         result.order(ByteOrder.LITTLE_ENDIAN);
         addPublicPart(result, true);
@@ -130,7 +131,7 @@ public class CloudChunk {
     }
 
     public byte[] encode() {
-        ByteBuffer result = ByteBuffer.allocate(HASH_BYTES * 2 + (Integer.SIZE/8) * 2
+        ByteBuffer result = ByteBuffer.allocate(HASH_BYTES * 2 + (Integer.SIZE / 8) * 2
                 + this.encData.length + MAC_BYTES + this.signature.length);
         result.order(ByteOrder.LITTLE_ENDIAN);
         addPublicPart(result, true);

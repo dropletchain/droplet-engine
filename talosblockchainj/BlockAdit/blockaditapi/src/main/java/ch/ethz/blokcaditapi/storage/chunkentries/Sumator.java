@@ -8,7 +8,7 @@ public class Sumator implements EntryProcessor {
     private double[] tempResult;
 
     public Sumator(int numResults) {
-        assert numResults>0;
+        assert numResults > 0;
         tempResult = new double[numResults];
     }
 
@@ -16,7 +16,7 @@ public class Sumator implements EntryProcessor {
     @Override
     public double[] getResult() {
         double[] result = new double[tempResult.length];
-        for (int iter=0; iter<result.length; iter++) {
+        for (int iter = 0; iter < result.length; iter++) {
             result[iter] = tempResult[iter];
         }
         return result;
@@ -30,7 +30,7 @@ public class Sumator implements EntryProcessor {
     @Override
     public void process(MultiDoubleEntry doubleEntry) {
         double[] values = doubleEntry.getDataValues();
-        for (int i=0; i<tempResult.length && i<values.length; i++) {
+        for (int i = 0; i < tempResult.length && i < values.length; i++) {
             tempResult[i] += values[i];
         }
     }

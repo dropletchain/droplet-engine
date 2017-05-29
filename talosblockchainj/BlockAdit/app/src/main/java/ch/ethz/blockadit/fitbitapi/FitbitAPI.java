@@ -56,7 +56,7 @@ import ch.ethz.blockadit.fitbitapi.model.StepsQuery;
 
 public class FitbitAPI {
 
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat ("yyyy-MM-dd");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private static final String FITBIT_API_URL = "https://api.fitbit.com";
     private static final String STEPS_RESOURCE = "/activities/steps";
     private static final String FLOOR_RESOURCE = "/activities/floors";
@@ -73,7 +73,7 @@ public class FitbitAPI {
     }
 
     public String testExample() {
-        return askFitbit(FITBIT_API_URL+"/1/user/-/activities/steps/date/2016-01-12/1d.json");
+        return askFitbit(FITBIT_API_URL + "/1/user/-/activities/steps/date/2016-01-12/1d.json");
     }
 
     public static Uri getAccessTokenURI(String clientID, String scope, String callback) {
@@ -91,7 +91,7 @@ public class FitbitAPI {
         return Uri.parse(sb.toString());
     }
 
-    public StepsQuery getStepsFromDate(Date date)throws FitbitAPIException  {
+    public StepsQuery getStepsFromDate(Date date) throws FitbitAPIException {
         StringBuilder sb = new StringBuilder();
         sb.append(FITBIT_API_URL)
                 .append(USER_IDENT)
@@ -103,7 +103,7 @@ public class FitbitAPI {
         return StepsQuery.fromJSON(res);
     }
 
-    public FloorQuery getFloorsFromDate(Date date)throws FitbitAPIException  {
+    public FloorQuery getFloorsFromDate(Date date) throws FitbitAPIException {
         StringBuilder sb = new StringBuilder();
         sb.append(FITBIT_API_URL)
                 .append(USER_IDENT)
@@ -115,7 +115,7 @@ public class FitbitAPI {
         return FloorQuery.fromJSON(res);
     }
 
-    public HeartQuery getHearthRateFromDate(Date date)throws FitbitAPIException  {
+    public HeartQuery getHearthRateFromDate(Date date) throws FitbitAPIException {
         StringBuilder sb = new StringBuilder();
         sb.append(FITBIT_API_URL)
                 .append(USER_IDENT)
@@ -127,7 +127,7 @@ public class FitbitAPI {
         return HeartQuery.fromJSON(res);
     }
 
-    public DistQuery getDistanceFromDate(Date date)throws FitbitAPIException  {
+    public DistQuery getDistanceFromDate(Date date) throws FitbitAPIException {
         StringBuilder sb = new StringBuilder();
         sb.append(FITBIT_API_URL)
                 .append(USER_IDENT)
@@ -139,7 +139,7 @@ public class FitbitAPI {
         return DistQuery.fromJSON(res);
     }
 
-    public CaloriesQuery getCaloriesFromDate(Date date)throws FitbitAPIException  {
+    public CaloriesQuery getCaloriesFromDate(Date date) throws FitbitAPIException {
         StringBuilder sb = new StringBuilder();
         sb.append(FITBIT_API_URL)
                 .append(USER_IDENT)
@@ -157,13 +157,13 @@ public class FitbitAPI {
         try {
 
             URL url = new URL(url1);
-            httpClient  = (HttpURLConnection) url.openConnection();
+            httpClient = (HttpURLConnection) url.openConnection();
             httpClient.setRequestProperty("Authorization", info.getToken_type() + " " + info.getAccess_token());
 
             httpClient.connect();
             in = new BufferedInputStream(httpClient.getInputStream());
 
-            String res =  CharStreams.toString(new InputStreamReader(in, "UTF-8"));
+            String res = CharStreams.toString(new InputStreamReader(in, "UTF-8"));
 
             if (httpClient.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 return res;
@@ -177,10 +177,14 @@ public class FitbitAPI {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if(httpClient!=null)
+            if (httpClient != null)
                 httpClient.disconnect();
-            if(in!=null)
-                try {in.close();} catch (IOException e) {e.printStackTrace();}
+            if (in != null)
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         }
 
         return null;

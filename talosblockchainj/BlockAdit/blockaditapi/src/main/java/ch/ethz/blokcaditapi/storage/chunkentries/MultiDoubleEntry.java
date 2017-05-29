@@ -52,8 +52,8 @@ public class MultiDoubleEntry implements Entry {
 
     @Override
     public int getEncodedSize() {
-        return Long.SIZE/8 + (Integer.SIZE/8) * 2 + metadata.getBytes().length +
-                (Double.SIZE/8) * dataValues.length + 1;
+        return Long.SIZE / 8 + (Integer.SIZE / 8) * 2 + metadata.getBytes().length +
+                (Double.SIZE / 8) * dataValues.length + 1;
     }
 
     @Override
@@ -77,10 +77,10 @@ public class MultiDoubleEntry implements Entry {
             lenMeta = buffer.getInt();
             byte[] metaDataBytes = new byte[lenMeta];
             buffer.get(metaDataBytes);
-            int lenDoubles = len - (Long.SIZE/8 + (Integer.SIZE/8) * 2 + lenMeta + 1);
-            int numDoubles = lenDoubles / (Double.SIZE/8);
+            int lenDoubles = len - (Long.SIZE / 8 + (Integer.SIZE / 8) * 2 + lenMeta + 1);
+            int numDoubles = lenDoubles / (Double.SIZE / 8);
             double[] dataValues = new double[numDoubles];
-            for (int i=0; i < numDoubles; i++) {
+            for (int i = 0; i < numDoubles; i++) {
                 dataValues[i] = buffer.getDouble();
             }
             return new MultiDoubleEntry(timestamp, new String(metaDataBytes), dataValues);

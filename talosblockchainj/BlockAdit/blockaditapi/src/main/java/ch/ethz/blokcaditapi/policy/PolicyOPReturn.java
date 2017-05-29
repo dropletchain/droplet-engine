@@ -23,7 +23,7 @@ public class PolicyOPReturn {
     public static char INVALIDATE_POLICY = '-';
 
     public static byte[] createPolicyCMD(int streamId, long timestampStart, long interval, byte[] nonce) {
-        int lenData = MAGIC_BYTES.length() + 1  + 1 + 4 + 8 + 8 + nonce.length;
+        int lenData = MAGIC_BYTES.length() + 1 + 1 + 4 + 8 + 8 + nonce.length;
         ByteBuffer data = ByteBuffer.allocate(lenData);
         data.order(ByteOrder.LITTLE_ENDIAN);
         data.put(MAGIC_BYTES.getBytes())

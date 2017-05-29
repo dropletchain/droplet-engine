@@ -1,10 +1,11 @@
 
 package ch.ethz.blockadit.fitbitapi.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ActivitiesHeartIntraday {
 
@@ -19,54 +20,42 @@ public class ActivitiesHeartIntraday {
     private String datasetType;
 
     /**
-     * 
-     * @return
-     *     The dataset
+     * @return The dataset
      */
     public List<DoubleDataSet> getDataset() {
         return dataset;
     }
 
     /**
-     * 
-     * @param dataset
-     *     The dataset
+     * @param dataset The dataset
      */
     public void setDataset(List<DoubleDataSet> dataset) {
         this.dataset = dataset;
     }
 
     /**
-     * 
-     * @return
-     *     The datasetInterval
+     * @return The datasetInterval
      */
     public Integer getDatasetInterval() {
         return datasetInterval;
     }
 
     /**
-     * 
-     * @param datasetInterval
-     *     The datasetInterval
+     * @param datasetInterval The datasetInterval
      */
     public void setDatasetInterval(Integer datasetInterval) {
         this.datasetInterval = datasetInterval;
     }
 
     /**
-     * 
-     * @return
-     *     The datasetType
+     * @return The datasetType
      */
     public String getDatasetType() {
         return datasetType;
     }
 
     /**
-     * 
-     * @param datasetType
-     *     The datasetType
+     * @param datasetType The datasetType
      */
     public void setDatasetType(String datasetType) {
         this.datasetType = datasetType;

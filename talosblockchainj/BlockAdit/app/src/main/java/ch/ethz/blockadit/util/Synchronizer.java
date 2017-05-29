@@ -82,30 +82,30 @@ public class Synchronizer {
 
     private static void transferData(ChunkData[] chunks, java.sql.Date dateSql, List<Dataset> datasets, Datatype type) {
         int interval = DAILY_SECONDS / chunks.length;
-        for(Dataset dataSet : datasets) {
+        for (Dataset dataSet : datasets) {
             Time time = Time.valueOf(dataSet.getTime());
             Date timestamp = transformDates(dateSql, time);
             long timeMs = timestamp.getTime() - dateSql.getTime();
-            int id =(int) ((timeMs/1000) / interval);
-            chunks[id].addEntry(new IntegerEntry(timestamp.getTime()/1000, type.getDisplayRep(), dataSet.getValue()));
+            int id = (int) ((timeMs / 1000) / interval);
+            chunks[id].addEntry(new IntegerEntry(timestamp.getTime() / 1000, type.getDisplayRep(), dataSet.getValue()));
         }
     }
 
     private static void transferDataDouble(ChunkData[] chunks, java.sql.Date dateSql, List<DoubleDataSet> datasets, Datatype type) {
         int interval = DAILY_SECONDS / chunks.length;
-        for(DoubleDataSet dataSet : datasets) {
+        for (DoubleDataSet dataSet : datasets) {
             Time time = Time.valueOf(dataSet.getTime());
             Date timestamp = transformDates(dateSql, time);
             long timeMs = timestamp.getTime() - dateSql.getTime();
-            int id =(int) ((timeMs/1000) / interval);
-            chunks[id].addEntry(new DoubleEntry(timestamp.getTime()/1000, type.getDisplayRep(), dataSet.getValue()));
+            int id = (int) ((timeMs / 1000) / interval);
+            chunks[id].addEntry(new DoubleEntry(timestamp.getTime() / 1000, type.getDisplayRep(), dataSet.getValue()));
         }
     }
 
     private int[] computeBlockIDs(Date date, int numBlocks) {
         int startId = this.computer.getIdForDate(date);
         int[] res = new int[numBlocks];
-        for (int i=0; i<res.length; i++) {
+        for (int i = 0; i < res.length; i++) {
             res[i] = i + startId;
         }
         return res;
@@ -114,8 +114,8 @@ public class Synchronizer {
     public void transferDataForDate(Date date, int numBlocks) throws BlockAditStreamException {
         ChunkData[] chunkdata = new ChunkData[numBlocks];
         int[] blockIds = this.computeBlockIDs(date, numBlocks);
-        for (int iter=0; iter<chunkdata.length; iter++)
-                chunkdata[iter] = new ChunkData();
+        for (int iter = 0; iter < chunkdata.length; iter++)
+            chunkdata[iter] = new ChunkData();
 
         if (types.contains(Datatype.FLOORS)) {
             FloorQuery query = fitbit.getFloorsFromDate(date);

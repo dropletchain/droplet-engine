@@ -19,7 +19,7 @@ public class Aggregator {
 
     public static double[] aggregateDataForType(List<Entry> entries, Datatype datatype) {
         EntryProcessor processor = Datatype.getEntryProcessorForType(datatype);
-        for (Entry entry: entries) {
+        for (Entry entry : entries) {
             if (Datatype.filterPerType(datatype, entry.getMetadata())) {
                 entry.accept(processor);
             }
@@ -28,19 +28,20 @@ public class Aggregator {
     }
 
     private static Date getDateFromTimestamp(long timestamp) {
-        Date temp = new Date((long)((int)timestamp) * 1000L);
+        Date temp = new Date((long) ((int) timestamp) * 1000L);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         try {
             return sdf.parse(sdf.format(temp));
         } catch (ParseException e) {
             e.printStackTrace();
-           return new Date();
+            return new Date();
         }
     }
 
     public static class DateSummary {
         public java.sql.Date date;
         public List<Entry> entries;
+
         public DateSummary(java.sql.Date date, List<Entry> entries) {
             this.date = date;
             this.entries = entries;
@@ -73,6 +74,7 @@ public class Aggregator {
     public static class DateTimeSummary {
         public java.sql.Time time;
         public List<Entry> entries;
+
         public DateTimeSummary(java.sql.Time date, List<Entry> entries) {
             this.time = date;
             this.entries = entries;

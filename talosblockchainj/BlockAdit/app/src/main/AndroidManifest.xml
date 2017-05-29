@@ -38,7 +38,6 @@
         </activity>
         <activity
             android:name=".activities.DataWeeklyActivity"
-            android:parentActivityName=".activities.CloudSelectActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".activities.CloudSelectActivity"
@@ -48,9 +47,6 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_data_daily"
             android:theme="@style/FullscreenTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="ch.ethz.blockadit.activities.DataWeeklyActivity" />
         </activity>
         <activity
             android:name=".activities.PolicySettingsActivity"
@@ -68,8 +64,10 @@
         <activity
             android:name=".activities.LoadingBlockchainActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".activities.StreamViewActivity" />
-        <activity android:name=".activities.QRCodeActivity"></activity>
+        <activity
+            android:name=".activities.StreamViewActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activities.QRCodeActivity" />
     </application>
 
 </manifest>

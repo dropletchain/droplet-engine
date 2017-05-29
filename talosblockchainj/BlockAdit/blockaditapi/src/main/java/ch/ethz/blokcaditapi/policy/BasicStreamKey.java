@@ -23,7 +23,10 @@ public class BasicStreamKey implements StreamKey {
 
     private byte[] symKey;
 
-    private BasicStreamKey() {};
+    private BasicStreamKey() {
+    }
+
+    ;
 
     public BasicStreamKey(int streamID, Address owner, ECKey identityKey, int curKeyVersion, byte[] symKey) {
         this.owner = owner;
@@ -77,6 +80,7 @@ public class BasicStreamKey implements StreamKey {
     public byte[] getSymKey(int version) {
         return symKey;
     }
+
     // totLen | streamId | keyVersion | symKey | lenOwner | owner | identKey
     @Override
     public byte[] serialize() {

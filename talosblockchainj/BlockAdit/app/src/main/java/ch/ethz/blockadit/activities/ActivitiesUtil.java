@@ -54,8 +54,8 @@ public class ActivitiesUtil {
 
     static final String SHARED_PREF_LAST_DOWNLOAD_KEY = "last_downlaod";
 
-    static final SimpleDateFormat dateFormat = new SimpleDateFormat ("E");
-    static final SimpleDateFormat titleFormat = new SimpleDateFormat ("dd.MM.yyyy");
+    static final SimpleDateFormat dateFormat = new SimpleDateFormat("E");
+    static final SimpleDateFormat titleFormat = new SimpleDateFormat("dd.MM.yyyy");
     static final SimpleDateFormat timeFormat = new SimpleDateFormat("HH");
     static final SimpleDateFormat keyFormat = new SimpleDateFormat("HH:mm:ss");
 

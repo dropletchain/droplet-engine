@@ -9,13 +9,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.store.BlockStoreException;
@@ -46,7 +45,8 @@ public class CreateStream extends AppCompatActivity {
     private CheckBox heartRadio;
 
     private Button fromDate;
-    private Spinner interval;
+    private SeekBar interval;
+    private TextView intervalSelection;
 
     private long curInterval;
     private Date curDate = null;
@@ -78,28 +78,57 @@ public class CreateStream extends AppCompatActivity {
         heartRadio = (CheckBox) findViewById(R.id.radioHeart);
 
         fromDate = (Button) findViewById(R.id.fromDateSelect);
-        interval = (Spinner) findViewById(R.id.spinnerInterval);
+        interval = (SeekBar) findViewById(R.id.seekBarInterval);
+        intervalSelection = (TextView) findViewById(R.id.selectedInterval);
 
         bar = (ProgressBar) findViewById(R.id.progressCreateStream);
         bar.setVisibility(View.INVISIBLE);
+        interval.setProgress(100);
+        curInterval = 24 * 3600;
+        interval.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.intervals, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        interval.setAdapter(adapter);
-        interval.setSelection(0);
-        interval.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                curInterval = 3600 * (24/(1<<position));
+            private int updateProgress(SeekBar seekBar, int progressIn) {
+                double progress = progressIn;
+                progress = progress / 100 * 24;
+                int numHours = (int) progress;
+                if (numHours == 0) {
+                    numHours = 1;
+                }
+
+                if (24 % numHours > 0) {
+                    while (numHours < 24 && (24 % numHours > 0)) {
+                        numHours++;
+                    }
+                }
+
+                progress = (numHours / 24.0) * 100;
+                seekBar.setProgress((int) progress);
+                return numHours;
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                interval.setSelection(0);
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    int numHours = updateProgress(seekBar, progress);
+                    if (numHours == 24) {
+                        intervalSelection.setText(String.format("%dd", 1));
+                    } else {
+                        intervalSelection.setText(String.format("%dh", numHours));
+                    }
+                }
             }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int numHours = updateProgress(seekBar, seekBar.getProgress());
+                curInterval = numHours * 3600;
+            }
         });
-        curInterval = 84600;
 
     }
 
@@ -123,7 +152,7 @@ public class CreateStream extends AppCompatActivity {
             return;
         final int streamId = StreamIDType.createId(types);
 
-        if (curDate==null)
+        if (curDate == null)
             return;
 
         final long startTime = this.curDate.getTime() / 1000;
@@ -152,14 +181,14 @@ public class CreateStream extends AppCompatActivity {
                 bar.setVisibility(View.INVISIBLE);
                 if (stream == null) {
                     Intent returnIntent = new Intent();
-                    setResult(Activity.RESULT_CANCELED,returnIntent);
+                    setResult(Activity.RESULT_CANCELED, returnIntent);
                     finish();
                 } else {
-                    if(!temporaryStreams.containsKey(user.getName()))
+                    if (!temporaryStreams.containsKey(user.getName()))
                         temporaryStreams.put(user.getName(), new ArrayList<IBlockAditStream>());
                     temporaryStreams.get(user.getName()).add(stream);
                     Intent returnIntent = new Intent();
-                    setResult(Activity.RESULT_OK,returnIntent);
+                    setResult(Activity.RESULT_OK, returnIntent);
                     finish();
                 }
 
@@ -190,7 +219,7 @@ public class CreateStream extends AppCompatActivity {
             int day = c.get(Calendar.DAY_OF_MONTH);
             int year = c.get(Calendar.YEAR);
 
-            return new DatePickerDialog(getActivity(),this,year,month,day);
+            return new DatePickerDialog(getActivity(), this, year, month, day);
         }
 
         @Override
