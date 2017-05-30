@@ -11,7 +11,7 @@ import ch.ethz.blokcaditapi.policy.PolicyManipulationClient;
 import ch.ethz.blokcaditapi.policy.PolicyVcApiClient;
 
 /**
- * Created by lukas on 12.05.17.
+ * Implements the stream policy manipulation interface.
  */
 public class BlockAditStreamPolicy implements IBlockAditStreamPolicy {
 

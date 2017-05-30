@@ -19,7 +19,7 @@ import ch.ethz.blokcaditapi.storage.StreamIdentifier;
 import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
 
 /**
- * Created by lukas on 12.05.17.
+ * Implements the stream interface.
  */
 
 public class BlockAditStream implements IBlockAditStream {

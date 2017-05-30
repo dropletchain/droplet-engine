@@ -4,7 +4,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 
 /**
- * Created by lukas on 12.05.17.
+ * Interface for a system configuration
  */
 
 public interface BlockAditStorageConfig {

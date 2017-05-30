@@ -5,7 +5,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.RegTestParams;
 
 /**
- * Created by lukas on 16.05.17.
+ * Default dummy configuration for the system.
  */
 
 public class DefaultConfig implements BlockAditStorageConfig {
