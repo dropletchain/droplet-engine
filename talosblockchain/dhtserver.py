@@ -30,6 +30,7 @@ if __name__ == "__main__":
     parser.add_argument('--logfile', type=str, help='store_state_file', default=None,
                         required=False)
     parser.add_argument('--secure', dest='secure', action='store_true', required=False)
+    parser.add_argument('--tls_port', type=int, help='tls_port', default=-1, required=False)
     parser.set_defaults(secure=False)
     args = parser.parse_args()
     f = None
@@ -46,10 +47,10 @@ if __name__ == "__main__":
     if args.dht_cache_file is None:
         if args.secure:
             server = TalosSecureDHTServer(ksize=args.ksize, alpha=args.alpha, storage=storage,
-                                          talos_vc=vc_server)
+                                          talos_vc=vc_server, tls_port=args.tls_port)
         else:
             server = TalosDHTServer(ksize=args.ksize, alpha=args.alpha, storage=storage,
-                                    talos_vc=vc_server)
+                                    talos_vc=vc_server, tls_port=args.tls_port)
         if args.bootstrap is None:
             server.bootstrap([("1.2.3.4", args.dhtport)])
         else:

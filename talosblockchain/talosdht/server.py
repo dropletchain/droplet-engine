@@ -9,10 +9,11 @@ from kademlia.crawling import NodeSpiderCrawl
 from kademlia.log import Logger
 from kademlia.node import Node
 from kademlia.utils import deferredDict, digest
-from twisted.internet import defer, reactor, task
+from twisted.internet import ssl, defer, reactor, task
 from twisted.internet.task import LoopingCall
 from twisted.web.resource import Resource
 from twisted.web.server import Site
+from twisted.python.modules import getModule
 
 from talosdht.asyncpolicy import AsyncPolicyApiClient
 from talosdht.crawlers import TalosChunkSpiderCrawl, TimedNodeSpiderCrawl
@@ -44,7 +45,7 @@ class TalosDHTServer(object):
     """
 
     def __init__(self, ksize=20, alpha=3, id=None, storage=None,
-                 talos_vc=None, rebub_delay=3600):
+                 talos_vc=None, rebub_delay=3600, tls_port=-1):
         """
         Create a server instance.  This will start listening on the given port.
         Args:
@@ -67,21 +68,39 @@ class TalosDHTServer(object):
         self.talos_vc = talos_vc or AsyncPolicyApiClient()
         self.protocol = TalosKademliaProtocol(self.node, self.storage, ksize, talos_vc=self.talos_vc)
         self.httpprotocol_client = None
+        self.tls_port = tls_port
 
     def listen(self, port, interface="127.0.0.1"):
         """
         Init tcp/udp protocol on the given port
         Start listening on the given port.
         """
-        root = Resource()
-        root.putChild("get_chunk", QueryChunk(self.storage, talos_vc=self.talos_vc))
-        root.putChild("storelargechunk", StoreLargeChunk(self.storage, self.protocol, talos_vc=self.talos_vc))
-        factory = Site(root)
+        if self.tls_port != -1:
+            root1 = Resource()
+            root2 = Resource()
+            root1.putChild("get_chunk", QueryChunk(self.storage, talos_vc=self.talos_vc))
+            root2.putChild("storelargechunk", StoreLargeChunk(self.storage, self.protocol, talos_vc=self.talos_vc))
+            factory1 = Site(root1)
+            factory2 = Site(root2)
 
-        self.httpprotocol_client = TalosHTTPClient(self.protocol, port)
-        self.protocol.http_client = self.httpprotocol_client
-        reactor.listenTCP(port, factory, interface=interface)
-        return reactor.listenUDP(port, self.protocol, interface, maxPacketSize=65535)
+            certData = getModule(__name__).filePath.sibling('server.pem').getContent()
+            certificate = ssl.PrivateCertificate.loadPEM(certData)
+
+            self.httpprotocol_client = TalosHTTPClient(self.protocol, port)
+            self.protocol.http_client = self.httpprotocol_client
+            reactor.listenTCP(port, factory1, interface=interface)
+            reactor.listenSSL(self.tls_port, factory2, certificate.options(), interface=interface)
+            return reactor.listenUDP(port, self.protocol, interface, maxPacketSize=65535)
+        else:
+            root = Resource()
+            root.putChild("get_chunk", QueryChunk(self.storage, talos_vc=self.talos_vc))
+            root.putChild("storelargechunk", StoreLargeChunk(self.storage, self.protocol, talos_vc=self.talos_vc))
+            factory = Site(root)
+
+            self.httpprotocol_client = TalosHTTPClient(self.protocol, port)
+            self.protocol.http_client = self.httpprotocol_client
+            reactor.listenTCP(port, factory, interface=interface)
+            return reactor.listenUDP(port, self.protocol, interface, maxPacketSize=65535)
 
     def refreshTable(self):
         """
@@ -285,7 +304,7 @@ class TalosDHTServer(object):
 
 class TalosSecureDHTServer(TalosDHTServer):
     def __init__(self, ksize=20, alpha=3, priv_key=None, storage=None,
-                 talos_vc=None, rebub_delay=3600, c1bits=1):
+                 talos_vc=None, rebub_delay=3600, c1bits=1, tls_port=-1):
         """
         Create a server instance.  This will start listening on the given port.
         Args:
@@ -318,6 +337,7 @@ class TalosSecureDHTServer(TalosDHTServer):
         self.protocol = TalosSKademliaProtocol(self.priv_key, self.node,
                                                self.storage, ksize, talos_vc=self.talos_vc, cbits=c1bits)
         self.httpprotocol_client = None
+        self.tls_port = tls_port
 
     def saveState(self, fname):
         """

@@ -21,13 +21,13 @@ def store_chunk(session, chunk, ip, port):
 
 def get_nonce_peer(session, ip, port):
     url = "http://%s:%d/get_chunk" % (ip, port)
-    req = session.get(url)
+    req = session.get(url, verify=False)
     return req.reason, req.status_code, req.content
 
 
 def get_chunk_peer(session, json_token, ip, port):
     url = "http://%s:%d/get_chunk" % (ip, port)
-    req = session.post(url, json=json_token)
+    req = session.post(url, json=json_token, verify=False)
     return req.reason, req.status_code, req.content
 
 
@@ -96,10 +96,11 @@ def splitting(l, n):
 
 
 class DHTRestClient(object):
-    def __init__(self, dhtip='127.0.0.1', dhtport=14000):
+    def __init__(self, dhtip='127.0.0.1', dhtport=14000, tlsport=-1):
         self.session = requests.session()
         self.dhtip = dhtip
         self.dhtport = dhtport
+        self.tlsport = tlsport
 
     def store_chunk(self, chunk, time_keeper=TimeKeeper()):
         time_keeper.start_clock()
@@ -120,6 +121,9 @@ class DHTRestClient(object):
             raise DHTRestClientException("Fetch chunk location error", code, reason, address)
 
         [ip, port] = address.split(':')
+        if self.tlsport != -1:
+            port = self.tlsport
+
         time_keeper.start_clock()
         reason, code, nonce = get_nonce_peer(self.session, ip, int(port))
         time_keeper.stop_clock(TIME_FETCH_NONCE)
