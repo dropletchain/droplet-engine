@@ -317,7 +317,6 @@ class ChunkData:
         :param entry: the entry
         :return: True if success else False i.e. chunk full
         """
-        assert entry.get_type_id() == self.type
         if len(self.entries) >= self.max_size:
             return False
         self.entries.append(entry)
