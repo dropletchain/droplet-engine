@@ -310,7 +310,6 @@ class ChunkData:
         """
         self.entries = entries_in or []
         self.max_size = max_size
-        self.type = entry_type
 
     def add_entry(self, entry):
         """
@@ -354,7 +353,7 @@ class ChunkData:
             entry_decoder = DECODER_FOR_TYPE[int(type_entry)]
             entries.append(entry_decoder(encoded[cur_pos:(cur_pos + len_entry)], use_compression))
             cur_pos += len_entry
-        return ChunkData(entries_in=entries, max_size=len(entries), entry_type=int(type_entry))
+        return ChunkData(entries_in=entries, max_size=len(entries))
 
 
 class DataStreamIdentifier:

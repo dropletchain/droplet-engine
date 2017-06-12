@@ -33,10 +33,10 @@ def dummy_capture(filename):
 
 
 class ImageProducer(object):
-    def __init__(self, name, start_block, bc_privatekey,
+    def __init__(self, name, start_time, bc_privatekey,
                  policy_nonce, stream_id, txid, ip='127.0.0.1', port=14000):
         self.name = name
-        self.start_block = start_block
+        self.start_time = start_time
         self.bc_privatekey = BitcoinVersionedPrivateKey(bc_privatekey)
         self.policy_nonce = base64.b64decode(policy_nonce)
         self.stream_id = stream_id
@@ -61,8 +61,11 @@ class ImageProducer(object):
         while True:
             try:
                 timer_chunk = TimeKeeper()
+                total_id = timer_chunk.start_clock_unique()
+                timestamp_data = int(time.time())
+                block_id = (timestamp_data - self.start_time) / interval
                 # Take a picture
-                picture_name = "%s%d.jpg" % (self.name, cur_block)
+                picture_name = "%s%d.jpg" % (self.name, block_id)
                 image_capture(picture_name)
                 print picture_name
 
@@ -70,11 +73,12 @@ class ImageProducer(object):
                 with open(picture_name, 'r') as f:
                     picture = f.read()
 
-                chunk_tmp = ChunkData(entry_type=TYPE_PICTURE_ENTRY)
-                chunk_tmp.add_entry(PictureEntry(int(time.time()), picture_name, picture, time_keeper=timer_chunk))
+                chunk_tmp = ChunkData()
+
+                chunk_tmp.add_entry(PictureEntry(timestamp_data, picture_name, picture, time_keeper=timer_chunk))
 
                 cur_time = timer()
-                cloud_chunk = self._generate_cloud_chunk(cur_block, sym_key, chunk_tmp, timer_chunk)
+                cloud_chunk = self._generate_cloud_chunk(block_id, sym_key, chunk_tmp, timer_chunk)
                 chunk_creation = timer() - cur_time
 
                 len_normal = len(chunk_tmp.encode(use_compression=False))
@@ -97,9 +101,9 @@ class ImageProducer(object):
                                                                            len_normal,
                                                                            len_compressed,
                                                                            length_final))
-                cur_block += 1
                 time_file.flush()
-                time.sleep(interval)
+                timer_chunk.stop_clock_unique('time_total', total_id)
+                time.sleep(interval - int(timer_chunk.logged_times['time_total'] / 1000))
             except RuntimeError as e:
                 print e.message
                 logging.error("Exception in round %d" % cur_block)
@@ -108,11 +112,11 @@ class ImageProducer(object):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Run raspberrypi producer server client")
     parser.add_argument('--dhtport', type=int, help='dhtport', default=14000, required=False)
-    parser.add_argument('--start_block', type=int, help='start_block', default=0, required=False)
+    parser.add_argument('--start_block', type=int, help='start_block', default=1497225600, required=False)
     parser.add_argument('--dhtserver', type=str, help='dhtserver', default="46.101.113.112", required=False)
     parser.add_argument('--configfile', type=str, help='configfile', default='./config', required=False)
     parser.add_argument('--timefile', type=str, help='timefile', default='./time.log', required=False)
-    parser.add_argument('--interval', type=int, help='interval', default=10, required=False)
+    parser.add_argument('--interval', type=int, help='interval', default=7200, required=False)
     parser.add_argument('--name', type=str, help='name', default="./photos/rapsberry", required=False)
     args = parser.parse_args()
 
