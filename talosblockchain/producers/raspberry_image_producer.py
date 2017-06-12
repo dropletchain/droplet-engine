@@ -8,7 +8,8 @@ import picamera
 import time
 
 import requests
-
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from talosstorage.checks import BitcoinVersionedPrivateKey, get_priv_key
 from talosstorage.chunkdata import ChunkData, TYPE_PICTURE_ENTRY, PictureEntry, create_cloud_chunk, \
     DataStreamIdentifier, compress_data
