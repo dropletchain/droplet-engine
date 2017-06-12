@@ -1,0 +1,2 @@
+include ':app', ':blockaditapi'
+project(':blockaditapi').projectDir=new File(rootProject.projectDir, '../BlockAdit/blockaditapi')
