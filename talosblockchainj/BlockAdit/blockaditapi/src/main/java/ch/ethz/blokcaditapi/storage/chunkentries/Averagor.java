@@ -43,4 +43,9 @@ public class Averagor implements EntryProcessor {
         count++;
         tempResult[0] += intEEntry.getDataValue();
     }
+
+    @Override
+    public void process(PictureEntry pictureEntry) {
+        return;
+    }
 }

@@ -39,4 +39,9 @@ public class Sumator implements EntryProcessor {
     public void process(IntegerEntry intEEntry) {
         tempResult[0] += intEEntry.getDataValue();
     }
+
+    @Override
+    public void process(PictureEntry pictureEntry) {
+        return;
+    }
 }

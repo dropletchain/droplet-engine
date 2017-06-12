@@ -14,4 +14,5 @@ public interface EntryProcessor {
 
     public void process(IntegerEntry doubleEntry);
 
+    public void process(PictureEntry pictureEntry);
 }
