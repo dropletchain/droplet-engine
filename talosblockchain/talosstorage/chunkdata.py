@@ -332,7 +332,7 @@ class ChunkData:
     def remaining_space(self):
         return self.max_size - len(self.entries)
 
-    def encode(self, use_compression=True):
+    def encode(self, use_compression=False):
         res = ""
         for entry in self.entries:
             res += entry.encode(use_compression=use_compression)
