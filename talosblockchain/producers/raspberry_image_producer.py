@@ -58,7 +58,6 @@ class ImageProducer(object):
         return req.reason, req.status_code
 
     def run_loop(self, image_capture, time_file, sym_key="a" * 16, interval=3600):
-        cur_block = self.start_block
         while True:
             try:
                 timer_chunk = TimeKeeper()
@@ -107,7 +106,7 @@ class ImageProducer(object):
                 time.sleep(interval - int(timer_chunk.logged_times['time_total'] / 1000))
             except RuntimeError as e:
                 print e.message
-                logging.error("Exception in round %d" % cur_block)
+                logging.error("Exception occured %s" % e.message)
 
 
 if __name__ == "__main__":
