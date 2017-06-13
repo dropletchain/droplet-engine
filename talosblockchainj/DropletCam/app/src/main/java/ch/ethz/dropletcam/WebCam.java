@@ -10,6 +10,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
@@ -43,6 +45,8 @@ public class WebCam extends AppCompatActivity {
     private Button leftClick;
     private Button rightClick;
     private TextView title;
+    private Animation slideR;
+    private Animation slideL;
 
     private BlockAditStorage storage;
     private IBlockAditStream loadedStream = null;
@@ -68,6 +72,11 @@ public class WebCam extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        slideR = AnimationUtils.loadAnimation(getApplicationContext(),
+                R.anim.slide);
+
+        slideL = AnimationUtils.loadAnimation(getApplicationContext(),
+                R.anim.slideleft);
 
         pictureView = (ImageView) findViewById(R.id.webImage);
         title = (TextView) findViewById(R.id.title);
@@ -82,9 +91,8 @@ public class WebCam extends AppCompatActivity {
 
     private int computeCurrentBLockid(long startTime, long interval) {
         long unixTime = System.currentTimeMillis() / 1000L;
-        unixTime -= (interval + startTime);
-        //return (int) (unixTime / interval);
-        return 4;
+        unixTime -= startTime;
+        return (int) (unixTime / interval);
     }
 
     private void loadStream(final Address owner, final int streamID) {
@@ -108,14 +116,21 @@ public class WebCam extends AppCompatActivity {
                 actual = computeCurrentBLockid(streamRes.getStartTimestamp(), streamRes.getInterval());
                 currentImage.set(actual);
                 loadedStream = streamRes;
-                loadImage(currentImage.get());
+                loadImage(currentImage.get(), true, null);
                 leftClick.setVisibility(View.VISIBLE);
             }
         }.execute();
     }
 
-    private void loadImage(final int blockId) {
+    private void loadImage(final int blockId, final boolean retry, final Animation anim) {
         new AsyncTask<Void, Void, PictureEntry>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                //title.setVisibility(View.INVISIBLE);
+
+            }
+
             @Override
             protected PictureEntry doInBackground(Void... params) {
                 try {
@@ -132,9 +147,23 @@ public class WebCam extends AppCompatActivity {
             @Override
             protected void onPostExecute(PictureEntry entry) {
                 super.onPostExecute(entry);
-                if (entry == null)
+                if (entry == null) {
+                    if (retry) {
+                        int id = currentImage.decrementAndGet();
+                        actual = id;
+                        loadImage(id, false, null);
+                    }
+
+                    pictureView.setVisibility(View.INVISIBLE);
+                    title.setVisibility(View.VISIBLE);
+                    title.setText("NOT FOUND");
                     return;
+                }
+                pictureView.setVisibility(View.VISIBLE);
                 byte[] image = entry.getPictureData();
+                if (anim!=null) {
+                    while(!anim.hasEnded()) {}
+                }
                 pictureView.setImageBitmap(BitmapFactory.decodeByteArray(image, 0, image.length));
                 title.setVisibility(View.VISIBLE);
                 title.setText(ActivitiesUtil.titleWeb.format(new Date(entry.getTimestamp() * 1000L)));
@@ -151,14 +180,34 @@ public class WebCam extends AppCompatActivity {
         lock.lock();
         try {
             int currentIdx = currentImage.get();
-            if (currentIdx == 1) {
+            if (currentIdx <= 1) {
                 leftClick.setVisibility(View.INVISIBLE);
-            } else if (currentIdx == actual) {
+            } else if (currentIdx >= actual) {
                 rightClick.setVisibility(View.VISIBLE);
             }
 
-            int id = currentImage.decrementAndGet();
-            loadImage(id);
+            final int id = currentImage.decrementAndGet();
+            if(pictureView.getVisibility() == View.VISIBLE) {
+                slideR.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+                        loadImage(id, false, animation);
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        pictureView.setVisibility(View.INVISIBLE);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                pictureView.startAnimation(slideR);
+            } else {
+                loadImage(id, false, null);
+            }
         } finally {
             lock.unlock();
         }
@@ -171,14 +220,33 @@ public class WebCam extends AppCompatActivity {
         lock.lock();
         try {
             int currentIdx = currentImage.get();
-            if (currentIdx == actual - 1) {
+            if (currentIdx >= actual - 1) {
                 rightClick.setVisibility(View.INVISIBLE);
-            } else if (currentIdx == 0) {
+            } else if (currentIdx <= 0) {
                 leftClick.setVisibility(View.VISIBLE);
             }
 
-            int id = currentImage.incrementAndGet();
-            loadImage(id);
+            final int id = currentImage.incrementAndGet();
+            if(pictureView.getVisibility() == View.VISIBLE) {
+                slideL.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+                        loadImage(id, false, null);
+                    }
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        pictureView.setVisibility(View.INVISIBLE);
+                    }
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                pictureView.startAnimation(slideL);
+            } else {
+                loadImage(id, false, null);
+            }
+
         } finally {
             lock.unlock();
         }
