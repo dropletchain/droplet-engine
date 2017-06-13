@@ -7,7 +7,7 @@ from talosvc.config import BitcoinVersionedPrivateKey
 from talosvc.talosclient.policycreation import BitcoinPolicyCreator
 
 ip = "46.101.113.112"
-timestamp_start = 1497225600
+timestamp_start = 1497312000
 interval = 7200
 share = "cT3GKi6SbCwKEG2o9BJCtrmaCDSkAFfvF6nwS3GDb4xbCNBiUoy6"
 
@@ -28,3 +28,4 @@ if __name__ == "__main__":
     policy_client.create_policy(1, int(stream_id), timestamp_start, interval, base64.b64decode(policy_nonce))
 
     policy_client.add_share_to_policy(int(stream_id), [share_key.public_key().address()])
+    #policy_client.invalidate_policy(int(stream_id))

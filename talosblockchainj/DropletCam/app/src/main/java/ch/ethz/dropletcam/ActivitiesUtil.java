@@ -58,5 +58,6 @@ public class ActivitiesUtil {
     static final SimpleDateFormat titleFormat = new SimpleDateFormat("dd.MM.yyyy");
     static final SimpleDateFormat timeFormat = new SimpleDateFormat("HH");
     static final SimpleDateFormat keyFormat = new SimpleDateFormat("HH:mm:ss");
+    static final SimpleDateFormat titleWeb = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
 }
