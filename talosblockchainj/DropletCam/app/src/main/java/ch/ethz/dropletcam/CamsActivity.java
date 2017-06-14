@@ -42,10 +42,9 @@ public class CamsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cams);
-
-        DemoDataLoader loader = new DemoDataLoader(this);
-        List<DemoUser> users = loader.loadDemoUsers();
-        user = users.get(0);
+        Intent creator = getIntent();
+        String userData = creator.getExtras().getString(ActivitiesUtil.DEMO_USER_KEY);
+        user = DemoUser.fromString(userData);
 
         camList = (ListView) findViewById(R.id.camsList);
 
