@@ -2,6 +2,7 @@ package ch.ethz.dropletcam;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
@@ -37,6 +38,8 @@ import ch.ethz.blokcaditapi.storage.chunkentries.Entry;
 import ch.ethz.blokcaditapi.storage.chunkentries.PictureEntry;
 import ch.ethz.dropletcam.util.DemoDataLoader;
 import ch.ethz.dropletcam.util.DemoUser;
+
+import static android.R.attr.entries;
 
 public class WebCam extends AppCompatActivity {
 
@@ -122,6 +125,29 @@ public class WebCam extends AppCompatActivity {
         }.execute();
     }
 
+    private void setImageOnAnimationFihished(final Animation anim, final Bitmap map) {
+        new AsyncTask<Void, Void, Boolean>() {
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                try {
+                    while(!anim.hasEnded()) {
+                        Thread.sleep(1);
+                    }
+                    return true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Boolean ok) {
+                pictureView.setVisibility(View.VISIBLE);
+                pictureView.setImageBitmap(map);
+            }
+        }.execute();
+    }
+
     private void loadImage(final int blockId, final boolean retry, final Animation anim) {
         new AsyncTask<Void, Void, PictureEntry>() {
             @Override
@@ -159,12 +185,14 @@ public class WebCam extends AppCompatActivity {
                     title.setText("NOT FOUND");
                     return;
                 }
-                pictureView.setVisibility(View.VISIBLE);
                 byte[] image = entry.getPictureData();
+                Bitmap imagBit = BitmapFactory.decodeByteArray(image, 0, image.length);
                 if (anim!=null) {
-                    while(!anim.hasEnded()) {}
+                    setImageOnAnimationFihished(anim, imagBit);
+                } else {
+                    pictureView.setVisibility(View.VISIBLE);
+                    pictureView.setImageBitmap(imagBit);
                 }
-                pictureView.setImageBitmap(BitmapFactory.decodeByteArray(image, 0, image.length));
                 title.setVisibility(View.VISIBLE);
                 title.setText(ActivitiesUtil.titleWeb.format(new Date(entry.getTimestamp() * 1000L)));
             }
@@ -231,7 +259,7 @@ public class WebCam extends AppCompatActivity {
                 slideL.setAnimationListener(new Animation.AnimationListener() {
                     @Override
                     public void onAnimationStart(Animation animation) {
-                        loadImage(id, false, null);
+                        loadImage(id, false, animation);
                     }
                     @Override
                     public void onAnimationEnd(Animation animation) {

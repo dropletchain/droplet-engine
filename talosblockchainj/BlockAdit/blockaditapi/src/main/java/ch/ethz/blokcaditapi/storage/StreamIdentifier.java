@@ -4,7 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Created by lukas on 09.05.17.
+ * Identifies a stream
  */
 
 public class StreamIdentifier {
