@@ -21,8 +21,8 @@ class IPFSStorage:
         return self.api.cat(ipfs_address)
 
 
-def run_ipfs_load(list_of_addresses):
-    storage = IPFSStorage()
+def run_ipfs_load(list_of_addresses, ip="127.0.0.1", port=5001):
+    storage = IPFSStorage(ip=ip, port=port)
     results = []
     for address in list_of_addresses:
         before = timer()
@@ -32,7 +32,7 @@ def run_ipfs_load(list_of_addresses):
 
 
 if __name__ == '__main__':
-    storage = IPFSStorage()
+    storage = IPFSStorage(ip='35.159.23.185')
     addr = storage.store_chunk("HelloChunk")
     print addr
     print storage.get_chunk(addr)

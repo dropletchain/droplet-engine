@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request, g
 from ipfs_util import run_ipfs_load
+from do_benchmark import store_chunks
 import json
 import argparse
 
@@ -23,9 +24,10 @@ def run_benchmark():
         print e
         return "ERROR", 400
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Run Basic IPFS bench Server")
     parser.add_argument('--port', type=int, help='port', default=12000, required=False)
-    parser.add_argument('--ip', type=str, help='ip', default="127.0.0.1", required=False)
+    parser.add_argument('--ip', type=str, help='ip', default="0.0.0.0", required=False)
     args = parser.parse_args()
     app.run(host=args.ip, port=args.port)
