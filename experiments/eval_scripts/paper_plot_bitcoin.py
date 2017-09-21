@@ -15,11 +15,15 @@ def parse_date(date):
 def bitcoin_plot():
     bc_data = []
     bc_dates = []
+    from_date = parse_date("2016-09-01 00:00:00")
+    to_date = parse_date("2017-09-01 00:00:00")
     with open("../data/bitcoin_blockchain/median-confirmation-time.csv") as file_data:
         for line in file_data:
             [date, minutes] = line.split(",")
-            bc_data.append(float(minutes))
-            bc_dates.append(parse_date(date))
+            date_parsed = parse_date(date)
+            if date_parsed>=from_date and date_parsed<=to_date:
+                bc_data.append(float(minutes))
+                bc_dates.append(date_parsed)
     bc_data = np.asarray(bc_data)
 
     ########
@@ -61,8 +65,9 @@ def bitcoin_plot():
     plt.plot(bc_dates, bc_data, color=colors[0], linestyle=linestyles[0], linewidth=1.5)
 
     plt.ylabel('Time [min]')
-    plt.xlabel('From May 2016 to May 2017')
-    plt.ylim(5,31)
+    plt.xlabel('From Sept 2016 to Sept 2017')
+    plt.ylim(5,30)
+    plt.xlim(bc_dates[0], bc_dates[-1])
 
     plt.grid(True, linestyle=':', color='0.8', zorder=0)
     F = plt.gcf()
