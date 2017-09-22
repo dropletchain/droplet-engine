@@ -89,7 +89,7 @@ def plot_dht_latency():
     print data_get_addr.shape
     print data_store_addr.shape
 
-    s3_plain_data, s3_enc_data = fetch_s3_data_from_db(data_path_s3, 0, 100)
+    s3_plain_data, s3_enc_data = fetch_s3_data_from_db(data_path_s3, 50, 950)
 
     def compute_latency(data):
         avg_latency = np.average(data, axis=0)
