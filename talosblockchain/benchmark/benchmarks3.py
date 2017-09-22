@@ -331,7 +331,7 @@ class FetchTalosThread(threading.Thread):
                     token = generate_query_token(self.stream_identifier.owner, self.stream_identifier.streamid, str(bytearray(16)), key, self.private_key)
                 else:
                     token = self.token_store[block_id]
-                    print "Token fetched"
+                    #print "Token fetched"
                 chunk = fetch_chunk(self.connection, self.vc_client, token)
                 data = chunk.get_and_check_chunk_data(aes_key, compression_used=False, do_decode=False)
                 self.result_store[self.my_id].append(data)
