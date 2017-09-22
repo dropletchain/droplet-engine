@@ -76,7 +76,7 @@ def plot_dht_s3_get_tp():
     golden_mean = ((math.sqrt(5)-1.0)/2.0)*.8   # Aesthetic ratio
     fig_width = fig_width_pt*inches_per_pt      # width in inches
     fig_height =(fig_width*golden_mean)           # height in inches
-    fig_size = [fig_width,fig_height/1.22]
+    fig_size = [fig_width*1.1,fig_height/1.5]
 
     params = {'backend': 'ps',
         'axes.labelsize': 20,
@@ -87,7 +87,7 @@ def plot_dht_s3_get_tp():
         'figure.figsize': fig_size,
         'font.family': 'times new roman'}
 
-    fig_size = [fig_width, fig_height / 1.2]
+#fig_size = [fig_width, fig_height / 1.2]
 
     plt.rcParams.update(params)
     plt.axes([0.12, 0.32, 0.85, 0.63], frameon=True)
@@ -114,7 +114,7 @@ def plot_dht_s3_get_tp():
     ax1.set_ylabel("Throughput [get/s]")
     xticks = ind + width / 2
     ax1.set_xticks(xticks)
-    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes.tolist())) + ["Plain", "Secure"])
+    ax1.set_xticklabels((map(lambda x: str(int(x)), nodes.tolist())) + ["Vanilla", "Secure"])
     # HACK xD
     ax1.set_xlabel("       DHT Number of nodes                  Amazon S3")
 
