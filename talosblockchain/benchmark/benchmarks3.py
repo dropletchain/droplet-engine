@@ -163,9 +163,12 @@ def run_benchmark_s3_talos(num_rounds, out_logger, bucket_name, private_key=Bitc
             time_keeper = TimeKeeper()
             chunk = generate_random_chunk(private_key, round_bench, identifier, key=key, size=chunk_size, time_keeper=time_keeper)
             store_chunk(storage, vc_client, chunk, time_keeper=time_keeper)
-            token = generate_query_token(owner, stream_id, str(bytearray(16)), chunk.key, private_key)
 
             global_id = time_keeper.start_clock_unique()
+            token_time_id = time_keeper.start_clock_unique()
+            token = generate_query_token(owner, stream_id, str(bytearray(16)), chunk.key, private_key)
+            time_keeper.stop_clock_unique("time_token_create", token_time_id)
+
             chunk = fetch_chunk(storage, vc_client, token, global_id=global_id, time_keeper=time_keeper)
             time_keeper.stop_clock_unique("time_s3_get_chunk", global_id)
 
@@ -340,7 +343,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     FIELDS_TALOS = ["time_s3_store_chunk", "time_s3_get_chunk", "time_create_chunk"]
-    FIELDS_TALOS_EXT = ["time_s3_store_chunk", "time_s3_get_chunk", "time_create_chunk", ENTRY_CHECK_TOKEN_VALID, ENTRY_FETCH_POLICY, ENTRY_GET_AND_CHECK]
+    FIELDS_TALOS_EXT = ["time_s3_store_chunk", "time_s3_get_chunk", "time_create_chunk", "time_token_create",
+                        ENTRY_CHECK_TOKEN_VALID, ENTRY_FETCH_POLICY, ENTRY_GET_AND_CHECK]
     FIELDS_TALOS_FETCH = ["time_fetch_all"]
 
     private_key = BitcoinVersionedPrivateKey(args.private_key)
