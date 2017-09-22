@@ -27,10 +27,10 @@ from talosstorage.storage import TalosStorage
 from talosstorage.timebench import TimeKeeper
 from talosvc.talosclient.restapiclient import TalosVCRestClient
 
-PRIVATE_KEY = "cN5YgNRq8rbcJwngdp3fRzv833E7Z74TsF8nB6GhzRg8Gd9aGWH1"
-NONCE = "OU2HliHRUUZJokNvn84a+A=="
-STREAMID = 1
-TXID = "8cf71b7ed09acf896b40fc087e56d3d4dbd8cc346a869bb8a81624153c0c2b8c"
+PRIVATE_KEY = "cMuRy6QaookV4sc42PJtAbTP52BjN3hTyiuDNvgcRruMqWtEi6Wt"
+NONCE = "uX415++EmJfKBGPUYr5C/g=="
+STREAMID = 341244894
+TXID = "2b5b0bbfe651bcd846c2a03170bf35c4ec63fcb45cdaa630bdde4b481c6ec0a0"
 IP = "127.0.0.1"
 PORT = 14000
 
@@ -146,8 +146,6 @@ def  fetch_chunk(storage, vc_client, token, global_id=None, time_keeper=TimeKeep
     id = time_keeper.start_clock_unique()
     chunk = storage.get_check_chunk(token.chunk_key, token.pubkey, policy, time_keeper=time_keeper)
     time_keeper.stop_clock_unique(ENTRY_GET_AND_CHECK, id)
-    if not global_id is None:
-        time_keeper.stop_clock_unique("time_s3_get_chunk", global_id)
     return chunk
 
 
@@ -167,8 +165,12 @@ def run_benchmark_s3_talos(num_rounds, out_logger, bucket_name, private_key=Bitc
             store_chunk(storage, vc_client, chunk, time_keeper=time_keeper)
 
             global_id = time_keeper.start_clock_unique()
+            token_time_id = time_keeper.start_clock_unique()
             token = generate_query_token(owner, stream_id, str(bytearray(16)), chunk.key, private_key)
+            time_keeper.stop_clock_unique("time_token_create", token_time_id)
+
             chunk = fetch_chunk(storage, vc_client, token, global_id=global_id, time_keeper=time_keeper)
+            time_keeper.stop_clock_unique("time_s3_get_chunk", global_id)
 
             if chunk is None:
                 print "Round %d error" % round_bench
@@ -341,6 +343,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     FIELDS_TALOS = ["time_s3_store_chunk", "time_s3_get_chunk", "time_create_chunk"]
+    FIELDS_TALOS_EXT = ["time_s3_store_chunk", "time_s3_get_chunk", "time_create_chunk", "time_token_create",
+                        ENTRY_CHECK_TOKEN_VALID, ENTRY_FETCH_POLICY, ENTRY_GET_AND_CHECK]
     FIELDS_TALOS_FETCH = ["time_fetch_all"]
 
     private_key = BitcoinVersionedPrivateKey(args.private_key)
@@ -357,14 +361,15 @@ if __name__ == "__main__":
     logger.close()
 
     if args.log_db is None:
-        logger = FileBenchmarkLogger("%s_%d_SYNC_TALOS_S3.log" % (args.name, args.num_rounds), FIELDS_TALOS)
+        logger = FileBenchmarkLogger("%s_%d_SYNC_TALOS_S3.log" % (args.name, args.num_rounds), FIELDS_TALOS_EXT)
     else:
-        logger = SQLLiteBenchmarkLogger(args.log_db, FIELDS_TALOS, "%s_SYNC_TALOS" % (args.name,))
+        logger = SQLLiteBenchmarkLogger(args.log_db, FIELDS_TALOS_EXT, "%s_SYNC_TALOS" % (args.name,))
 
     run_benchmark_s3_talos(args.num_rounds, logger, args.bucket_name, private_key=private_key,
                            policy_nonce=policy_nonce, stream_id=args.stream_id, txid=args.txid,
                            chunk_size=args.chunk_size, do_delete=False)
     logger.close()
+
 
     if args.log_db is None:
         logger = FileBenchmarkLogger("%s_%d_AR_FETCH_PLAIN_S3.log" % (args.name, args.num_rounds), FIELDS_TALOS)
