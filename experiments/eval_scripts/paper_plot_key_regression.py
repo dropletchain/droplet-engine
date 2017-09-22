@@ -33,8 +33,9 @@ def plot_key_regression(max_power):
     golden_mean = ((math.sqrt(5) - 1.0) / 2.0) * .8  # Aesthetic ratio
     fig_width = fig_width_pt * inches_per_pt  # width in inches
     fig_height = (fig_width * golden_mean)  # height in inches
-    fig_size = [fig_width, fig_height / 1.22]
-
+    #fig_size = [fig_width, fig_height / 1.8] #1.22
+    fig_size = [fig_width, fig_height / 1.6]
+    
     params = {'backend': 'ps',
         'axes.labelsize': 20,
         'legend.fontsize': 18,
@@ -44,7 +45,7 @@ def plot_key_regression(max_power):
         'figure.figsize': fig_size,
         'font.family': 'times new roman'}
 
-    fig_size = [fig_width, fig_height / 1.2]
+
 
     plt.rcParams.update(params)
     plt.axes([0.12, 0.32, 0.85, 0.63], frameon=True)
@@ -69,7 +70,7 @@ def plot_key_regression(max_power):
     ax.get_yaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     plt.xlabel('Length of Hash Chain')
     plt.ylabel('Time [ms]')
-    plt.ylim(0, 100000)
+    plt.ylim(0, 800000)
     plt.xlim(0, 80000)
 
     #bbox_to_anchor=(0., 1.00, 1., .102)

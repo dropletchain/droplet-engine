@@ -58,7 +58,7 @@ def plot_compression():
         'font.family': 'times new roman'}
 
     pdf_pages = PdfPages('../plots/plot_compression-rate.pdf')
-    fig_size = [fig_width, fig_height / 1.2]
+    fig_size = [fig_width, fig_height / 1.6]
 
     plt.rcParams.update(params)
     plt.axes([0.12, 0.32, 0.85, 0.63], frameon=True)
