@@ -46,7 +46,7 @@ def plot_dht_s3_get_tp():
     result_data = result_data[result_data[:, 0].argsort()]
 
 
-    s3_plain_data, s3_enc_data = fetch_s3_data_from_db(data_path_s3, 5, 105)
+    s3_plain_data, s3_enc_data = fetch_s3_data_from_db(data_path_s3, 10, 100)
 
     def compute_troughput(data, num_fetch):
         data_fetch = num_fetch / (data[:, 1:] / 1000)
