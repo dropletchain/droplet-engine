@@ -40,13 +40,13 @@ def plot_dht_s3_get_tp():
                 aval = int(matching.group(2))
                 num_nodes = int(matching.group(3))
                 latency = int(matching.group(4)) * 2
-                data = fetch_data_from_db(os.path.join(data_parh, filename), 5, 105)
+                data = fetch_data_from_db(os.path.join(data_parh, filename), 0, 100)
                 result_data.append([num_nodes] + [x for [x] in data.tolist()])
     result_data = np.asarray(result_data)
     result_data = result_data[result_data[:, 0].argsort()]
 
 
-    s3_plain_data, s3_enc_data = fetch_s3_data_from_db(data_path_s3, 0, 100)
+    s3_plain_data, s3_enc_data = fetch_s3_data_from_db(data_path_s3, 10, 100)
 
     def compute_troughput(data, num_fetch):
         data_fetch = num_fetch / (data[:, 1:] / 1000)
