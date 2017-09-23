@@ -37,6 +37,21 @@ PORT = 14000
 aes_key = "0"*16
 
 
+class DummyData:
+    def __init__(self,size):
+        self.data = os.urandom(size)
+
+    def encode(self):
+        return self.data
+
+    @staticmethod
+    def decode(encoded):
+        dummy = DummyData(0)
+        dummy.data = encoded
+        return dummy
+
+
+
 def generate_random_chunk(private_key, block_id, stream_identifier, tag="test", key=os.urandom(32),
                           size=1000, max_float=1000, time_keeper=TimeKeeper()):
     chunk = ChunkData()
@@ -49,6 +64,7 @@ def generate_random_chunk(private_key, block_id, stream_identifier, tag="test", 
     return cloud_chunk
 
 
+
 def generate_data(tag="test", size=1000, max_float=1000, time_keeper=TimeKeeper()):
     chunk = ChunkData()
     for i in range(size):
@@ -57,9 +73,10 @@ def generate_data(tag="test", size=1000, max_float=1000, time_keeper=TimeKeeper(
     return chunk
 
 
-def generate_random_chunk_from_data(chunk, private_key, block_id, stream_identifier, time_keeper=TimeKeeper()):
+def generate_random_chunk_from_data(chunk, private_key, block_id, stream_identifier, time_keeper=TimeKeeper(), do_compression=False):
     time_keeper.start_clock()
-    cloud_chunk = create_cloud_chunk(stream_identifier, block_id, get_priv_key(private_key), 0, aes_key, chunk)
+    cloud_chunk = create_cloud_chunk(stream_identifier, block_id, get_priv_key(private_key), 0, aes_key, chunk,
+                                     use_compression=do_compression)
     time_keeper.stop_clock("time_create_chunk")
     return cloud_chunk
 
@@ -126,11 +143,11 @@ def run_benchmark_s3_plain_latency(num_rounds, out_logger, bucket_name, private_
     for round_bench in range(num_rounds):
         try:
             time_keeper = TimeKeeper()
-            chunk = generate_data(size=chunk_size, time_keeper=time_keeper)
+            #chunk = generate_data(size=chunk_size, time_keeper=time_keeper)
+            chunk = DummyData(8500)
             key_for_chunk = identifier.get_key_for_blockid(round_bench)
             if do_comp_data:
-                chunk = generate_random_chunk_from_data(chunk, private_key, round_bench, identifier,
-                                                        time_keeper=time_keeper)
+                chunk = generate_random_chunk_from_data(chunk, private_key, round_bench, identifier, time_keeper=time_keeper)
             storage.store_chunk(key_for_chunk, chunk, time_keeper=time_keeper)
             chunk = storage.get_chunk(key_for_chunk, time_keeper=time_keeper, do_plain=(not do_comp_data))
             if chunk is None:
@@ -183,7 +200,8 @@ def run_benchmark_s3_talos(num_rounds, out_logger, bucket_name, private_key=Bitc
     for round_bench in range(num_rounds):
         try:
             time_keeper = TimeKeeper()
-            chunk_data = generate_data(size=chunk_size)
+            #chunk_data = generate_data(size=chunk_size)
+            chunk_data = DummyData(8500)
 
             global_id = time_keeper.start_clock_unique()
             chunk = generate_random_chunk_from_data(chunk_data, private_key, round_bench, identifier,
@@ -197,7 +215,7 @@ def run_benchmark_s3_talos(num_rounds, out_logger, bucket_name, private_key=Bitc
 
             global_id = time_keeper.start_clock_unique()
             chunk = fetch_chunk(storage, vc_client, token, global_id=global_id, time_keeper=time_keeper)
-            data = chunk.get_and_check_chunk_data(aes_key, compression_used=True, time_keeper=time_keeper)
+            data = chunk.get_and_check_chunk_data(aes_key, compression_used=False, time_keeper=time_keeper, do_decode=False)
             time_keeper.stop_clock_unique("time_s3_get_chunk", global_id)
 
             if chunk is None:
@@ -313,8 +331,9 @@ class FetchTalosThread(threading.Thread):
                     token = generate_query_token(self.stream_identifier.owner, self.stream_identifier.streamid, str(bytearray(16)), key, self.private_key)
                 else:
                     token = self.token_store[block_id]
+                    #print "Token fetched"
                 chunk = fetch_chunk(self.connection, self.vc_client, token)
-                data = chunk.get_and_check_chunk_data(aes_key, compression_used=True)
+                data = chunk.get_and_check_chunk_data(aes_key, compression_used=False, do_decode=False)
                 self.result_store[self.my_id].append(data)
             except Exception:
                 self.result_store[self.my_id].append(None)
@@ -392,7 +411,7 @@ if __name__ == "__main__":
 
     FIELDS_TALOS = ["time_s3_store_chunk", "time_s3_get_chunk", "time_create_chunk"]
     FIELDS_TALOS_EXT = ["time_s3_store_chunk", "time_s3_get_chunk", "time_create_chunk", "time_token_create",
-                        ENTRY_FETCH_POLICY, ENTRY_GET_AND_CHECK]
+                        "aes_gcm_decrypt", ENTRY_FETCH_POLICY, ENTRY_GET_AND_CHECK]
     FIELDS_TALOS_FETCH = ["time_fetch_all"]
 
     do_comp_plain = True
