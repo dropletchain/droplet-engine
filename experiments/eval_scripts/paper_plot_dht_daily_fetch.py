@@ -70,7 +70,7 @@ def plot_dht_s3_get_tp():
     golden_mean = ((math.sqrt(5) - 1.0) / 2.0) * .8  # Aesthetic ratio
     fig_width = fig_width_pt * inches_per_pt  # width in inches
     fig_height = (fig_width * golden_mean)  # height in inches
-    fig_size = [fig_width, fig_height / 1.8] #1.22
+    fig_size = [fig_width, fig_height / 1.5] #1.22
 
     params = {'backend': 'ps',
         'axes.labelsize': 20,
@@ -104,7 +104,7 @@ def plot_dht_s3_get_tp():
     ax.get_xaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     plt.xlabel('Number of Days')
     plt.ylabel('Time [ms]')
-    plt.ylim(0,15000)
+    plt.ylim(0,10000)
     #plt.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
     ax.yaxis.set_ticks([100,1000,10000])#np.arange(0, 201, 20.0))
 
