@@ -111,6 +111,7 @@ def plot_dht_s3_get_tp():
     print data_bars
     
 
+    ax1.grid(True, linestyle=':', color='0.8', zorder=0, axis='y')
     ax1.set_ylabel("Throughput [get/s]")
     xticks = ind + width / 2
     ax1.set_xticks(xticks)

@@ -67,6 +67,7 @@ def plot_key_regression(max_power):
         ax.plot(number_of_hashes, cur_data[:, 1], '-o', label="%s compact" % type_key, color=colors[idx * 2 + 1],
                 linestyle=linestyles[idx+2])
 
+    ax.grid(True, linestyle=':', color='0.8', zorder=0)
     ax.get_yaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     plt.xlabel('Length of Hash Chain')
     plt.ylabel('Time [ms]')

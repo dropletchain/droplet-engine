@@ -100,6 +100,7 @@ def plot_dht_s3_get_tp():
         x_values = np.asarray(map(entries_to_day, data[:, 0].tolist()))
         ax.plot(x_values, data[:, 1], '-o', label="%s chunks" % gran_to_str[granularity], color=colors[idx], linestyle=linestyles[idx])
 
+    ax.grid(True, linestyle=':', color='0.8', zorder=0)
     ax.get_yaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     ax.get_xaxis().set_major_formatter(ticker.FormatStrFormatter("%d"))
     plt.xlabel('Number of Days')
