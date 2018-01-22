@@ -25,8 +25,8 @@ def fetch_s3_data_from_db(db_path, from_row, to_row, tab1, tab2):
 
 def plot_s3_latency():
 
-    api_plain_data, api_enc_data = fetch_s3_data_from_db(data_path_s3, 5, 1996, FETCH_API_DATA_BASELINE, FETCH_API_DATA_DROPLET)
-    api_plain_data_tp, api_enc_data_tp = fetch_s3_data_from_db(data_path_s3, 2, 199, FETCH_API_DATA_BASELINE_TP, FETCH_API_DATA_DROPLET_TP)
+    api_plain_data, api_enc_data = fetch_s3_data_from_db(data_path_s3, 0, 4000, FETCH_API_DATA_BASELINE, FETCH_API_DATA_DROPLET)
+    api_plain_data_tp, api_enc_data_tp = fetch_s3_data_from_db(data_path_s3, 0, 400, FETCH_API_DATA_BASELINE_TP, FETCH_API_DATA_DROPLET_TP)
 
     def compute_statistics(data):
         avg_latency = np.average(data, axis=0)
@@ -72,6 +72,11 @@ def plot_s3_latency():
     avg_plain_l, std_plain_l = compute_statistics(api_plain_data)
     avg_enc_l, std_enc_l = compute_statistics(api_enc_data)
 
+    print "Baseline PUT: %s ms, Basline GET %s ms" % (str(avg_plain_l[0]), str(avg_plain_l[1]))
+    print "Droplet PUT: %s ms, Droplet GET %s ms" % (str(avg_enc_l[0]), str(avg_enc_l[1]))
+    print "Overhead PUT: %.3f%% Overhead GET: %.3f%%" % ((avg_enc_l[0] - avg_plain_l[0]) / avg_plain_l[0] * 100 ,
+                                                         (avg_enc_l[1] - avg_plain_l[1]) / avg_plain_l[1] * 100 )
+
     avg_data = np.vstack((avg_plain_l, avg_enc_l))
     std_data = np.vstack((std_plain_l, std_enc_l))
 
@@ -116,6 +121,9 @@ def plot_s3_latency():
 
     avg_plain_l, std_plain_l = compute_statistics_tp(api_plain_data_tp, 100)
     avg_enc_l, std_enc_l = compute_statistics_tp(api_enc_data_tp, 100)
+
+    print "Throughput Baseline: %f, Droplet %f" % (avg_plain_l[0], avg_enc_l[0])
+    print "Overhead: %.3f%%" % ((avg_enc_l[0] - avg_plain_l[0]) / avg_plain_l[0] * -100,)
 
     avg_data = np.vstack((avg_plain_l, avg_enc_l))
     std_data = np.vstack((std_plain_l, std_enc_l))
