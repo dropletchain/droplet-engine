@@ -127,7 +127,7 @@ def plot_dht_latency():
         'font.family': 'times new roman'}
 
     pdf_pages = PdfPages('../plots/paper_dht_latency.pdf')
-    fig_size = [fig_width*1.1, fig_height / 1.5]
+    fig_size = [fig_width*1.1, fig_height / 1.8]
 
     plt.rcParams.update(params)
     plt.axes([0.12, 0.32, 0.85, 0.63], frameon=True)
@@ -181,17 +181,20 @@ def plot_dht_latency():
     ax1.set_ylabel("Time [ms]")
     ax1.set_xticks(ind_long + width)
     ax1.set_xticklabels((map(lambda x: str(int(x)), nodes_g.tolist())) + ["Vanilla", "Secure"])
-    ax1.set_xlabel("       DHT Number of nodes                  Amazon S3")
+    ax1.set_xlabel("       Number of nodes                                   Amazon S3")
 
     #ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), loc="upper left", ncol=2)
-    ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('Store', 'Get', 'Routing Store', 'Routing Get'), bbox_to_anchor=(-0.15, 1.00, 1., .102), loc=3, ncol=4, columnspacing=1)
+    legend = ax1.legend((rects1[0], rects2[0], rects3[0], rects4[0]), ('store', 'get', 'routing store', 'routing get'), bbox_to_anchor=(-0.02, .845, 1., .102), loc=6, ncol=4, columnspacing=1)
 
+    legend.get_frame().set_facecolor('none')
+    legend.get_frame().set_linewidth(0.0)
+    
     #handletextpad=0.5, labelspacing=0.2, borderaxespad=0.2, borderpad=0.3)
 
     #f.suptitle("RTT-%d average latency DHT operations" % latency, fontsize=24, y=1.02)
-    ax1.set_ylim([0, 215])
+    ax1.set_ylim([0, 230])
     ax1.yaxis.set_ticks(np.arange(0, 201, 30.0))
-
+    
 
 
     F = plt.gcf()

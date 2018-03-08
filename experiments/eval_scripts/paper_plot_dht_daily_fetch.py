@@ -70,7 +70,7 @@ def plot_dht_s3_get_tp():
     golden_mean = ((math.sqrt(5) - 1.0) / 2.0) * .8  # Aesthetic ratio
     fig_width = fig_width_pt * inches_per_pt  # width in inches
     fig_height = (fig_width * golden_mean)  # height in inches
-    fig_size = [fig_width, fig_height / 1.5] #1.22
+    fig_size = [fig_width, fig_height / 1.8] #1.5
 
     params = {'backend': 'ps',
         'axes.labelsize': 20,
