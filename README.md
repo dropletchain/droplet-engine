@@ -1,4 +1,4 @@
-Our reference implementation of Droplet (https://arxiv.org/abs/1806.02057) is composed of three entities implemented in Python: 
+Our reference implementation of Droplet ([paper](https://arxiv.org/abs/1806.02057)) is composed of three entities implemented in Python: 
  - the client engine
  - the storage-node engine
  - and the virtualchain.
