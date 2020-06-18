@@ -1,3 +1,5 @@
+//© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 package ch.ethz.dropletcam;
 
 import org.bitcoinj.store.BlockStoreException;
@@ -10,9 +12,6 @@ import java.util.concurrent.Semaphore;
 import ch.ethz.blokcaditapi.BlockAditStorage;
 import ch.ethz.dropletcam.util.DemoUser;
 
-/**
- * Created by lukas on 17.05.17.
- */
 
 public class BlockaditStorageState {
 

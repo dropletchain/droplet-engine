@@ -1,3 +1,5 @@
+#© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 BENCH_TAG = "[BENCH]"
 
 TYPE_ADD_CHUNK = "[ADD_CHUNK]"

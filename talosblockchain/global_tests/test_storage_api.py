@@ -1,3 +1,5 @@
+#© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 from StringIO import StringIO
 
 import requests

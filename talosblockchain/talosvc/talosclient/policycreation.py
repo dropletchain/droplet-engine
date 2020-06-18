@@ -1,3 +1,5 @@
+#© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 from pybitcoin import broadcast_transaction
 from pybitcoin import make_op_return_tx
 

@@ -1,3 +1,5 @@
+#© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 ENTRY_GET_CHECK_ACCESS = "time_check_access_valid"
 ENTRY_GET_DB = "time_db_get_chunk"
 ENTRY_GET_TAG_CHECK = "time_check_tag_matches"

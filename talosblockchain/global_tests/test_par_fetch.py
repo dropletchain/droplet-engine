@@ -1,3 +1,5 @@
+#© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 from multiprocessing.pool import ThreadPool
 from time import time as timer, sleep
 

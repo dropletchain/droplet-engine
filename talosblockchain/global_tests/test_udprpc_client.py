@@ -1,3 +1,5 @@
+#© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 from rpcudp.protocol import RPCProtocol
 from twisted.internet import reactor
 

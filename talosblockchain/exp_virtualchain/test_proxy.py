@@ -1,3 +1,5 @@
+#© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 from bitcoinrpc.authproxy import AuthServiceProxy
 
 rpc_connection = AuthServiceProxy("http://%s:%s@127.0.0.1:18332" % ("talos", "talos"))

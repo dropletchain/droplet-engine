@@ -1,3 +1,5 @@
+#© 2017-2020, ETH Zurich, D-INFK, lubu@inf.ethz.ch
+
 import ipfsapi
 import re
 from timeit import default_timer as timer
